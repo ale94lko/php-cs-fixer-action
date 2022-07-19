@@ -1,4 +1,4 @@
-FROM php:7.3-cli
+FROM php:7.4.0
 
 LABEL version="1.0"
 LABEL repository="https://github.com/ale94lko/php-cs-fixer-action"
