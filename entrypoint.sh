@@ -19,5 +19,5 @@ then
 	exit 2
 fi
 
-php -d memory_limit=-1 /php-cs-fixer fix --dry-run -v --show-progress=dots --config=/github/workspace/.php_cs --diff-format=udiff "${DIR}"
+php -d memory_limit=-1 /php-cs-fixer fix --dry-run -v --show-progress=dots --config=/github/workspace/.php_cs "${DIR}"
 	
