@@ -1,0 +1,15 @@
+name: PHP Code Style Fixer Action
+description: Github Action to fix PHP code styles automatically
+author: 'Fidel Alejandro Fernandez Arias'
+branding:
+    icon: 'check-circle'
+    color: 'green'
+inputs:
+    dir:
+        description: 'Folder to check'
+        required: false
+        default: '.'
+runs:
+    using: 'docker'
+    image: 'Dockerfile'
+    args: - ${{ inputs.dir }}
