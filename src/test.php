@@ -1,3 +1,4 @@
 <?php
 
-echo 'This is a test';
+$msg = "This is a test";
+        echo $msg;
