@@ -1,8 +1,9 @@
 name: 'php-cs-fixer-action'
 description: 'Action to fix PHP code styles'
+author: 'Fidel Alejandro Fernandez Arias'
 branding:
   icon: 'check-circle'
-  color: green
+  color: 'green'
 inputs:
   php-cs-fixer-version:
     description: 'Version of php-cs-fixer to download'
