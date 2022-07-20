@@ -30,7 +30,7 @@ runs:
         
     - name: Download PHP CS Fixer rules
       shell: bash
-      run: curl --fail -L https://github.com/ale94lko/php-cs-fixer-rules/releases/download/${{ inputs.rules-version }}/rules.php -o .php-cs-fixer.dist.php  
+      run: curl --fail -L https://github.com/ale94lko/php-cs-fixer-rules/releases/download/${{ inputs.rules-version }}/default.php-cs-fixer.dist.php -o .php-cs-fixer.dist.php  
         
     - name: Run PHP CS Fixer
       id: php-cs-fixer
