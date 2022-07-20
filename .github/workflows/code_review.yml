@@ -8,3 +8,5 @@ jobs:
 
       - name: PHP Code Style
         uses: ale94lko/php-cs-fixer-action@main
+        with:
+          dir: './src'
