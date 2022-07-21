@@ -30,5 +30,5 @@ runs:
       id: php-cs-fixer
       shell: bash
       run: |
-        ./php-cs-fixer fix --verbose --allow-risky=yes --dry-run --diff --format=txt > ./result.xml
-        echo "::set-output name=result::$(cat ./result.xml)"
+        ./php-cs-fixer fix --verbose --allow-risky=yes --dry-run --diff --format=txt > ./result.txt
+        echo "::set-output name=result::$(cat ./result.txt)"
