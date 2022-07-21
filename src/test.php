@@ -1,14 +1,9 @@
 <?php declare(strict_types=1);
-$header = <<<'EOF'
-This file is part of ale94lko/php-cs-fixer-action.
 
-(c) Fidel Alejandro Fernandez Arias <ale94lko@gmail.com>
-
-For the full copyright and license information, please view the LICENSE
-file that was distributed with this source code.
-EOF;
-
-class Fuit
+/**
+ * Class Fruit
+ */
+class Fruit
 {
     /**
      * @var string
