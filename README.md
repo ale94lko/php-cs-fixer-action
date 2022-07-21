@@ -16,13 +16,11 @@
 
 ## Setup
 
-- Include the following:
+- Include the following in your _action_:
   ```yaml
   - name: php-cs-fixer
     uses: ale94lko/php-cs-fixer-action@main
   ```
-  In the file:
-  > <your-repo-name>_/.github/workflows/_<your-action-name>
 
 ## Parameters
 
