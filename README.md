@@ -45,6 +45,7 @@ jobs:
       - name: PHP Code Style
         uses: ale94lko/php-cs-fixer-action@main
 ```
+
 ### Simple use with `php-cs-fixer-version`
 ```diff
   - name: PHP Code Style
