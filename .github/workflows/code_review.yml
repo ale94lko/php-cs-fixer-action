@@ -10,3 +10,5 @@ jobs:
         uses: ale94lko/php-cs-fixer-action@main
           with:
             php-cs-fixer-version: 'v3.9.4'
+            rules-version: 'v1.0.1'
+            use-full-rules: 'false'
