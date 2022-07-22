@@ -24,22 +24,15 @@
 
 ## Parameters
 
-### php-cs-fixer-version
+| Name | Description | Required | Default | Values |
+|----------|:----------:|:----------:|:----------:|:----------:|
+| php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.9.4` | v`X.X.X` |
+| rules-version | Version of rules to check from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) | `false` | `v1.0.1` | v`X.X.X` |
+| use-full-rules | Whether to use the full rules package or the minimal one | `false` | `true` | `true` OR `false` |
 
-> Version of php-cs-fixer to download
+## Examples
 
-* required: `false`
-* default: `v3.9.4`
-
-### rules-version
-
-> Version of rules to check from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)
-
-* required: `false`
-* default: `v1.0`
-
-## Example
-
+### Simple use with default parameters
 ```yaml
 name: Fix code styles
 on: [pull_request]
@@ -53,10 +46,34 @@ jobs:
         uses: ale94lko/php-cs-fixer-action@main
 ```
 
+### Simple use with `php-cs-fixer-version`
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@main
++     with:
++       php-cs-fixer-version: 'v3.9.4'
+```
+
+### Simple use with `rules-version`
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@main
++     with:
++       rules-version: 'v1.0.1'
+```
+
+### Simple use with `use-full-rules`
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@main
++     with:
++       use-full-rules: 'true'
+```
+
 ## View live
 
-- [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7422552728?check_suite_focus=true)
-- [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7459443044?check_suite_focus=true)
+- [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7460572306?check_suite_focus=true)
+- [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7460603908?check_suite_focus=true)
 
 ## Contributing
 
