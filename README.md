@@ -50,30 +50,30 @@ jobs:
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@main
-+     with:
-+       php-cs-fixer-version: 'v3.9.4'
++   with:
++     php-cs-fixer-version: v3.9.4
 ```
 
 ### Simple use with `rules-version`
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@main
-+     with:
-+       rules-version: 'v1.0.1'
++   with:
++     rules-version: v1.0.1
 ```
 
 ### Simple use with `use-full-rules`
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@main
-+     with:
-+       use-full-rules: 'true'
++   with:
++     use-full-rules: true
 ```
 
 ## View live
 
-- [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7460572306?check_suite_focus=true)
-- [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7460603908?check_suite_focus=true)
+- [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461553837?check_suite_focus=true)
+- [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461551350?check_suite_focus=true)
 
 ## Contributing
 
