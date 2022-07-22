@@ -1,5 +1,5 @@
-name: 'php-cs-fixer action'
-description: 'Action to fix PHP code styles'
+name: 'ale94lko php-cs-fixer-action'
+description: 'Action to fix PHP Code Standards'
 author: 'Fidel Alejandro Fernandez Arias'
 branding:
   icon: 'check-circle'
