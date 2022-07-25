@@ -1,7 +1,7 @@
 name: Bug report
-description: Create a report to help us improve php-cs-fixer-action
+description: Create a report to help us improve
 title: "Bug: "
-labels: ['bug']
+labels: ['type: Bug']
 
 body:
   - type: markdown

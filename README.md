@@ -16,10 +16,10 @@
 
 ## Setup
 
-- Include the following in your _action_:
+- Include the following in your action:
   ```yaml
   - name: php-cs-fixer
-    uses: ale94lko/php-cs-fixer-action@main
+    uses: ale94lko/php-cs-fixer-action@v1.0.1
   ```
 
 ## Parameters
@@ -43,13 +43,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@main
+        uses: ale94lko/php-cs-fixer-action@v1.0.1
 ```
 
 ### Simple use with `php-cs-fixer-version`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@main
+    uses: ale94lko/php-cs-fixer-action@v1.0.1
 +   with:
 +     php-cs-fixer-version: v3.9.4
 ```
@@ -57,7 +57,7 @@ jobs:
 ### Simple use with `rules-version`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@main
+    uses: ale94lko/php-cs-fixer-action@v1.0.1
 +   with:
 +     rules-version: v1.0.1
 ```
@@ -65,7 +65,7 @@ jobs:
 ### Simple use with `use-full-rules`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@main
+    uses: ale94lko/php-cs-fixer-action@v1.0.1
 +   with:
 +     use-full-rules: true
 ```
