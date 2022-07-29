@@ -1,4 +1,4 @@
-name: Fix code styles
+name: Repo Health Score Badge
 on:
   schedule: # execute every day at 02:00
     - cron: "0 2 * * *"
