@@ -1,0 +1,22 @@
+name: Fix code styles
+on:
+  schedule: # execute every day at 02:00
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+jobs:
+  build:
+    name: Job to deploy badge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get Repo Health Score Badge
+        uses: ale94lko/repo-health-score@main
+
+      - name: Deploy badge
+        uses: crazy-max/ghaction-github-pages@v3
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
