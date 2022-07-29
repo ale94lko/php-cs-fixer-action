@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          repository: ale94lko/repo-health-score
 
       - name: Get Repo Health Score Badge
         uses: ale94lko/repo-health-score@main
