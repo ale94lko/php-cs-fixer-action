@@ -44,5 +44,25 @@ runs:
       id: php-cs-fixer
       shell: bash
       run: |
-        ./php-cs-fixer fix --verbose --allow-risky=yes --dry-run --format=txt > ./result.txt
-        echo "::set-output name=result::$(cat ./result.txt)"
+        set +e
+        ./php-cs-fixer fix \
+          --verbose \
+          --diff \
+          --show-progress=none \
+          --allow-risky=yes \
+          --dry-run \
+          --format=txt \
+          2>&1 | tee ./result.txt
+        exit_code=${PIPESTATUS[0]}
+        set -e
+
+        {
+          echo "result<<PHP_CS_FIXER_EOF"
+          cat ./result.txt
+          echo "PHP_CS_FIXER_EOF"
+        } >> "$GITHUB_OUTPUT"
+
+        if [ "$exit_code" -ne 0 ]; then
+          echo "::error::PHP CS Fixer found coding standard violations. See the detailed report above for files, fixers and diffs."
+          exit "$exit_code"
+        fi
