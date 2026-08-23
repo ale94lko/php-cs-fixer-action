@@ -8,7 +8,7 @@ inputs:
   php-cs-fixer-version:
     description: 'Version of php-cs-fixer to download'
     required: false
-    default: 'v3.9.4'
+    default: 'v3.95.21'
   rules-version:
     description: 'Version of rules to check'
     required: false
@@ -27,7 +27,7 @@ runs:
     - name: Download php-cs-fixer
       shell: bash
       run: |
-        curl --fail -L https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/${{ inputs.php-cs-fixer-version }}/php-cs-fixer.phar -o php-cs-fixer
+        curl --fail -L https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${{ inputs.php-cs-fixer-version }}/php-cs-fixer.phar -o php-cs-fixer
         chmod a+x php-cs-fixer
 
     - name: Download PHP CS Fixer rules full
@@ -43,6 +43,8 @@ runs:
     - name: Run PHP CS Fixer
       id: php-cs-fixer
       shell: bash
+      env:
+        PHP_CS_FIXER_IGNORE_ENV: '1'
       run: |
         set +e
         ./php-cs-fixer fix \
