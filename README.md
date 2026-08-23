@@ -13,6 +13,8 @@
 
 > A github action to fix PHP Coding Standards using [php-cs-fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer).
 
+When style violations are found, the Action fails and prints a detailed console report (affected files, applied fixers and diffs) so you know exactly what to fix.
+
 ## Requirements
 
 - Be sure to have set the following before using the action
@@ -25,7 +27,7 @@
 - Include the following in your action:
   ```yaml
   - name: php-cs-fixer
-    uses: ale94lko/php-cs-fixer-action@v1.0.1
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
   ```
 
 ## Parameters
@@ -49,13 +51,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@v1.0.1
+        uses: ale94lko/php-cs-fixer-action@v1.0.2
 ```
 
 ### Simple use with `php-cs-fixer-version`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.1
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
 +     php-cs-fixer-version: v3.9.4
 ```
@@ -63,7 +65,7 @@ jobs:
 ### Simple use with `rules-version`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.1
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
 +     rules-version: v1.0.1
 ```
@@ -71,7 +73,7 @@ jobs:
 ### Simple use with `use-full-rules`
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.1
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
 +     use-full-rules: true
 ```

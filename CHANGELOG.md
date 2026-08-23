@@ -3,6 +3,11 @@ CHANGELOG for PHP CS Fixer Action
 
 This file contains changelogs for stable releases only.
 
+Changelog for v1.0.2
+--------------------
+
+* feature: Show detailed code style errors in the Action console (files, fixers and diffs) when violations are found. [#9](https://github.com/ale94lko/php-cs-fixer-action/issues/9)
+
 Changelog for v1.0.1
 --------------------
 
