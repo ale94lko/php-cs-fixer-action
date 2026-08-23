@@ -11,7 +11,7 @@
   </a>
 </p>
 
-> A github action to fix PHP Coding Standards using [php-cs-fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer).
+> A github action to fix PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
 
 When style violations are found, the Action fails and prints a detailed console report (affected files, applied fixers and diffs) so you know exactly what to fix.
 
@@ -19,7 +19,7 @@ When style violations are found, the Action fails and prints a detailed console 
 
 - Be sure to have set the following before using the action
   ```yaml
-  - uses: actions/checkout@v2
+  - uses: actions/checkout@v4
   ```
 
 ## Setup
@@ -34,7 +34,7 @@ When style violations are found, the Action fails and prints a detailed console 
 
 | Name | Description | Required | Default | Values |
 |----------|:----------:|:----------:|:----------:|:----------:|
-| php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.9.4` | v`X.X.X` |
+| php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.95.21` | v`X.X.X` |
 | rules-version | Version of rules to check from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) | `false` | `v1.0.1` | v`X.X.X` |
 | use-full-rules | Whether to use the full rules package or the minimal one | `false` | `true` | `true` OR `false` |
 
@@ -48,7 +48,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: PHP Code Style
         uses: ale94lko/php-cs-fixer-action@v1.0.2
@@ -59,7 +59,7 @@ jobs:
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
-+     php-cs-fixer-version: v3.9.4
++     php-cs-fixer-version: v3.95.21
 ```
 
 ### Simple use with `rules-version`

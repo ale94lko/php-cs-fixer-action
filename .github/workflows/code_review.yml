@@ -4,11 +4,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@v1.0.1
+        uses: ./
         with:
-          php-cs-fixer-version: v3.9.4
+          php-cs-fixer-version: v3.95.21
           rules-version: v1.0.1
           use-full-rules: false
