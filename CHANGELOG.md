@@ -3,6 +3,13 @@ CHANGELOG for PHP CS Fixer Action
 
 This file contains changelogs for stable releases only.
 
+Changelog for next
+------------------
+
+* feature: Support a local `config-path` so consumers can use their own php-cs-fixer config file.
+* feature: Download shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) via raw GitHub refs (`rules-version` tag/branch/SHA), defaulting to `main`.
+* docs: Document both shared-rules and local-config usage modes.
+
 Changelog for v1.0.2
 --------------------
 

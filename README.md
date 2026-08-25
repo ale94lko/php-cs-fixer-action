@@ -11,9 +11,14 @@
   </a>
 </p>
 
-> A github action to fix PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
+> A GitHub Action to check PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
 
 When style violations are found, the Action fails and prints a detailed console report (affected files, applied fixers and diffs) so you know exactly what to fix.
+
+Rules can come from:
+
+1. The shared [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) repository (default), or
+2. A config file already present in your own repository (`config-path`).
 
 ## Requirements
 
@@ -35,12 +40,13 @@ When style violations are found, the Action fails and prints a detailed console 
 | Name | Description | Required | Default | Values |
 |----------|:----------:|:----------:|:----------:|:----------:|
 | php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.95.21` | v`X.X.X` |
-| rules-version | Version of rules to check from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) | `false` | `v1.0.1` | v`X.X.X` |
-| use-full-rules | Whether to use the full rules package or the minimal one | `false` | `true` | `true` OR `false` |
+| config-path | Path to a local php-cs-fixer config in your repo. When set, skips downloading from php-cs-fixer-rules | `false` | _(empty)_ | e.g. `.php-cs-fixer.dist.php` |
+| rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `main` | `main`, `v1.0.1`, SHA… |
+| use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 
 ## Examples
 
-### Simple use with default parameters
+### Simple use with default parameters (shared rules from `php-cs-fixer-rules`)
 ```yaml
 name: Fix code styles
 on: [pull_request]
@@ -54,28 +60,37 @@ jobs:
         uses: ale94lko/php-cs-fixer-action@v1.0.2
 ```
 
-### Simple use with `php-cs-fixer-version`
+### Use a config file from your own repository
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
-+     php-cs-fixer-version: v3.95.21
++     config-path: .php-cs-fixer.dist.php
 ```
 
-### Simple use with `rules-version`
+### Pin shared rules to a specific ref
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
 +     rules-version: v1.0.1
++     use-full-rules: true
 ```
 
-### Simple use with `use-full-rules`
+### Use the minimal shared ruleset
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.2
 +   with:
-+     use-full-rules: true
++     use-full-rules: false
+```
+
+### Override php-cs-fixer version
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
++   with:
++     php-cs-fixer-version: v3.95.21
 ```
 
 ## View live

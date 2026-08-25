@@ -9,12 +9,16 @@ inputs:
     description: 'Version of php-cs-fixer to download'
     required: false
     default: 'v3.95.21'
-  rules-version:
-    description: 'Version of rules to check'
+  config-path:
+    description: 'Path to a php-cs-fixer config file in the consuming repository. When set, rules from php-cs-fixer-rules are not downloaded.'
     required: false
-    default: 'v1.0.1'
+    default: ''
+  rules-version:
+    description: 'Git ref (tag, branch or SHA) of ale94lko/php-cs-fixer-rules to download when config-path is empty'
+    required: false
+    default: 'main'
   use-full-rules:
-    description: 'Whether to use the full rules package or the minimal one'
+    description: 'Whether to use the full rules package or the minimal one from php-cs-fixer-rules'
     required: false
     default: 'true'
 outputs:
@@ -27,27 +31,51 @@ runs:
     - name: Download php-cs-fixer
       shell: bash
       run: |
-        curl --fail -L https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${{ inputs.php-cs-fixer-version }}/php-cs-fixer.phar -o php-cs-fixer
+        curl --fail -L "https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${{ inputs.php-cs-fixer-version }}/php-cs-fixer.phar" -o php-cs-fixer
         chmod a+x php-cs-fixer
 
-    - name: Download PHP CS Fixer rules full
-      if: inputs.use-full-rules == 'true'
+    - name: Resolve PHP CS Fixer config
+      id: resolve-config
       shell: bash
-      run: curl --fail -L https://github.com/ale94lko/php-cs-fixer-rules/releases/download/${{ inputs.rules-version }}/default.php-cs-fixer.dist.php -o .php-cs-fixer.dist.php
+      env:
+        CONFIG_PATH: ${{ inputs.config-path }}
+        RULES_VERSION: ${{ inputs.rules-version }}
+        USE_FULL_RULES: ${{ inputs.use-full-rules }}
+      run: |
+        set -euo pipefail
 
-    - name: Download PHP CS Fixer rules minimal
-      if: inputs.use-full-rules == 'false'
-      shell: bash
-      run: curl --fail -L https://github.com/ale94lko/php-cs-fixer-rules/releases/download/${{ inputs.rules-version }}/default.php-cs-fixer.dist.min.php -o .php-cs-fixer.dist.php
+        if [ -n "${CONFIG_PATH}" ]; then
+          if [ ! -f "${CONFIG_PATH}" ]; then
+            echo "::error::config-path '${CONFIG_PATH}' was not found in the repository workspace."
+            exit 1
+          fi
+          echo "Using local config: ${CONFIG_PATH}"
+          echo "config=${CONFIG_PATH}" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [ "${USE_FULL_RULES}" = "true" ]; then
+          rules_file=".php-cs-fixer.dist.php"
+        else
+          rules_file=".php-cs-fixer.dist.min.php"
+        fi
+
+        download_url="https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/${RULES_VERSION}/${rules_file}"
+        echo "Downloading rules from ${download_url}"
+        curl --fail -L "${download_url}" -o .php-cs-fixer.dist.php
+
+        echo "config=.php-cs-fixer.dist.php" >> "$GITHUB_OUTPUT"
 
     - name: Run PHP CS Fixer
       id: php-cs-fixer
       shell: bash
       env:
         PHP_CS_FIXER_IGNORE_ENV: '1'
+        CONFIG_FILE: ${{ steps.resolve-config.outputs.config }}
       run: |
         set +e
         ./php-cs-fixer fix \
+          --config="${CONFIG_FILE}" \
           --verbose \
           --diff \
           --show-progress=none \
