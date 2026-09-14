@@ -6,9 +6,6 @@
   <a href="https://github.com/ale94lko/repo-health-score">
     <img src="https://github.com/ale94lko/php-cs-fixer-action/blob/output/badge.svg"/>
   </a>
-  <a href="https://bestpractices.coreinfrastructure.org/projects/6296" target="_blank">
-    <img src="https://bestpractices.coreinfrastructure.org/projects/6296/badge">
-  </a>
 </p>
 
 > A GitHub Action to check PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
