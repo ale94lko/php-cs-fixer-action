@@ -1,0 +1,40 @@
+{
+  "name": "php-cs-fixer-action",
+  "version": "1.1.0",
+  "private": true,
+  "description": "GitHub Action to check PHP coding standards with php-cs-fixer",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "ci-local": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ale94lko/php-cs-fixer-action.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@vercel/ncc": "^0.38.4",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "typescript": "~5.9.3",
+    "undici": "^6.28.0"
+  }
+}

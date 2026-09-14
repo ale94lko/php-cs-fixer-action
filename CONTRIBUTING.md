@@ -4,17 +4,25 @@ Thanks for helping improve this GitHub Action. Please also read the [Code of Con
 
 ## Development setup
 
+Requires Node.js 24+.
+
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
 cp .env.example .env
+npm ci
 ```
 
-Run the input-validation tests (no PHP required):
+## Quality checks
 
 ```bash
-bash tests/validate-inputs.test.sh
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run build
 ```
+
+After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale.
 
 Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
 
@@ -22,21 +30,13 @@ Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to downl
 bash scripts/ci-local.sh
 ```
 
-Or start the same check with Docker:
+Or with Docker:
 
 ```bash
 docker compose run --rm fixer
 ```
 
-## Quality checks
-
-Lint the shell scripts (needs [ShellCheck](https://www.shellcheck.net/)):
-
-```bash
-shellcheck --source-path=SCRIPTDIR --external-sources scripts/*.sh tests/*.sh
-```
-
-CI also runs the input-validation tests, a passing Action run on clean fixtures, and a failing Action run on a dirty fixture. Every push and pull request must stay green. The dirty-fixture job is expected to print PHP CS Fixer errors; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint`, `typecheck`, `test` (Vitest + coverage thresholds), a passing Action run on clean fixtures, and a failing Action run on a dirty fixture. The dirty-fixture job is expected to print PHP CS Fixer errors; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 

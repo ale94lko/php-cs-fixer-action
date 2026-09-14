@@ -5,3 +5,6 @@
 php-cs-fixer
 result.txt
 tests/fixtures/Dirty.php
+node_modules/
+coverage/
+*.tsbuildinfo

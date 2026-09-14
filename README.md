@@ -12,6 +12,8 @@
 
 When style violations are found, the Action fails and prints a detailed console report (affected files, applied fixers and diffs) so you know exactly what to fix.
 
+This is a Node 24 TypeScript Action (`dist/index.js`). Public inputs and the `code-style-result` output are unchanged from the previous composite Action. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar.
+
 Rules can come from:
 
 1. The shared [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) repository (default), or
@@ -95,16 +97,24 @@ jobs:
 - [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461553837?check_suite_focus=true)
 - [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461551350?check_suite_focus=true)
 
+## Architecture
+
+`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --dry-run`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+
 ## Local development
+
+Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+.
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
 cp .env.example .env
-bash tests/validate-inputs.test.sh
+npm ci
+npm test
+npm run build
 ```
 
-Run php-cs-fixer against the clean fixtures (requires PHP 8.3+):
+Run php-cs-fixer against the clean fixtures (downloads the phar, needs network once):
 
 ```bash
 bash scripts/ci-local.sh

@@ -1,5 +1,10 @@
 {
   "name": "php-cs-fixer-action",
   "image": "mcr.microsoft.com/devcontainers/php:8.3",
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y shellcheck curl"
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    }
+  },
+  "postCreateCommand": "npm ci"
 }

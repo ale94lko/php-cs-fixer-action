@@ -2,6 +2,9 @@
 
 .shellcheckrc text eol=lf
 *.sh text eol=lf
+*.ts text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
 *.php text eol=lf
 *.yml text eol=lf
 Dockerfile text eol=lf
