@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: shellcheck --external-sources scripts/*.sh tests/*.sh
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run input validation tests
+        run: bash tests/validate-inputs.test.sh
+
+  action-passes-on-clean-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: PHP Code Style
+        uses: ./
+        with:
+          php-cs-fixer-version: v3.95.21
+          config-path: tests/fixtures/.php-cs-fixer.dist.php
+
+  action-fails-on-violations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Write a dirty fixture
+        run: printf '%s\n' '<?php' 'class foo{' 'function Bar(){' '$x=1;' '}' '}' > tests/fixtures/Dirty.php
+
+      - name: PHP Code Style
+        id: fixer
+        continue-on-error: true
+        uses: ./
+        with:
+          php-cs-fixer-version: v3.95.21
+          config-path: tests/fixtures/.php-cs-fixer.dist.php
+
+      - name: Expect the action to fail
+        run: |
+          if [[ "${{ steps.fixer.outcome }}" != "failure" ]]; then
+            echo "Expected coding-standard violations to fail the action"
+            exit 1
+          fi

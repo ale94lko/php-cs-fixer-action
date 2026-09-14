@@ -24,7 +24,7 @@ Rules can come from:
 
 - Be sure to have set the following before using the action
   ```yaml
-  - uses: actions/checkout@v4
+  - uses: actions/checkout@v5
   ```
 
 ## Setup
@@ -54,7 +54,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: PHP Code Style
         uses: ale94lko/php-cs-fixer-action@v1.0.2
@@ -98,9 +98,30 @@ jobs:
 - [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461553837?check_suite_focus=true)
 - [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461551350?check_suite_focus=true)
 
+## Local development
+
+```bash
+git clone https://github.com/ale94lko/php-cs-fixer-action.git
+cd php-cs-fixer-action
+cp .env.example .env
+bash tests/validate-inputs.test.sh
+```
+
+Run php-cs-fixer against the clean fixtures (requires PHP 8.3+):
+
+```bash
+bash scripts/ci-local.sh
+```
+
+### Docker (one command)
+
+```bash
+docker compose run --rm fixer
+```
+
 ## Contributing
 
-Please read through our [contributing guidelines](https://github.com/ale94lko/php-cs-fixer-action/blob/main/.github/CONTRIBUTING.md).
+Please read through our [contributing guidelines](CONTRIBUTING.md).
 
 ## License
 

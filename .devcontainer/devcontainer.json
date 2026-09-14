@@ -1,0 +1,5 @@
+{
+  "name": "php-cs-fixer-action",
+  "image": "mcr.microsoft.com/devcontainers/php:8.3",
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y shellcheck curl"
+}

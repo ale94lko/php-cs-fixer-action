@@ -1,1 +1,7 @@
 .idea/
+.env
+.env.*
+!.env.example
+php-cs-fixer
+result.txt
+tests/fixtures/Dirty.php

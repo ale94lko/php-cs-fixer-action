@@ -1,0 +1,9 @@
+services:
+  fixer:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      PHP_CS_FIXER_IGNORE_ENV: "1"
+      PHP_CS_FIXER_VERSION: v3.95.21
+      CONFIG_FILE: tests/fixtures/.php-cs-fixer.dist.php

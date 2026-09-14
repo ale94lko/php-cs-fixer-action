@@ -8,6 +8,8 @@ Changelog for next
 
 * feature: Support a local `config-path` so consumers can use their own php-cs-fixer config file.
 * feature: Download shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) via raw GitHub refs (`rules-version` tag/branch/SHA), defaulting to `main`.
+* feature: Validate Action inputs (version tag, boolean flags, git refs, config path) and pass them through environment variables instead of interpolating them into shell.
+* feature: Add ShellCheck, input-validation tests, fixture-based Action CI, Dependabot, Docker Compose, and a root CONTRIBUTING.md.
 * docs: Document both shared-rules and local-config usage modes.
 
 Changelog for v1.0.2
