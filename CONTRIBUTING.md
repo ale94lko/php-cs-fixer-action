@@ -30,7 +30,13 @@ docker compose run --rm fixer
 
 ## Quality checks
 
-CI runs ShellCheck, the input-validation tests, a passing Action run on clean fixtures, and a failing Action run on a dirty fixture. Every push and pull request must stay green.
+Lint the shell scripts (needs [ShellCheck](https://www.shellcheck.net/)):
+
+```bash
+shellcheck --source-path=SCRIPTDIR --external-sources scripts/*.sh tests/*.sh
+```
+
+CI also runs the input-validation tests, a passing Action run on clean fixtures, and a failing Action run on a dirty fixture. Every push and pull request must stay green. The dirty-fixture job is expected to print PHP CS Fixer errors; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
