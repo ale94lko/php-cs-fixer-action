@@ -13,6 +13,15 @@ cp .env.example .env
 npm ci
 ```
 
+From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a downloaded phar.
+
+```bash
+npm ci
+npm audit --omit=dev --audit-level=high
+```
+
+CI fails that job on high or critical advisories. Do not waive those without an explicit, reviewed exception.
+
 ## Quality checks
 
 ```bash
@@ -20,6 +29,7 @@ npm run lint
 npm run typecheck
 npm run test:coverage
 npm run build
+npm run audit:prod
 shfmt -d -i 2 scripts tests/*.sh
 actionlint
 bash tests/extract-release-notes.test.sh
@@ -31,7 +41,7 @@ Lint workflows with [`actionlint`](https://github.com/rhysd/actionlint) (`action
 
 Every `uses:` in `.github/workflows/` is pinned to a 40-character commit SHA with a version comment (for example `actions/checkout@3d3c42e5… # v7.0.1`). Do not switch those back to mutable tags (`@v7`, `@main`). Dependabot's `github-actions` ecosystem still opens weekly PRs because it reads the version comment. `uses: ./` in CI is the local Action and stays unpinned. Consumer examples under `examples/` keep patch tags (`@v1.0.3`).
 
-After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change. Dependabot PRs that touch `package.json` or `package-lock.json` get `dist/` rebuilt automatically; do not merge a bump if that workflow fails (`ncc` cannot bundle ESM-only `@actions/cache` 5+/6+ or `@actions/core` 2+/3+). CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. Keep `@actions/cache` on `^4.1.0` and `@actions/core` on `^1.11.1`. `dist/` is marked generated and ignored in `.github/codeql/codeql-config.yml` so CodeQL scans `src/` rather than the ncc vendor bundle. CodeQL runs on push/PR to `main` and weekly (`.github/workflows/codeql.yml`). OpenSSF Scorecard runs on `main` and weekly (`.github/workflows/scorecard.yml`); add the README badge only after a successful run on `main`.
+After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change when you can. Same-repo PRs that touch `package.json`, `package-lock.json`, `src/`, or `scripts/` get `dist/` rebuilt automatically (`.github/workflows/rebuild-dist.yml`); fork PRs still need a local `npm run build`. Do not merge if that workflow fails (`ncc` cannot bundle ESM-only `@actions/cache` 5+/6+ or `@actions/core` 2+/3+). CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. Keep `@actions/cache` on `^4.1.0` and `@actions/core` on `^1.11.1`. `dist/` is marked generated and ignored in `.github/codeql/codeql-config.yml` so CodeQL scans `src/` rather than the ncc vendor bundle. CodeQL runs on push/PR to `main` and weekly (`.github/workflows/codeql.yml`). OpenSSF Scorecard runs on `main` and weekly (`.github/workflows/scorecard.yml`); add the README badge only after a successful run on `main`.
 
 When bumping the default `php-cs-fixer-version`, keep `checksums.txt` in the same change:
 
@@ -77,7 +87,7 @@ docker run --rm php-cs-fixer-action
 docker compose run --rm fixer
 ```
 
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 

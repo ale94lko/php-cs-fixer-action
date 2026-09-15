@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "ci-local": "node dist/index.js"
+    "ci-local": "node dist/index.js",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "repository": {
     "type": "git",

@@ -179,6 +179,7 @@ git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
 cp .env.example .env
 npm ci
+npm audit --omit=dev --audit-level=high
 npm test
 npm run build
 ```

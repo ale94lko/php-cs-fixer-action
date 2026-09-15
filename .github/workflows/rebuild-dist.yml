@@ -1,8 +1,8 @@
-# Rebuilds committed dist/ on Dependabot PRs so Verify bundled dist can pass
+# Rebuilds committed dist/ on same-repo PRs so Verify bundled dist can pass
 # without a manual npm run build. pull_request_target is required because
 # workflows triggered by Dependabot get a read-only GITHUB_TOKEN.
-# Restricted to dependabot[bot] on this repository; does not push a bundle
-# that ncc failed to resolve (webpackMissingModule).
+# Restricted to this repository (no forks); does not push a bundle that ncc
+# failed to resolve (webpackMissingModule).
 # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
 name: Rebuild dist
 
@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   rebuild:
-    if: github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR branch
@@ -58,5 +58,5 @@ jobs:
             echo 'dist/ already up to date'
             exit 0
           fi
-          git commit -m 'chore: rebuild dist after dependency update'
+          git commit -m 'chore: rebuild dist so src-hash matches'
           git push
