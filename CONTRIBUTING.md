@@ -20,11 +20,12 @@ npm run lint
 npm run typecheck
 npm run test:coverage
 npm run build
-shfmt -d -i 2 scripts
+shfmt -d -i 2 scripts tests/*.sh
 actionlint
+bash tests/extract-release-notes.test.sh
 ```
 
-Format shell scripts with `shfmt -w -i 2 scripts` (CI runs `shfmt -d -i 2` on `scripts/`). `.editorconfig` sets UTF-8, LF, and trim-whitespace so Windows checkouts do not drift.
+Format shell scripts with `shfmt -w -i 2 scripts tests/*.sh` (CI runs `shfmt -d -i 2` on `scripts/` and `tests/*.sh`). `.editorconfig` sets UTF-8, LF, and trim-whitespace so Windows checkouts do not drift.
 
 Lint workflows with [`actionlint`](https://github.com/rhysd/actionlint) (`actionlint` from the repo root, or `actionlint -color`). It checks `.github/workflows/` only; composite `action.yml` is not supported. CI pins [v1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12). Install locally from the [actionlint README](https://github.com/rhysd/actionlint#installation). When `shellcheck` is on `PATH`, actionlint also lints `run:` scripts.
 
@@ -37,6 +38,25 @@ bash scripts/update-checksums.sh v3.95.21
 ```
 
 A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`).
+
+## Releasing
+
+Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` section; if that heading is missing or empty, the release workflow uses `Changelog for next`.
+
+1. Make sure the section that should ship is non-empty (usually `Changelog for next`).
+2. Merge the release commit to `main`.
+3. Tag and push a stable version:
+
+   ```bash
+   git tag v1.0.4
+   git push origin v1.0.4
+   ```
+
+4. [`.github/workflows/release.yml`](.github/workflows/release.yml) (`contents: write` only) creates or updates the GitHub Release from those notes and force-updates the floating major tag (`v1` for `v1.x.y`) to the same commit so `uses: ale94lko/php-cs-fixer-action@v1` tracks the latest compatible release.
+
+The workflow does not rewrite `CHANGELOG.md`. After the tag, retitle `Changelog for next` to `Changelog for vX.Y.Z` and add an empty next section in a follow-up commit. Do not push an older `vX.Y.Z` than the current major tag; the major tag is force-updated.
+
+## Local fixer
 
 Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
 
@@ -55,7 +75,7 @@ docker run --rm php-cs-fixer-action
 docker compose run --rm fixer
 ```
 
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 

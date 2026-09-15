@@ -1,0 +1,47 @@
+# Publish a GitHub Release from CHANGELOG.md when a version tag is pushed.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/29
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Extract release notes
+        env:
+          TAG: ${{ github.ref_name }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: bash scripts/extract-release-notes.sh
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: |
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release edit "${TAG}" --notes-file "${NOTES_FILE}"
+          else
+            gh release create "${TAG}" --title "${TAG}" --notes-file "${NOTES_FILE}"
+          fi
+
+      - name: Update floating major tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: bash scripts/update-major-tag.sh

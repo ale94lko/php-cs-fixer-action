@@ -44,10 +44,13 @@ jobs:
           actionlint -version
 
       - name: Lint shell scripts
-        run: shellcheck --source-path=SCRIPTDIR --external-sources scripts/*.sh
+        run: shellcheck --source-path=SCRIPTDIR --external-sources scripts/*.sh tests/*.sh
 
       - name: Check shell script formatting
-        run: shfmt -d -i 2 scripts
+        run: shfmt -d -i 2 scripts tests/*.sh
+
+      - name: Test changelog release-notes extraction
+        run: bash tests/extract-release-notes.test.sh
 
       - name: Lint GitHub Actions workflows
         run: actionlint -color

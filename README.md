@@ -34,7 +34,7 @@ Rules can come from:
     uses: ale94lko/php-cs-fixer-action@v1.0.3
   ```
 
-Pin a patch tag (`@v1.0.3`) so CI stays on a known release. A floating major pin (`@v1`) would pick up compatible 1.x updates automatically, but that tag is not published yet — keep using the latest patch tag until it is.
+Pin a patch tag (`@v1.0.3`) so CI stays on a known release. Pushing a `vX.Y.Z` tag publishes a GitHub Release from `CHANGELOG.md` and force-updates the floating major tag (`@v1`) so it tracks the latest compatible 1.x. Until that major tag exists, keep using the latest patch tag.
 
 When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` with another tag, branch (for example `main`), or commit SHA when you want a different ref.
 
