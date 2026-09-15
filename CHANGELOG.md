@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* feature: Add CodeQL analysis for JavaScript/TypeScript and GitHub Actions workflows. [#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)
 * chore: Add EditorConfig and fail CI when shell scripts are not `shfmt`-clean. [#20](https://github.com/ale94lko/php-cs-fixer-action/issues/20)
 * feature: Verify php-cs-fixer.phar with a committed SHA-256 in `checksums.txt` and cache it across CI runs (`@actions/cache`, keyed by version + hash). Weekly workflow opens a PR that bumps the default tag and checksum together. [#17](https://github.com/ale94lko/php-cs-fixer-action/issues/17)
 * chore: Rebuild committed `dist/` on Dependabot PRs and ignore ESM majors of `@actions/core` and `@actions/cache`.
