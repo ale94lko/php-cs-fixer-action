@@ -1,3 +1,5 @@
+# Scorecard CI-Tests counts github-actions checks on merged PRs. Do not add
+# paths filters here: a docs-only commit would then land without a CI check (#66).
 name: CI
 
 on:
