@@ -2,6 +2,16 @@
 const { readdirSync, readFileSync, statSync, writeFileSync } = require('node:fs')
 const { join } = require('node:path')
 
+function canonicalizeDistText(text) {
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/^[ \t]*\/\/# sourceMappingURL=.*(?:\n|$)/gm, '')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+$/, '\n')
+}
+
 const dist = join(__dirname, '..', 'dist')
 
 for (const name of readdirSync(dist)) {
@@ -10,10 +20,13 @@ for (const name of readdirSync(dist)) {
     continue
   }
 
-  const buf = readFileSync(path)
-  if (!buf.includes(0x0d)) {
-    continue
-  }
+  const original = readFileSync(path, 'utf8')
+  const next =
+    name.endsWith('.js') || name === 'licenses'
+      ? canonicalizeDistText(original)
+      : original.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 
-  writeFileSync(path, buf.toString('utf8').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))
+  if (next !== original) {
+    writeFileSync(path, next)
+  }
 }
