@@ -1,7 +1,7 @@
 <h1 align="center">PHP Coding Standards Fixer Action</h1>
 <p>
   <a href="https://github.com/ale94lko/php-cs-fixer-action/blob/main/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" />
+    <img alt="License: Source-Available (AI restricted)" src="https://img.shields.io/badge/License-Source--Available-blue.svg" />
   </a>
   <a href="https://github.com/ale94lko/repo-health-score">
     <img src="https://github.com/ale94lko/php-cs-fixer-action/blob/output/badge.svg"/>
@@ -224,4 +224,4 @@ Please read through our [contributing guidelines](CONTRIBUTING.md).
 
 ## License
 
-**php-cs-fixer-action** is an open source project that is licensed under [MIT](https://opensource.org/licenses/MIT).
+**php-cs-fixer-action** is source-available under the terms in [`LICENSE`](LICENSE): use, modification, and distribution are allowed, but using this software or its documentation to train, fine-tune, evaluate, or synthesize AI/ML/LLM systems requires a separate paid written agreement with the copyright holder.

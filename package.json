@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/ale94lko/php-cs-fixer-action.git"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@actions/cache": "^4.1.0",
     "@actions/core": "^1.11.1",

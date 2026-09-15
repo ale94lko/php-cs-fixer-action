@@ -1,4 +1,4 @@
-MIT License
+Source-Available License with AI Restriction
 
 Copyright (c) 2022 Fidel Alejandro Fernández Arias
 
@@ -9,8 +9,19 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+2. SPECIFIC AI TRAINING RESTRICTION:
+   Notwithstanding any other provision of this License, NO permission is granted
+   to use, process, scrape, ingest, extract, or analyze this Software, its source
+   code, structure, architecture, or associated documentation, in whole or in part,
+   for the purpose of training, fine-tuning, evaluating, validating, or synthesizing
+   any Artificial Intelligence (AI), Machine Learning (ML), Large Language Model (LLM),
+   or automated decision-making system.
+
+   Any such use for AI/ML model development or evaluation requires a separate, explicit,
+   and paid written license agreement signed by the Copyright Holder (Fidel Alejandro Fernández Arias).
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
