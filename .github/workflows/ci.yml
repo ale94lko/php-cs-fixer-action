@@ -54,8 +54,9 @@ jobs:
 
       - name: Verify bundled dist
         run: |
+          node scripts/check-dist.cjs
           npm run build
-          git diff --exit-code -- dist
+          node --check dist/index.js
 
   test:
     runs-on: ubuntu-latest

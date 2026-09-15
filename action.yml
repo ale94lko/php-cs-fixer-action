@@ -16,7 +16,7 @@ inputs:
   rules-version:
     description: 'Git ref (tag, branch or SHA) of ale94lko/php-cs-fixer-rules to download when config-path is empty'
     required: false
-    default: 'main'
+    default: 'v1.0.1'
   use-full-rules:
     description: 'Whether to use the full rules package or the minimal one from php-cs-fixer-rules'
     required: false

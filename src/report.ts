@@ -86,7 +86,7 @@ export function tryParseViolations(output: string, workspace = process.cwd()): V
 }
 
 function escapeCell(value: string): string {
-  return value.replace(/\|/g, '\\|')
+  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
 }
 
 export function buildSummaryMarkdown(violations: Violation[], mode: ActionMode): string {

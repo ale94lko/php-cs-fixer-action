@@ -9,12 +9,13 @@ import {
   validatePhpCsFixerVersion,
   validateUseFullRules,
 } from './validate'
+import { DEFAULT_RULES_VERSION } from './inputs'
 import type { ActionInputs } from './inputs'
 
 const valid: ActionInputs = {
   phpCsFixerVersion: 'v3.95.21',
   configPath: '',
-  rulesVersion: 'main',
+  rulesVersion: DEFAULT_RULES_VERSION,
   useFullRules: 'true',
   mode: 'check',
   paths: '',
