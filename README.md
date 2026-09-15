@@ -12,7 +12,7 @@
 
 By default (`mode: check`) the Action runs `--dry-run`. Style violations fail the step, emit inline `::error file=,line=` annotations on the PR, and write a markdown table to the job summary. Set `mode: fix` to write those changes in the workspace (rewritten files are reported as warnings).
 
-This is a Node 24 TypeScript Action (`dist/index.js`). Default behavior stays check-only so existing workflows keep failing on violations without rewriting files. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar.
+This is a Node 24 TypeScript Action (`dist/index.js`). Default behavior stays check-only so existing workflows keep failing on violations without rewriting files. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar. The Action verifies the downloaded phar against `checksums.txt` and caches it across CI runs when the workflow has `actions: write` (or at least cache write) permission.
 
 Rules can come from:
 
@@ -46,6 +46,20 @@ Pin a patch tag (`@v1.0.3`) so CI stays on a known release. A floating major pin
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
+
+## Integrity and cache
+
+The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`).
+
+It then caches the phar with `@actions/cache`, keyed by version + hash. Grant cache write so later CI runs can reuse it:
+
+```yaml
+permissions:
+  contents: read
+  actions: write
+```
+
+If the cache service is unavailable (local runs, missing permission, fork PR), the Action downloads again and still verifies the checksum.
 
 ## Examples
 
@@ -151,6 +165,7 @@ Runtime pipeline (`src/run.ts`):
 ### Repo health badge
 
 [`.github/workflows/health_score.yml`](.github/workflows/health_score.yml) publishes the README badge on a schedule. It sets `permissions: contents: write` and passes `token: ${{ secrets.GITHUB_TOKEN }}` to [`ale94lko/repo-health-score`](https://github.com/ale94lko/repo-health-score) so the workflow can push the generated badge.
+`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar (SHA-256 from `checksums.txt`, restored from the Actions cache when possible), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 

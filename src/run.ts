@@ -25,7 +25,7 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   validateAllInputs(inputs)
   const mode = inputs.mode === 'fix' ? 'fix' : 'check'
 
-  core.info(`Downloading php-cs-fixer ${inputs.phpCsFixerVersion}`)
+  core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`)
   await deps.downloadFixer(inputs.phpCsFixerVersion)
 
   core.info(

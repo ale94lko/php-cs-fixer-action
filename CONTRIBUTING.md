@@ -22,7 +22,11 @@ npm run test:coverage
 npm run build
 ```
 
-`npm test` / `npm run test:coverage` are offline (HTTP is mocked). After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale.
+After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale. `npm run build` rewrites `dist/` to LF so a Windows ncc output matches Linux CI. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
+
+```bash
+bash scripts/update-checksums.sh v3.95.21
+```
 
 Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
 
