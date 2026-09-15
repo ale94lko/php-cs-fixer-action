@@ -31,7 +31,8 @@ body:
       description: Which php-cs-fixer-rules version did you run your code?
       multiple: true
       options:
-        - 'Default'
+        - 'Default (v1.0.1)'
+        - 'main'
         - 'v1.0'
         - 'v1.0.1'
     validations:

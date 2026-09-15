@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { readInputs } from './inputs'
+import { DEFAULT_RULES_VERSION, readInputs } from './inputs'
 
 vi.mock('@actions/core', () => ({
   getInput: vi.fn(() => ''),
@@ -22,7 +24,7 @@ describe('readInputs', () => {
     expect(readInputs()).toEqual({
       phpCsFixerVersion: 'v3.95.21',
       configPath: '',
-      rulesVersion: 'main',
+      rulesVersion: DEFAULT_RULES_VERSION,
       useFullRules: 'true',
       mode: 'check',
       paths: '',
@@ -46,5 +48,14 @@ describe('readInputs', () => {
     process.env.PHP_CS_FIXER_MODE = 'fix'
     process.env.PHP_CS_FIXER_PATHS = 'src tests'
     expect(readInputs()).toMatchObject({ mode: 'fix', paths: 'src tests' })
+  })
+
+  it('defaults rules-version to a release tag aligned with action.yml', () => {
+    expect(DEFAULT_RULES_VERSION).toMatch(/^v[0-9]+\.[0-9]+\.[0-9]+$/)
+    const actionYaml = readFileSync(join(process.cwd(), 'action.yml'), 'utf8')
+    const match = actionYaml.match(
+      /^\s*rules-version:[\s\S]*?^\s*default:\s*['"]?([^'"\n]+)['"]?\s*$/m,
+    )
+    expect(match?.[1]).toBe(DEFAULT_RULES_VERSION)
   })
 })
