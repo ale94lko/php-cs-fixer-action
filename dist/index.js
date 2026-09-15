@@ -31554,6 +31554,177 @@ function readInputs() {
 
 /***/ }),
 
+/***/ 665:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extractJsonObject = extractJsonObject;
+exports.firstChangedLine = firstChangedLine;
+exports.toRepoPath = toRepoPath;
+exports.parseViolations = parseViolations;
+exports.tryParseViolations = tryParseViolations;
+exports.buildSummaryMarkdown = buildSummaryMarkdown;
+exports.writeJobSummary = writeJobSummary;
+exports.emitAnnotations = emitAnnotations;
+exports.publishReport = publishReport;
+exports.failWithoutGenericAnnotation = failWithoutGenericAnnotation;
+const core = __importStar(__nccwpck_require__(7484));
+function extractJsonObject(output) {
+    const start = output.indexOf('{');
+    const end = output.lastIndexOf('}');
+    if (start === -1 || end <= start) {
+        throw new Error('php-cs-fixer did not produce a JSON report.');
+    }
+    return JSON.parse(output.slice(start, end + 1));
+}
+function firstChangedLine(diff) {
+    const match = /@@ -(\d+)/.exec(diff);
+    if (!match) {
+        return undefined;
+    }
+    const line = Number(match[1]);
+    if (!Number.isFinite(line) || line < 1) {
+        return 1;
+    }
+    return line;
+}
+function toRepoPath(file, workspace = process.cwd()) {
+    const normalized = file.replace(/\\/g, '/');
+    const root = workspace.replace(/\\/g, '/').replace(/\/+$/, '');
+    if (root !== '' && (normalized === root || normalized.startsWith(`${root}/`))) {
+        return normalized.slice(root.length).replace(/^\/+/, '') || '.';
+    }
+    return normalized.replace(/^\.\//, '');
+}
+function parseViolations(output, workspace = process.cwd()) {
+    const parsed = extractJsonObject(output);
+    if (!Array.isArray(parsed.files)) {
+        return [];
+    }
+    return parsed.files.flatMap((entry) => {
+        if (typeof entry?.name !== 'string' || entry.name === '') {
+            return [];
+        }
+        const fixers = Array.isArray(entry.appliedFixers)
+            ? entry.appliedFixers.filter((fixer) => typeof fixer === 'string')
+            : [];
+        const violation = {
+            file: toRepoPath(entry.name, workspace),
+            fixers,
+        };
+        const line = firstChangedLine(entry.diff ?? '');
+        if (line !== undefined) {
+            violation.line = line;
+        }
+        if (typeof entry.diff === 'string' && entry.diff !== '') {
+            violation.diff = entry.diff;
+        }
+        return [violation];
+    });
+}
+function tryParseViolations(output, workspace = process.cwd()) {
+    try {
+        return parseViolations(output, workspace);
+    }
+    catch {
+        return [];
+    }
+}
+function escapeCell(value) {
+    return value.replace(/\|/g, '\\|');
+}
+function buildSummaryMarkdown(violations, mode) {
+    if (violations.length === 0) {
+        return ['## PHP CS Fixer', '', 'No coding standard violations found.', ''].join('\n');
+    }
+    const verb = mode === 'fix' ? 'rewritten' : 'with style violations';
+    const rows = violations.map((violation) => {
+        const fixers = violation.fixers.length > 0 ? escapeCell(violation.fixers.join(', ')) : '—';
+        return `| \`${escapeCell(violation.file)}\` | ${fixers} | ${violation.fixers.length} |`;
+    });
+    return [
+        '## PHP CS Fixer',
+        '',
+        `Found **${violations.length}** file(s) ${verb}.`,
+        '',
+        '| File | Fixers | Count |',
+        '| --- | --- | ---: |',
+        ...rows,
+        '',
+    ].join('\n');
+}
+async function writeJobSummary(markdown) {
+    if (!process.env.GITHUB_STEP_SUMMARY) {
+        return;
+    }
+    await core.summary.addRaw(markdown, true).write();
+}
+function emitAnnotations(violations, mode) {
+    for (const violation of violations) {
+        const message = violation.fixers.length > 0
+            ? `Found violation(s) of type: ${violation.fixers.join(', ')}`
+            : 'Found coding standard violations';
+        const properties = {
+            title: 'PHP CS Fixer',
+            file: violation.file,
+        };
+        if (violation.line !== undefined) {
+            properties.startLine = violation.line;
+        }
+        if (mode === 'fix') {
+            core.warning(message, properties);
+        }
+        else {
+            core.error(message, properties);
+        }
+    }
+}
+async function publishReport(violations, mode) {
+    await writeJobSummary(buildSummaryMarkdown(violations, mode));
+    emitAnnotations(violations, mode);
+}
+function failWithoutGenericAnnotation() {
+    process.exitCode = 1;
+}
+
+
+/***/ }),
+
 /***/ 9190:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -31612,11 +31783,10 @@ const node_path_1 = __nccwpck_require__(6760);
 const download_fixer_1 = __nccwpck_require__(3230);
 exports.BASE_FIXER_ARGS = [
     'fix',
-    '--verbose',
     '--diff',
     '--show-progress=none',
     '--allow-risky=yes',
-    '--format=txt',
+    '--format=json',
 ];
 function buildFixerArgs(configFile, mode = 'check', paths = []) {
     const args = [...exports.BASE_FIXER_ARGS];
@@ -31713,16 +31883,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.VIOLATIONS_MESSAGE = void 0;
 exports.executeAction = executeAction;
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const download_fixer_1 = __nccwpck_require__(3230);
 const inputs_1 = __nccwpck_require__(8422);
+const report_1 = __nccwpck_require__(665);
 const resolve_config_1 = __nccwpck_require__(9190);
 const run_fixer_1 = __nccwpck_require__(5975);
 const validate_1 = __nccwpck_require__(397);
-exports.VIOLATIONS_MESSAGE = 'PHP CS Fixer found coding standard violations. See the detailed report above for files, fixers and diffs.';
 const defaultDeps = {
     readInputs: inputs_1.readInputs,
     downloadFixer: download_fixer_1.downloadFixer,
@@ -31732,6 +31901,7 @@ const defaultDeps = {
 async function executeAction(deps = defaultDeps) {
     const inputs = deps.readInputs();
     (0, validate_1.validateAllInputs)(inputs);
+    const mode = inputs.mode === 'fix' ? 'fix' : 'check';
     core.info(`Downloading php-cs-fixer ${inputs.phpCsFixerVersion}`);
     await deps.downloadFixer(inputs.phpCsFixerVersion);
     core.info(inputs.configPath === ''
@@ -31739,13 +31909,20 @@ async function executeAction(deps = defaultDeps) {
         : `Using local config: ${inputs.configPath}`);
     const configFile = await deps.resolveConfig(inputs);
     const result = await deps.runFixer(configFile, {
-        mode: inputs.mode === 'fix' ? 'fix' : 'check',
+        mode,
         paths: (0, validate_1.parsePaths)(inputs.paths),
     });
     core.setOutput('code-style-result', result.output);
-    if (result.exitCode !== 0) {
-        core.setFailed(exports.VIOLATIONS_MESSAGE);
+    const violations = (0, report_1.tryParseViolations)(result.output);
+    await (0, report_1.publishReport)(violations, mode);
+    if (result.exitCode === 0) {
+        return result;
     }
+    if (violations.length > 0) {
+        (0, report_1.failWithoutGenericAnnotation)();
+        return result;
+    }
+    core.setFailed(result.output.trim() || 'php-cs-fixer failed.');
     return result;
 }
 async function run(deps = defaultDeps) {

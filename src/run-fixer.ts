@@ -26,11 +26,10 @@ export type RunFixerSettings = {
 
 export const BASE_FIXER_ARGS = [
   'fix',
-  '--verbose',
   '--diff',
   '--show-progress=none',
   '--allow-risky=yes',
-  '--format=txt',
+  '--format=json',
 ] as const
 
 export function buildFixerArgs(

@@ -85,6 +85,7 @@ describe('buildFixerArgs', () => {
   it('includes --dry-run in check mode', () => {
     expect(buildFixerArgs('config.php', 'check')).toContain('--dry-run')
     expect(buildFixerArgs('config.php', 'check')).toContain('--config=config.php')
+    expect(buildFixerArgs('config.php', 'check')).toContain('--format=json')
   })
 
   it('omits --dry-run in fix mode and appends paths', () => {

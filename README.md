@@ -10,7 +10,7 @@
 
 > A GitHub Action to check or fix PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
 
-By default (`mode: check`) the Action runs `--dry-run`: when style violations are found it fails and prints a detailed console report (affected files, applied fixers and diffs). Set `mode: fix` to write those changes in the workspace.
+By default (`mode: check`) the Action runs `--dry-run`. Style violations fail the step, emit inline `::error file=,line=` annotations on the PR, and write a markdown table to the job summary. Set `mode: fix` to write those changes in the workspace (rewritten files are reported as warnings).
 
 This is a Node 24 TypeScript Action (`dist/index.js`). Default behavior stays check-only so existing workflows keep failing on violations without rewriting files. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar.
 
@@ -118,7 +118,7 @@ jobs:
 
 ## Architecture
 
-`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 

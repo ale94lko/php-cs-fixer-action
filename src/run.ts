@@ -1,12 +1,10 @@
 import * as core from '@actions/core'
 import { downloadFixer } from './download-fixer'
 import { readInputs, type ActionInputs } from './inputs'
+import { failWithoutGenericAnnotation, publishReport, tryParseViolations } from './report'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
 import { parsePaths, validateAllInputs } from './validate'
-
-export const VIOLATIONS_MESSAGE =
-  'PHP CS Fixer found coding standard violations. See the detailed report above for files, fixers and diffs.'
 
 export type ActionDeps = {
   readInputs: () => ActionInputs
@@ -25,6 +23,7 @@ const defaultDeps: ActionDeps = {
 export async function executeAction(deps: ActionDeps = defaultDeps): Promise<FixerResult | void> {
   const inputs = deps.readInputs()
   validateAllInputs(inputs)
+  const mode = inputs.mode === 'fix' ? 'fix' : 'check'
 
   core.info(`Downloading php-cs-fixer ${inputs.phpCsFixerVersion}`)
   await deps.downloadFixer(inputs.phpCsFixerVersion)
@@ -37,15 +36,24 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   const configFile = await deps.resolveConfig(inputs)
 
   const result = await deps.runFixer(configFile, {
-    mode: inputs.mode === 'fix' ? 'fix' : 'check',
+    mode,
     paths: parsePaths(inputs.paths),
   })
   core.setOutput('code-style-result', result.output)
 
-  if (result.exitCode !== 0) {
-    core.setFailed(VIOLATIONS_MESSAGE)
+  const violations = tryParseViolations(result.output)
+  await publishReport(violations, mode)
+
+  if (result.exitCode === 0) {
+    return result
   }
 
+  if (violations.length > 0) {
+    failWithoutGenericAnnotation()
+    return result
+  }
+
+  core.setFailed(result.output.trim() || 'php-cs-fixer failed.')
   return result
 }
 
