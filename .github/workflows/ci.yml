@@ -55,6 +55,9 @@ jobs:
       - name: Test php-cs-fixer checksum lookup
         run: bash tests/vendor-php-cs-fixer.test.sh
 
+      - name: Test dist Git Data API helper
+        run: bash tests/commit-dist-tree.test.sh
+
       - name: Lint GitHub Actions workflows
         run: actionlint -color
 

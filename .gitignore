@@ -8,3 +8,5 @@ tests/fixtures/Dirty.php
 node_modules/
 coverage/
 *.tsbuildinfo
+__pycache__/
+*.py[cod]

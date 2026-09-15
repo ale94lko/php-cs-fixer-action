@@ -1,0 +1,54 @@
+# Privileged follow-up to "Rebuild dist". Downloads the artifact and commits
+# it with the Git Data API. Does not check out pull-request code.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/63
+name: Commit rebuilt dist
+
+on:
+  workflow_run:
+    workflows: [Rebuild dist]
+    types: [completed]
+
+concurrency:
+  group: commit-dist-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  commit:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    # Git Data API commit to the PR branch needs contents: write. OpenSSF
+    # still warns on that job-level permission (same as release.yml) unless
+    # the job is semantic-release / goreleaser / Maven. Do not raise this to
+    # the workflow root; permissions: {} above is already least privilege.
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: /tmp/rebuilt-dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Checkout commit helper from the default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify artifact
+        run: node --check /tmp/rebuilt-dist/index.js
+
+      - name: Commit dist via Git Data API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_DIR: /tmp/rebuilt-dist
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PARENT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: python3 scripts/commit-dist-tree.py

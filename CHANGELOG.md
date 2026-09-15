@@ -6,6 +6,8 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
+* fix: Split dist rebuild into an unprivileged `pull_request` build and a `workflow_run` Git Data API commit so Scorecard Dangerous-Workflow is not triggered. [#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)
 * chore: Replace deprecated `moduleResolution: node` (`node10`) with `module: preserve` and `moduleResolution: bundler` so TypeScript 6/7 typecheck stays valid.
 * feature: Vendor the pinned php-cs-fixer phar in the Docker image and lint fixtures offline (`docker run --network=none`). Local/CI fixture runs use `tests/fixtures/.php-cs-fixer.dist.php` so php-cs-fixer-rules is not required. [#35](https://github.com/ale94lko/php-cs-fixer-action/issues/35)
 * chore: Run `npm audit --omit=dev --audit-level=high` on every push and pull request. [#34](https://github.com/ale94lko/php-cs-fixer-action/issues/34)

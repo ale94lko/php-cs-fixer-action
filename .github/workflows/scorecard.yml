@@ -1,6 +1,10 @@
 # OpenSSF Scorecard: supply-chain checks for this public GitHub Action.
 # https://github.com/ale94lko/php-cs-fixer-action/issues/27
 # Do not add the README badge until this workflow has succeeded on main.
+# Do not run on pull_request: publish_results only emits
+# supply-chain/branch-protection and supply-chain/online-scm on the default
+# branch, so a PR SARIF upload makes GitHub Code Scanning fail with
+# "2 configurations not found".
 name: Scorecard
 
 on:
@@ -12,8 +16,6 @@ on:
     - cron: '31 4 * * 2'
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 permissions: read-all
 
@@ -21,7 +23,6 @@ jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
-    if: github.event.repository.default_branch == github.ref_name || github.event_name == 'pull_request'
     permissions:
       contents: read
       security-events: write
