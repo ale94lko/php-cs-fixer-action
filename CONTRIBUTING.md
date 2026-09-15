@@ -67,6 +67,8 @@ These checks are **accepted low scores**, not a regression of the Scorecard work
 
 **Dangerous-Workflow** is not in that set: `rebuild-dist.yml` no longer uses `pull_request_target`. Dist rebuild is an unprivileged `pull_request` job plus a `workflow_run` Git Data API commit ([#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)). Do not check out `pull_request.head` or `workflow_run.head_sha` in the privileged job.
 
+**Token-Permissions** workflow roots are `permissions: {}`, `contents: read`, or `read-all`. Write is only on the jobs that need it: `actions: write` for php-cs-fixer cache in CI ([#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)), `contents: write` for release / badge / bump / dist commit ([#65](https://github.com/ale94lko/php-cs-fixer-action/issues/65), [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72), [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73), [#61](https://github.com/ale94lko/php-cs-fixer-action/issues/61)). Scorecard still **warns** on those job-level writes (it only ignores semantic-release / goreleaser / Maven). Do not raise write back to the workflow root ([#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)).
+
 ## Releasing
 
 Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` section; if that heading is missing or empty, the release workflow uses `Changelog for next`.
