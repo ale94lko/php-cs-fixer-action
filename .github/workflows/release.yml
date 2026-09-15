@@ -16,6 +16,9 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Creating the GitHub Release and moving vN requires contents: write.
+    # Scorecard Token-Permissions still flags this unless the job matches
+    # semantic-release, goreleaser, or mvn release:prepare.
     permissions:
       contents: write
     steps:
