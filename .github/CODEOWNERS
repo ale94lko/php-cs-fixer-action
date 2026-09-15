@@ -1,0 +1,4 @@
+# Scorecard Code-Review counts GitHub APPROVED reviews (or a merger other
+# than the committer). Enable "Require review from Code Owners" on main so
+# this file is enforced. Do not merge your own PR without that approval (#68).
+* @ale94lko @leoflavio1989
