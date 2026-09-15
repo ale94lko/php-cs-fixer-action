@@ -1,17 +1,12 @@
-# Rebuilds committed dist/ on same-repo PRs so Verify bundled dist can pass
-# without a manual npm run build. pull_request_target is required because
-# workflows triggered by Dependabot get a read-only GITHUB_TOKEN.
-# Restricted to this repository (no forks); does not push a bundle that ncc
-# failed to resolve (webpackMissingModule).
-# Checkout uses the PR head SHA (not a moving branch ref) and does not persist
-# credentials, so npm ci/build cannot push. Scorecard Dangerous-Workflow still
-# flags any explicit PR checkout on pull_request_target; see CONTRIBUTING.md.
-# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
+# Builds dist/ on pull_request (unprivileged). A follow-up workflow_run job
+# commits that artifact without checking out PR code — Scorecard
+# Dangerous-Workflow flags pull_request_target / workflow_run + PR checkout.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/63
 # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
 name: Rebuild dist
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - package.json
@@ -24,22 +19,16 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  rebuild:
-    # Same-repo only. Fork PRs never get a write token or a checkout.
+  build:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      # Workflow YAML comes from the base branch (pull_request_target). Checkout
-      # the immutable PR commit from *this* repository so a fork SHA cannot be
-      # fetched even if the job if: is later loosened.
-      - name: Checkout PR commit
+      - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
@@ -57,17 +46,10 @@ jobs:
           node scripts/check-dist.cjs
           node --check dist/index.js
 
-      - name: Commit rebuilt dist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add dist
-          if git diff --staged --quiet; then
-            echo 'dist/ already up to date'
-            exit 0
-          fi
-          git commit -m 'chore: rebuild dist so src-hash matches'
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${BRANCH}"
+      - name: Upload dist
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
