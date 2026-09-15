@@ -1,5 +1,10 @@
 import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import type { ActionInputs, ActionMode } from './inputs'
+
+function invalidInput(message: string): never {
+  throw new ActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, message)
+}
 
 const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/
 const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/
@@ -7,7 +12,7 @@ const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/
 
 export function validatePhpCsFixerVersion(version: string): void {
   if (!VERSION_PATTERN.test(version)) {
-    throw new Error(
+    invalidInput(
       `Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`,
     )
   }
@@ -15,16 +20,16 @@ export function validatePhpCsFixerVersion(version: string): void {
 
 export function validateUseFullRules(value: string): void {
   if (value !== 'true' && value !== 'false') {
-    throw new Error(`Invalid use-full-rules '${value}'. Expected true or false.`)
+    invalidInput(`Invalid use-full-rules '${value}'. Expected true or false.`)
   }
 }
 
 export function validateGitRef(ref: string): void {
   if (ref === '') {
-    throw new Error('rules-version must not be empty.')
+    invalidInput('rules-version must not be empty.')
   }
   if (!GIT_REF_PATTERN.test(ref)) {
-    throw new Error(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`)
+    invalidInput(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`)
   }
 }
 
@@ -33,13 +38,13 @@ export function validateConfigPath(path: string): void {
     return
   }
   if (path.startsWith('/') || WINDOWS_ABSOLUTE.test(path) || path.includes('..')) {
-    throw new Error(`Invalid config-path '${path}'. Use a relative path inside the workspace.`)
+    invalidInput(`Invalid config-path '${path}'. Use a relative path inside the workspace.`)
   }
 }
 
 export function validateMode(mode: string): asserts mode is ActionMode {
   if (mode !== 'check' && mode !== 'fix') {
-    throw new Error(`Invalid mode '${mode}'. Expected check or fix.`)
+    invalidInput(`Invalid mode '${mode}'. Expected check or fix.`)
   }
 }
 
@@ -71,7 +76,7 @@ export function validatePaths(raw: string, workspace = process.cwd()): void {
       hasParentSegment(path) ||
       !isInsideWorkspace(workspace, path)
     ) {
-      throw new Error(`Invalid path '${path}'. Use a relative path inside the workspace.`)
+      invalidInput(`Invalid path '${path}'. Use a relative path inside the workspace.`)
     }
   }
 }

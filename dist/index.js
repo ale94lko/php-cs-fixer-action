@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 9815650e3dfaa1b2271843d5e49156be6dc8d2e03037a7aebf481ee574ab11e5
+// php-cs-fixer-action-src-hash 5b3e17fc3fe8ce8d5b8dd613beccbf830720ca4552632610f61ad812c07da54d
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -45945,833 +45945,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 97377:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cacheKey = cacheKey;
-exports.cacheDir = cacheDir;
-exports.createGithubPharCache = createGithubPharCache;
-exports.sha256Buffer = sha256Buffer;
-exports.sha256File = sha256File;
-exports.assertChecksum = assertChecksum;
-const node_crypto_1 = __nccwpck_require__(77598);
-const promises_1 = __nccwpck_require__(51455);
-const node_path_1 = __nccwpck_require__(76760);
-const node_os_1 = __nccwpck_require__(48161);
-const core = __importStar(__nccwpck_require__(37484));
-const cache_1 = __nccwpck_require__(5116);
-const CACHED_NAME = 'php-cs-fixer';
-function cacheKey(version, sha256) {
-    return `php-cs-fixer-phar-${version}-${sha256}`;
-}
-function cacheDir(version, sha256) {
-    const root = process.env.RUNNER_TOOL_CACHE ?? (0, node_path_1.join)((0, node_os_1.tmpdir)(), 'php-cs-fixer-action-cache');
-    return (0, node_path_1.join)(root, 'php-cs-fixer', version, sha256);
-}
-function cachedBinary(version, sha256) {
-    return (0, node_path_1.join)(cacheDir(version, sha256), CACHED_NAME);
-}
-function createGithubPharCache() {
-    return {
-        async restore(version, sha256) {
-            if (!(0, cache_1.isFeatureAvailable)()) {
-                return undefined;
-            }
-            const key = cacheKey(version, sha256);
-            const dir = cacheDir(version, sha256);
-            try {
-                const hit = await (0, cache_1.restoreCache)([dir], key);
-                if (!hit) {
-                    return undefined;
-                }
-                core.info(`Restored php-cs-fixer ${version} from cache (${key})`);
-                return cachedBinary(version, sha256);
-            }
-            catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                core.warning(`Could not restore php-cs-fixer cache: ${message}`);
-                return undefined;
-            }
-        },
-        async save(version, sha256, filePath) {
-            if (!(0, cache_1.isFeatureAvailable)()) {
-                return;
-            }
-            const key = cacheKey(version, sha256);
-            const dir = cacheDir(version, sha256);
-            try {
-                await (0, promises_1.mkdir)(dir, { recursive: true });
-                await (0, promises_1.copyFile)(filePath, cachedBinary(version, sha256));
-                await (0, cache_1.saveCache)([dir], key);
-                core.info(`Saved php-cs-fixer ${version} to cache (${key})`);
-            }
-            catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                core.warning(`Could not save php-cs-fixer cache: ${message}`);
-            }
-        },
-    };
-}
-function sha256Buffer(data) {
-    return (0, node_crypto_1.createHash)('sha256').update(data).digest('hex');
-}
-async function sha256File(path) {
-    return sha256Buffer(await (0, promises_1.readFile)(path));
-}
-function assertChecksum(actual, expected, version) {
-    if (actual !== expected) {
-        throw new Error(`Checksum mismatch for php-cs-fixer ${version}. Expected ${expected}, got ${actual}.`);
-    }
-}
-
-/***/ }),
-
-/***/ 73219:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_CHECKSUMS_FILE = void 0;
-exports.parseChecksums = parseChecksums;
-exports.resolveChecksumsPath = resolveChecksumsPath;
-exports.loadChecksums = loadChecksums;
-exports.expectedChecksum = expectedChecksum;
-const node_fs_1 = __nccwpck_require__(73024);
-const promises_1 = __nccwpck_require__(51455);
-const node_path_1 = __nccwpck_require__(76760);
-exports.DEFAULT_CHECKSUMS_FILE = 'checksums.txt';
-const SHA256_LINE = /^([a-fA-F0-9]{64})\s+(\S+)$/;
-function parseChecksums(text) {
-    const table = new Map();
-    for (const rawLine of text.split(/\r?\n/)) {
-        const line = rawLine.trim();
-        if (line === '' || line.startsWith('#')) {
-            continue;
-        }
-        const match = SHA256_LINE.exec(line);
-        if (!match) {
-            throw new Error(`Invalid checksums.txt line: '${line}'. Expected '<sha256>  <tag>'.`);
-        }
-        table.set(match[2], match[1].toLowerCase());
-    }
-    return table;
-}
-function resolveChecksumsPath(cwd = process.cwd(), fromDir = __dirname) {
-    const candidates = [(0, node_path_1.join)(fromDir, '..', exports.DEFAULT_CHECKSUMS_FILE), (0, node_path_1.join)(cwd, exports.DEFAULT_CHECKSUMS_FILE)];
-    for (const candidate of candidates) {
-        if ((0, node_fs_1.existsSync)(candidate)) {
-            return candidate;
-        }
-    }
-    throw new Error(`checksums.txt was not found. Place it next to action.yml (looked in ${candidates.join(', ')}).`);
-}
-async function loadChecksums(path) {
-    return parseChecksums(await (0, promises_1.readFile)(path, 'utf8'));
-}
-function expectedChecksum(version, table) {
-    const hash = table.get(version);
-    if (!hash) {
-        throw new Error(`No SHA-256 checksum for php-cs-fixer ${version}. Add it to checksums.txt (see scripts/update-checksums.sh).`);
-    }
-    return hash;
-}
-
-/***/ }),
-
-/***/ 3230:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.VENDORED_PHAR_ENV = exports.FIXER_BINARY = void 0;
-exports.fixerReleaseUrl = fixerReleaseUrl;
-exports.downloadFixer = downloadFixer;
-const promises_1 = __nccwpck_require__(51455);
-const node_path_1 = __nccwpck_require__(76760);
-const cache_1 = __nccwpck_require__(97377);
-const checksums_1 = __nccwpck_require__(73219);
-const http_1 = __nccwpck_require__(76803);
-exports.FIXER_BINARY = 'php-cs-fixer';
-/** Docker / local path to a pre-verified phar so runtime can stay offline. */
-exports.VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR';
-function fixerReleaseUrl(version) {
-    return `https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${version}/php-cs-fixer.phar`;
-}
-async function makeExecutable(path) {
-    try {
-        await (0, promises_1.chmod)(path, 0o755);
-    }
-    catch {
-        // chmod is optional on Windows runners
-    }
-}
-async function installVerifiedPhar(source, dest, expected, version) {
-    try {
-        const hash = await (0, cache_1.sha256File)(source);
-        (0, cache_1.assertChecksum)(hash, expected, version);
-        if ((0, node_path_1.resolve)(source) !== (0, node_path_1.resolve)(dest)) {
-            await (0, promises_1.copyFile)(source, dest);
-        }
-        await makeExecutable(dest);
-        return true;
-    }
-    catch {
-        return false;
-    }
-}
-async function downloadFixer(version, workspace = process.cwd(), options = {}) {
-    const dest = (0, node_path_1.join)(workspace, exports.FIXER_BINARY);
-    const table = options.checksums ?? (await (0, checksums_1.loadChecksums)(options.checksumsPath ?? (0, checksums_1.resolveChecksumsPath)()));
-    const expected = (0, checksums_1.expectedChecksum)(version, table);
-    const cache = options.cache ?? (0, cache_1.createGithubPharCache)();
-    if (await installVerifiedPhar(dest, dest, expected, version)) {
-        return dest;
-    }
-    const vendored = process.env[exports.VENDORED_PHAR_ENV];
-    if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
-        return dest;
-    }
-    const cached = await cache.restore(version, expected);
-    if (cached) {
-        const cachedHash = await (0, cache_1.sha256File)(cached);
-        try {
-            (0, cache_1.assertChecksum)(cachedHash, expected, version);
-            await (0, promises_1.copyFile)(cached, dest);
-            await makeExecutable(dest);
-            return dest;
-        }
-        catch {
-            await (0, promises_1.rm)(cached, { force: true });
-        }
-    }
-    await (0, http_1.downloadToFile)(fixerReleaseUrl(version), dest, options);
-    const actual = await (0, cache_1.sha256File)(dest);
-    try {
-        (0, cache_1.assertChecksum)(actual, expected, version);
-    }
-    catch (error) {
-        await (0, promises_1.rm)(dest, { force: true });
-        throw error;
-    }
-    await makeExecutable(dest);
-    await cache.save(version, expected, dest);
-    return dest;
-}
-
-/***/ }),
-
-/***/ 76803:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.downloadToFile = downloadToFile;
-const promises_1 = __nccwpck_require__(51455);
-const defaultSleep = (ms) => new Promise((resolve) => {
-    setTimeout(resolve, ms);
-});
-async function downloadToFile(url, dest, options = {}) {
-    const fetchImpl = options.fetchImpl ?? fetch;
-    const writeFileImpl = options.writeFileImpl ?? promises_1.writeFile;
-    const retries = options.retries ?? 3;
-    const delayMs = options.delayMs ?? 2000;
-    const sleep = options.sleep ?? defaultSleep;
-    let lastError;
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            const response = await fetchImpl(url, { redirect: 'follow' });
-            if (!response.ok) {
-                throw new Error(`Download failed (${response.status}) from ${url}`);
-            }
-            const data = Buffer.from(await response.arrayBuffer());
-            await writeFileImpl(dest, data);
-            return;
-        }
-        catch (error) {
-            lastError = error instanceof Error ? error : new Error(String(error));
-            if (attempt < retries) {
-                await sleep(delayMs);
-            }
-        }
-    }
-    throw lastError ?? new Error(`Download failed from ${url}`);
-}
-
-/***/ }),
-
-/***/ 38422:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_RULES_VERSION = exports.DEFAULT_PHP_CS_FIXER_VERSION = void 0;
-exports.readInputs = readInputs;
-const core = __importStar(__nccwpck_require__(37484));
-/** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
-exports.DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21';
-/** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
-exports.DEFAULT_RULES_VERSION = 'v1.0.1';
-function read(name, fallbackEnv, defaultValue) {
-    const fromAction = core.getInput(name);
-    if (fromAction !== '') {
-        return fromAction;
-    }
-    return process.env[fallbackEnv] ?? defaultValue;
-}
-function readInputs() {
-    const configFromEnv = process.env.CONFIG_PATH ?? process.env.CONFIG_FILE ?? '';
-    return {
-        phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', exports.DEFAULT_PHP_CS_FIXER_VERSION),
-        configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
-        rulesVersion: read('rules-version', 'RULES_VERSION', exports.DEFAULT_RULES_VERSION),
-        useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
-        mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
-        paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
-    };
-}
-
-/***/ }),
-
-/***/ 70665:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.extractJsonObject = extractJsonObject;
-exports.firstChangedLine = firstChangedLine;
-exports.toRepoPath = toRepoPath;
-exports.parseViolations = parseViolations;
-exports.tryParseViolations = tryParseViolations;
-exports.buildSummaryMarkdown = buildSummaryMarkdown;
-exports.writeJobSummary = writeJobSummary;
-exports.emitAnnotations = emitAnnotations;
-exports.publishReport = publishReport;
-exports.failWithoutGenericAnnotation = failWithoutGenericAnnotation;
-const core = __importStar(__nccwpck_require__(37484));
-function extractJsonObject(output) {
-    const start = output.indexOf('{');
-    const end = output.lastIndexOf('}');
-    if (start === -1 || end <= start) {
-        throw new Error('php-cs-fixer did not produce a JSON report.');
-    }
-    return JSON.parse(output.slice(start, end + 1));
-}
-function firstChangedLine(diff) {
-    const match = /@@ -(\d+)/.exec(diff);
-    if (!match) {
-        return undefined;
-    }
-    const line = Number(match[1]);
-    if (!Number.isFinite(line) || line < 1) {
-        return 1;
-    }
-    return line;
-}
-function toRepoPath(file, workspace = process.cwd()) {
-    const normalized = file.replace(/\\/g, '/');
-    const root = workspace.replace(/\\/g, '/').replace(/\/+$/, '');
-    if (root !== '' && (normalized === root || normalized.startsWith(`${root}/`))) {
-        return normalized.slice(root.length).replace(/^\/+/, '') || '.';
-    }
-    return normalized.replace(/^\.\//, '');
-}
-function parseViolations(output, workspace = process.cwd()) {
-    const parsed = extractJsonObject(output);
-    if (!Array.isArray(parsed.files)) {
-        return [];
-    }
-    return parsed.files.flatMap((entry) => {
-        if (typeof entry?.name !== 'string' || entry.name === '') {
-            return [];
-        }
-        const fixers = Array.isArray(entry.appliedFixers)
-            ? entry.appliedFixers.filter((fixer) => typeof fixer === 'string')
-            : [];
-        const violation = {
-            file: toRepoPath(entry.name, workspace),
-            fixers,
-        };
-        const line = firstChangedLine(entry.diff ?? '');
-        if (line !== undefined) {
-            violation.line = line;
-        }
-        if (typeof entry.diff === 'string' && entry.diff !== '') {
-            violation.diff = entry.diff;
-        }
-        return [violation];
-    });
-}
-function tryParseViolations(output, workspace = process.cwd()) {
-    try {
-        return parseViolations(output, workspace);
-    }
-    catch {
-        return [];
-    }
-}
-function escapeCell(value) {
-    return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
-}
-function buildSummaryMarkdown(violations, mode) {
-    if (violations.length === 0) {
-        return ['## PHP CS Fixer', '', 'No coding standard violations found.', ''].join('\n');
-    }
-    const verb = mode === 'fix' ? 'rewritten' : 'with style violations';
-    const rows = violations.map((violation) => {
-        const fixers = violation.fixers.length > 0 ? escapeCell(violation.fixers.join(', ')) : '—';
-        return `| \`${escapeCell(violation.file)}\` | ${fixers} | ${violation.fixers.length} |`;
-    });
-    return [
-        '## PHP CS Fixer',
-        '',
-        `Found **${violations.length}** file(s) ${verb}.`,
-        '',
-        '| File | Fixers | Count |',
-        '| --- | --- | ---: |',
-        ...rows,
-        '',
-    ].join('\n');
-}
-async function writeJobSummary(markdown) {
-    if (!process.env.GITHUB_STEP_SUMMARY) {
-        return;
-    }
-    await core.summary.addRaw(markdown, true).write();
-}
-function emitAnnotations(violations, mode) {
-    for (const violation of violations) {
-        const message = violation.fixers.length > 0
-            ? `Found violation(s) of type: ${violation.fixers.join(', ')}`
-            : 'Found coding standard violations';
-        const properties = {
-            title: 'PHP CS Fixer',
-            file: violation.file,
-        };
-        if (violation.line !== undefined) {
-            properties.startLine = violation.line;
-        }
-        if (mode === 'fix') {
-            core.warning(message, properties);
-        }
-        else {
-            core.error(message, properties);
-        }
-    }
-}
-async function publishReport(violations, mode) {
-    await writeJobSummary(buildSummaryMarkdown(violations, mode));
-    emitAnnotations(violations, mode);
-}
-function failWithoutGenericAnnotation() {
-    process.exitCode = 1;
-}
-
-/***/ }),
-
-/***/ 79190:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DOWNLOADED_CONFIG = void 0;
-exports.rulesFileName = rulesFileName;
-exports.rulesDownloadUrl = rulesDownloadUrl;
-exports.resolveConfig = resolveConfig;
-const promises_1 = __nccwpck_require__(51455);
-const node_fs_1 = __nccwpck_require__(73024);
-const node_path_1 = __nccwpck_require__(76760);
-const http_1 = __nccwpck_require__(76803);
-exports.DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php';
-function rulesFileName(useFullRules) {
-    return useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php';
-}
-function rulesDownloadUrl(rulesVersion, useFullRules) {
-    return `https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/${rulesVersion}/${rulesFileName(useFullRules)}`;
-}
-async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
-    if (inputs.configPath !== '') {
-        const localPath = (0, node_path_1.join)(workspace, inputs.configPath);
-        try {
-            await (0, promises_1.access)(localPath, node_fs_1.constants.F_OK);
-        }
-        catch {
-            throw new Error(`config-path '${inputs.configPath}' was not found in the repository workspace.`);
-        }
-        return inputs.configPath;
-    }
-    const dest = (0, node_path_1.join)(workspace, exports.DOWNLOADED_CONFIG);
-    await (0, http_1.downloadToFile)(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options);
-    return exports.DOWNLOADED_CONFIG;
-}
-
-/***/ }),
-
-/***/ 85975:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BASE_FIXER_ARGS = void 0;
-exports.buildFixerArgs = buildFixerArgs;
-exports.spawnPhp = spawnPhp;
-exports.runFixer = runFixer;
-const node_child_process_1 = __nccwpck_require__(31421);
-const promises_1 = __nccwpck_require__(51455);
-const node_fs_1 = __nccwpck_require__(73024);
-const promises_2 = __nccwpck_require__(51455);
-const node_path_1 = __nccwpck_require__(76760);
-const download_fixer_1 = __nccwpck_require__(3230);
-exports.BASE_FIXER_ARGS = [
-    'fix',
-    '--diff',
-    '--show-progress=none',
-    '--allow-risky=yes',
-    '--format=json',
-];
-function buildFixerArgs(configFile, mode = 'check', paths = []) {
-    const args = [...exports.BASE_FIXER_ARGS];
-    if (mode === 'check') {
-        args.push('--dry-run');
-    }
-    args.push(`--config=${configFile}`, ...paths);
-    return args;
-}
-function spawnPhp(command, args, options) {
-    return new Promise((resolve, reject) => {
-        const child = (0, node_child_process_1.spawn)(command, args, {
-            cwd: options.cwd,
-            env: options.env,
-            windowsHide: true,
-        });
-        let output = '';
-        child.stdout.on('data', (chunk) => {
-            const text = chunk.toString();
-            output += text;
-            process.stdout.write(text);
-        });
-        child.stderr.on('data', (chunk) => {
-            const text = chunk.toString();
-            output += text;
-            process.stderr.write(text);
-        });
-        child.on('error', reject);
-        child.on('close', (code) => {
-            resolve({ exitCode: code ?? 1, output });
-        });
-    });
-}
-async function runFixer(configFile, settings = {}) {
-    const workspace = settings.workspace ?? process.cwd();
-    const runProcess = settings.runProcess ?? spawnPhp;
-    const mode = settings.mode ?? 'check';
-    const paths = settings.paths ?? [];
-    const configPath = (0, node_path_1.join)(workspace, configFile);
-    try {
-        await (0, promises_1.access)(configPath, node_fs_1.constants.F_OK);
-    }
-    catch {
-        throw new Error(`Resolved config '${configFile}' does not exist.`);
-    }
-    const env = {
-        ...process.env,
-        PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
-    };
-    const result = await runProcess('php', [(0, node_path_1.join)(workspace, download_fixer_1.FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)], { cwd: workspace, env });
-    await (0, promises_2.writeFile)((0, node_path_1.join)(workspace, 'result.txt'), result.output);
-    return result;
-}
-
-/***/ }),
-
-/***/ 79786:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.executeAction = executeAction;
-exports.run = run;
-const core = __importStar(__nccwpck_require__(37484));
-const download_fixer_1 = __nccwpck_require__(3230);
-const inputs_1 = __nccwpck_require__(38422);
-const report_1 = __nccwpck_require__(70665);
-const resolve_config_1 = __nccwpck_require__(79190);
-const run_fixer_1 = __nccwpck_require__(85975);
-const validate_1 = __nccwpck_require__(60397);
-const defaultDeps = {
-    readInputs: inputs_1.readInputs,
-    downloadFixer: download_fixer_1.downloadFixer,
-    resolveConfig: resolve_config_1.resolveConfig,
-    runFixer: run_fixer_1.runFixer,
-};
-async function executeAction(deps = defaultDeps) {
-    const inputs = deps.readInputs();
-    (0, validate_1.validateAllInputs)(inputs);
-    const mode = inputs.mode === 'fix' ? 'fix' : 'check';
-    core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`);
-    await deps.downloadFixer(inputs.phpCsFixerVersion);
-    core.info(inputs.configPath === ''
-        ? `Downloading rules from php-cs-fixer-rules@${inputs.rulesVersion}`
-        : `Using local config: ${inputs.configPath}`);
-    const configFile = await deps.resolveConfig(inputs);
-    const result = await deps.runFixer(configFile, {
-        mode,
-        paths: (0, validate_1.parsePaths)(inputs.paths),
-    });
-    core.setOutput('code-style-result', result.output);
-    const violations = (0, report_1.tryParseViolations)(result.output);
-    await (0, report_1.publishReport)(violations, mode);
-    if (result.exitCode === 0) {
-        return result;
-    }
-    if (violations.length > 0) {
-        (0, report_1.failWithoutGenericAnnotation)();
-        return result;
-    }
-    core.setFailed(result.output.trim() || 'php-cs-fixer failed.');
-    return result;
-}
-async function run(deps = defaultDeps) {
-    try {
-        await executeAction(deps);
-    }
-    catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        core.setFailed(message);
-    }
-}
-
-/***/ }),
-
-/***/ 60397:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validatePhpCsFixerVersion = validatePhpCsFixerVersion;
-exports.validateUseFullRules = validateUseFullRules;
-exports.validateGitRef = validateGitRef;
-exports.validateConfigPath = validateConfigPath;
-exports.validateMode = validateMode;
-exports.parsePaths = parsePaths;
-exports.validatePaths = validatePaths;
-exports.validateAllInputs = validateAllInputs;
-const node_path_1 = __nccwpck_require__(76760);
-const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
-const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/;
-const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/;
-function validatePhpCsFixerVersion(version) {
-    if (!VERSION_PATTERN.test(version)) {
-        throw new Error(`Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`);
-    }
-}
-function validateUseFullRules(value) {
-    if (value !== 'true' && value !== 'false') {
-        throw new Error(`Invalid use-full-rules '${value}'. Expected true or false.`);
-    }
-}
-function validateGitRef(ref) {
-    if (ref === '') {
-        throw new Error('rules-version must not be empty.');
-    }
-    if (!GIT_REF_PATTERN.test(ref)) {
-        throw new Error(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`);
-    }
-}
-function validateConfigPath(path) {
-    if (path === '') {
-        return;
-    }
-    if (path.startsWith('/') || WINDOWS_ABSOLUTE.test(path) || path.includes('..')) {
-        throw new Error(`Invalid config-path '${path}'. Use a relative path inside the workspace.`);
-    }
-}
-function validateMode(mode) {
-    if (mode !== 'check' && mode !== 'fix') {
-        throw new Error(`Invalid mode '${mode}'. Expected check or fix.`);
-    }
-}
-function parsePaths(raw) {
-    const trimmed = raw.trim();
-    if (trimmed === '') {
-        return [];
-    }
-    return trimmed.split(/\s+/);
-}
-function hasParentSegment(path) {
-    return path.split(/[\\/]/).includes('..');
-}
-function isInsideWorkspace(workspace, candidate) {
-    const root = (0, node_path_1.resolve)(workspace);
-    const resolved = (0, node_path_1.resolve)(workspace, candidate);
-    const rel = (0, node_path_1.relative)(root, resolved);
-    return rel !== '..' && !rel.startsWith(`..${node_path_1.sep}`) && !(0, node_path_1.isAbsolute)(rel);
-}
-function validatePaths(raw, workspace = process.cwd()) {
-    for (const path of parsePaths(raw)) {
-        if (path.startsWith('-') ||
-            path.startsWith('/') ||
-            WINDOWS_ABSOLUTE.test(path) ||
-            hasParentSegment(path) ||
-            !isInsideWorkspace(workspace, path)) {
-            throw new Error(`Invalid path '${path}'. Use a relative path inside the workspace.`);
-        }
-    }
-}
-function validateAllInputs(inputs, workspace = process.cwd()) {
-    validatePhpCsFixerVersion(inputs.phpCsFixerVersion);
-    validateUseFullRules(inputs.useFullRules);
-    validateGitRef(inputs.rulesVersion);
-    validateConfigPath(inputs.configPath);
-    validateMode(inputs.mode);
-    validatePaths(inputs.paths, workspace);
-}
-
-/***/ }),
-
 /***/ 60075:
 /***/ ((module) => {
 
@@ -46875,14 +46048,6 @@ module.exports = require("node:buffer");
 
 /***/ }),
 
-/***/ 31421:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:child_process");
-
-/***/ }),
-
 /***/ 37540:
 /***/ ((module) => {
 
@@ -46931,14 +46096,6 @@ module.exports = require("node:fs");
 
 /***/ }),
 
-/***/ 51455:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs/promises");
-
-/***/ }),
-
 /***/ 37067:
 /***/ ((module) => {
 
@@ -46976,14 +46133,6 @@ module.exports = require("node:net");
 
 "use strict";
 module.exports = require("node:os");
-
-/***/ }),
-
-/***/ 76760:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:path");
 
 /***/ }),
 
@@ -62443,6 +61592,40 @@ class StorageContextClient extends import_src.StorageClient {
 
 /***/ }),
 
+/***/ 83627:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var generatedModels_exports = {};
+__export(generatedModels_exports, {
+  KnownEncryptionAlgorithmType: () => KnownEncryptionAlgorithmType
+});
+module.exports = __toCommonJS(generatedModels_exports);
+var KnownEncryptionAlgorithmType = /* @__PURE__ */ ((KnownEncryptionAlgorithmType2) => {
+  KnownEncryptionAlgorithmType2["AES256"] = "AES256";
+  return KnownEncryptionAlgorithmType2;
+})(KnownEncryptionAlgorithmType || {});
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+/***/ }),
+
 /***/ 30247:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -73195,6 +72378,162 @@ const listType = {
 
 /***/ }),
 
+/***/ 56635:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var appendBlob_exports = {};
+module.exports = __toCommonJS(appendBlob_exports);
+
+/***/ }),
+
+/***/ 68355:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var blob_exports = {};
+module.exports = __toCommonJS(blob_exports);
+
+/***/ }),
+
+/***/ 17188:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var blockBlob_exports = {};
+module.exports = __toCommonJS(blockBlob_exports);
+
+/***/ }),
+
+/***/ 15337:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var container_exports = {};
+module.exports = __toCommonJS(container_exports);
+
+/***/ }),
+
+/***/ 82354:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var operationsInterfaces_exports = {};
+module.exports = __toCommonJS(operationsInterfaces_exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(26865), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(15337), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(68355), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(14400), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(56635), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(17188), module.exports);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+/***/ }),
+
+/***/ 14400:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var pageBlob_exports = {};
+module.exports = __toCommonJS(pageBlob_exports);
+
+/***/ }),
+
+/***/ 26865:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var service_exports = {};
+module.exports = __toCommonJS(service_exports);
+
+/***/ }),
+
 /***/ 40535:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -76748,162 +76087,6 @@ const filterBlobsOperationSpec = {
 
 /***/ }),
 
-/***/ 56635:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var appendBlob_exports = {};
-module.exports = __toCommonJS(appendBlob_exports);
-
-/***/ }),
-
-/***/ 68355:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var blob_exports = {};
-module.exports = __toCommonJS(blob_exports);
-
-/***/ }),
-
-/***/ 17188:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var blockBlob_exports = {};
-module.exports = __toCommonJS(blockBlob_exports);
-
-/***/ }),
-
-/***/ 15337:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var container_exports = {};
-module.exports = __toCommonJS(container_exports);
-
-/***/ }),
-
-/***/ 82354:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var operationsInterfaces_exports = {};
-module.exports = __toCommonJS(operationsInterfaces_exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(26865), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(15337), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(68355), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(14400), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(56635), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(17188), module.exports);
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-/***/ }),
-
-/***/ 14400:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var pageBlob_exports = {};
-module.exports = __toCommonJS(pageBlob_exports);
-
-/***/ }),
-
-/***/ 26865:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var service_exports = {};
-module.exports = __toCommonJS(service_exports);
-
-/***/ }),
-
 /***/ 5313:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -76987,40 +76170,6 @@ class StorageClient extends coreHttpCompat.ExtendedServiceClient {
   appendBlob;
   blockBlob;
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-/***/ }),
-
-/***/ 83627:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var generatedModels_exports = {};
-__export(generatedModels_exports, {
-  KnownEncryptionAlgorithmType: () => KnownEncryptionAlgorithmType
-});
-module.exports = __toCommonJS(generatedModels_exports);
-var KnownEncryptionAlgorithmType = /* @__PURE__ */ ((KnownEncryptionAlgorithmType2) => {
-  KnownEncryptionAlgorithmType2["AES256"] = "AES256";
-  return KnownEncryptionAlgorithmType2;
-})(KnownEncryptionAlgorithmType || {});
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
 
@@ -93998,11 +93147,715 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-var exports = __webpack_exports__;
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const run_1 = __nccwpck_require__(79786);
-void (0, run_1.run)();
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(37484);
+;// CONCATENATED MODULE: external "node:fs/promises"
+const promises_namespaceObject = require("node:fs/promises");
+;// CONCATENATED MODULE: external "node:path"
+const external_node_path_namespaceObject = require("node:path");
+// EXTERNAL MODULE: external "node:crypto"
+var external_node_crypto_ = __nccwpck_require__(77598);
+// EXTERNAL MODULE: external "node:os"
+var external_node_os_ = __nccwpck_require__(48161);
+// EXTERNAL MODULE: ./node_modules/@actions/cache/lib/cache.js
+var cache = __nccwpck_require__(5116);
+;// CONCATENATED MODULE: ./src/cache.ts
+
+const CACHED_NAME = 'php-cs-fixer';
+function cacheKey(version, sha256) {
+    return `php-cs-fixer-phar-${version}-${sha256}`;
+}
+function cacheDir(version, sha256) {
+    const root = process.env.RUNNER_TOOL_CACHE ?? (0,external_node_path_namespaceObject.join)((0,external_node_os_.tmpdir)(), 'php-cs-fixer-action-cache');
+    return (0,external_node_path_namespaceObject.join)(root, 'php-cs-fixer', version, sha256);
+}
+function cachedBinary(version, sha256) {
+    return (0,external_node_path_namespaceObject.join)(cacheDir(version, sha256), CACHED_NAME);
+}
+function createGithubPharCache() {
+    return {
+        async restore(version, sha256) {
+            if (!(0,cache.isFeatureAvailable)()) {
+                return undefined;
+            }
+            const key = cacheKey(version, sha256);
+            const dir = cacheDir(version, sha256);
+            try {
+                const hit = await (0,cache.restoreCache)([dir], key);
+                if (!hit) {
+                    return undefined;
+                }
+                core.info(`Restored php-cs-fixer ${version} from cache (${key})`);
+                return cachedBinary(version, sha256);
+            }
+            catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                core.warning(`Could not restore php-cs-fixer cache: ${message}`);
+                return undefined;
+            }
+        },
+        async save(version, sha256, filePath) {
+            if (!(0,cache.isFeatureAvailable)()) {
+                return;
+            }
+            const key = cacheKey(version, sha256);
+            const dir = cacheDir(version, sha256);
+            try {
+                await (0,promises_namespaceObject.mkdir)(dir, { recursive: true });
+                await (0,promises_namespaceObject.copyFile)(filePath, cachedBinary(version, sha256));
+                await (0,cache.saveCache)([dir], key);
+                core.info(`Saved php-cs-fixer ${version} to cache (${key})`);
+            }
+            catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                core.warning(`Could not save php-cs-fixer cache: ${message}`);
+            }
+        },
+    };
+}
+function sha256Buffer(data) {
+    return (0,external_node_crypto_.createHash)('sha256').update(data).digest('hex');
+}
+async function sha256File(path) {
+    return sha256Buffer(await (0,promises_namespaceObject.readFile)(path));
+}
+function assertChecksum(actual, expected, version) {
+    if (actual !== expected) {
+        throw new Error(`Checksum mismatch for php-cs-fixer ${version}. Expected ${expected}, got ${actual}.`);
+    }
+}
+
+// EXTERNAL MODULE: external "node:fs"
+var external_node_fs_ = __nccwpck_require__(73024);
+;// CONCATENATED MODULE: ./src/checksums.ts
+
+const DEFAULT_CHECKSUMS_FILE = 'checksums.txt';
+const SHA256_LINE = /^([a-fA-F0-9]{64})\s+(\S+)$/;
+function parseChecksums(text) {
+    const table = new Map();
+    for (const rawLine of text.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (line === '' || line.startsWith('#')) {
+            continue;
+        }
+        const match = SHA256_LINE.exec(line);
+        if (!match) {
+            throw new Error(`Invalid checksums.txt line: '${line}'. Expected '<sha256>  <tag>'.`);
+        }
+        table.set(match[2], match[1].toLowerCase());
+    }
+    return table;
+}
+function resolveChecksumsPath(cwd = process.cwd(), fromDir = __dirname) {
+    const candidates = [(0,external_node_path_namespaceObject.join)(fromDir, '..', DEFAULT_CHECKSUMS_FILE), (0,external_node_path_namespaceObject.join)(cwd, DEFAULT_CHECKSUMS_FILE)];
+    for (const candidate of candidates) {
+        if ((0,external_node_fs_.existsSync)(candidate)) {
+            return candidate;
+        }
+    }
+    throw new Error(`checksums.txt was not found. Place it next to action.yml (looked in ${candidates.join(', ')}).`);
+}
+async function loadChecksums(path) {
+    return parseChecksums(await (0,promises_namespaceObject.readFile)(path, 'utf8'));
+}
+function expectedChecksum(version, table) {
+    const hash = table.get(version);
+    if (!hash) {
+        throw new Error(`No SHA-256 checksum for php-cs-fixer ${version}. Add it to checksums.txt (see scripts/update-checksums.sh).`);
+    }
+    return hash;
+}
+
+;// CONCATENATED MODULE: ./src/error-tracking.ts
+
+/** Optional webhook for Action failures. No-op when unset; never required in CI. */
+const ERROR_TRACKING_URL_ENV = 'ERROR_TRACKING_URL';
+const ActionStep = {
+    ValidateInputs: 'validate-inputs',
+    DownloadFixer: 'download-fixer',
+    ResolveConfig: 'resolve-config',
+    RunFixer: 'run-fixer',
+    Run: 'run',
+};
+const ActionErrorCode = {
+    InvalidInput: 'INVALID_INPUT',
+    DownloadFailed: 'DOWNLOAD_FAILED',
+    ChecksumMismatch: 'CHECKSUM_MISMATCH',
+    ConfigNotFound: 'CONFIG_NOT_FOUND',
+    FixerFailed: 'FIXER_FAILED',
+    StyleViolations: 'STYLE_VIOLATIONS',
+    Unexpected: 'UNEXPECTED',
+};
+const WEBHOOK_TIMEOUT_MS = 3000;
+class ActionError extends Error {
+    step;
+    code;
+    constructor(step, code, message) {
+        super(message);
+        this.name = 'ActionError';
+        this.step = step;
+        this.code = code;
+    }
+}
+function toActionError(step, code, error) {
+    if (error instanceof ActionError) {
+        return error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return new ActionError(step, code, message);
+}
+function failurePayload(report) {
+    return {
+        step: report.step,
+        code: report.code,
+        message: report.message,
+    };
+}
+function trackingWebhookUrl(env = process.env) {
+    const raw = env[ERROR_TRACKING_URL_ENV]?.trim();
+    if (!raw) {
+        return undefined;
+    }
+    try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return undefined;
+        }
+        return raw;
+    }
+    catch {
+        return undefined;
+    }
+}
+async function postTracking(payload, fetchImpl = fetch) {
+    const url = trackingWebhookUrl();
+    if (!url) {
+        return;
+    }
+    try {
+        await fetchImpl(url, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+            redirect: 'follow',
+            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+        });
+    }
+    catch {
+        core.warning('Optional error tracking webhook failed; continuing.');
+    }
+}
+/**
+ * Single failure path: structured `{step,code,message}` log, GitHub `::error::`
+ * via setFailed (unless `fail: false`), and an optional webhook POST.
+ */
+async function reportFailure(report, options = {}) {
+    const payload = failurePayload(report);
+    core.info(JSON.stringify(payload));
+    if (options.fail !== false) {
+        core.setFailed(payload.message);
+    }
+    await postTracking(payload, options.fetchImpl ?? fetch);
+}
+
+;// CONCATENATED MODULE: ./src/http.ts
+
+const defaultSleep = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms);
+});
+async function downloadToFile(url, dest, options = {}) {
+    const fetchImpl = options.fetchImpl ?? fetch;
+    const writeFileImpl = options.writeFileImpl ?? promises_namespaceObject.writeFile;
+    const retries = options.retries ?? 3;
+    const delayMs = options.delayMs ?? 2000;
+    const sleep = options.sleep ?? defaultSleep;
+    let lastError;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetchImpl(url, { redirect: 'follow' });
+            if (!response.ok) {
+                throw new Error(`Download failed (${response.status}) from ${url}`);
+            }
+            const data = Buffer.from(await response.arrayBuffer());
+            await writeFileImpl(dest, data);
+            return;
+        }
+        catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+            if (attempt < retries) {
+                await sleep(delayMs);
+            }
+        }
+    }
+    throw lastError ?? new Error(`Download failed from ${url}`);
+}
+
+;// CONCATENATED MODULE: ./src/download-fixer.ts
+
+const FIXER_BINARY = 'php-cs-fixer';
+/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+const VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR';
+function fixerReleaseUrl(version) {
+    return `https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${version}/php-cs-fixer.phar`;
+}
+async function makeExecutable(path) {
+    try {
+        await (0,promises_namespaceObject.chmod)(path, 0o755);
+    }
+    catch {
+        // chmod is optional on Windows runners
+    }
+}
+async function installVerifiedPhar(source, dest, expected, version) {
+    try {
+        const hash = await sha256File(source);
+        assertChecksum(hash, expected, version);
+        if ((0,external_node_path_namespaceObject.resolve)(source) !== (0,external_node_path_namespaceObject.resolve)(dest)) {
+            await (0,promises_namespaceObject.copyFile)(source, dest);
+        }
+        await makeExecutable(dest);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+async function downloadFixer(version, workspace = process.cwd(), options = {}) {
+    try {
+        const dest = (0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY);
+        const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()));
+        const expected = expectedChecksum(version, table);
+        const cache = options.cache ?? createGithubPharCache();
+        if (await installVerifiedPhar(dest, dest, expected, version)) {
+            return dest;
+        }
+        const vendored = process.env[VENDORED_PHAR_ENV];
+        if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
+            return dest;
+        }
+        const cached = await cache.restore(version, expected);
+        if (cached) {
+            const cachedHash = await sha256File(cached);
+            try {
+                assertChecksum(cachedHash, expected, version);
+                await (0,promises_namespaceObject.copyFile)(cached, dest);
+                await makeExecutable(dest);
+                return dest;
+            }
+            catch {
+                await (0,promises_namespaceObject.rm)(cached, { force: true });
+            }
+        }
+        await downloadToFile(fixerReleaseUrl(version), dest, options);
+        const actual = await sha256File(dest);
+        try {
+            assertChecksum(actual, expected, version);
+        }
+        catch (error) {
+            await (0,promises_namespaceObject.rm)(dest, { force: true });
+            throw error;
+        }
+        await makeExecutable(dest);
+        await cache.save(version, expected, dest);
+        return dest;
+    }
+    catch (error) {
+        if (error instanceof ActionError) {
+            throw error;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        const code = message.includes('Checksum mismatch')
+            ? ActionErrorCode.ChecksumMismatch
+            : ActionErrorCode.DownloadFailed;
+        throw new ActionError(ActionStep.DownloadFixer, code, message);
+    }
+}
+
+;// CONCATENATED MODULE: ./src/inputs.ts
+
+/** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
+const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21';
+/** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
+const DEFAULT_RULES_VERSION = 'v1.0.1';
+function read(name, fallbackEnv, defaultValue) {
+    const fromAction = core.getInput(name);
+    if (fromAction !== '') {
+        return fromAction;
+    }
+    return process.env[fallbackEnv] ?? defaultValue;
+}
+function readInputs() {
+    const configFromEnv = process.env.CONFIG_PATH ?? process.env.CONFIG_FILE ?? '';
+    return {
+        phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', DEFAULT_PHP_CS_FIXER_VERSION),
+        configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
+        rulesVersion: read('rules-version', 'RULES_VERSION', DEFAULT_RULES_VERSION),
+        useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
+        mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
+        paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
+    };
+}
+
+;// CONCATENATED MODULE: ./src/report.ts
+
+function extractJsonObject(output) {
+    const start = output.indexOf('{');
+    const end = output.lastIndexOf('}');
+    if (start === -1 || end <= start) {
+        throw new Error('php-cs-fixer did not produce a JSON report.');
+    }
+    return JSON.parse(output.slice(start, end + 1));
+}
+function firstChangedLine(diff) {
+    const match = /@@ -(\d+)/.exec(diff);
+    if (!match) {
+        return undefined;
+    }
+    const line = Number(match[1]);
+    if (!Number.isFinite(line) || line < 1) {
+        return 1;
+    }
+    return line;
+}
+function toRepoPath(file, workspace = process.cwd()) {
+    const normalized = file.replace(/\\/g, '/');
+    const root = workspace.replace(/\\/g, '/').replace(/\/+$/, '');
+    if (root !== '' && (normalized === root || normalized.startsWith(`${root}/`))) {
+        return normalized.slice(root.length).replace(/^\/+/, '') || '.';
+    }
+    return normalized.replace(/^\.\//, '');
+}
+function parseViolations(output, workspace = process.cwd()) {
+    const parsed = extractJsonObject(output);
+    if (!Array.isArray(parsed.files)) {
+        return [];
+    }
+    return parsed.files.flatMap((entry) => {
+        if (typeof entry?.name !== 'string' || entry.name === '') {
+            return [];
+        }
+        const fixers = Array.isArray(entry.appliedFixers)
+            ? entry.appliedFixers.filter((fixer) => typeof fixer === 'string')
+            : [];
+        const violation = {
+            file: toRepoPath(entry.name, workspace),
+            fixers,
+        };
+        const line = firstChangedLine(entry.diff ?? '');
+        if (line !== undefined) {
+            violation.line = line;
+        }
+        if (typeof entry.diff === 'string' && entry.diff !== '') {
+            violation.diff = entry.diff;
+        }
+        return [violation];
+    });
+}
+function tryParseViolations(output, workspace = process.cwd()) {
+    try {
+        return parseViolations(output, workspace);
+    }
+    catch {
+        return [];
+    }
+}
+function escapeCell(value) {
+    return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+}
+function buildSummaryMarkdown(violations, mode) {
+    if (violations.length === 0) {
+        return ['## PHP CS Fixer', '', 'No coding standard violations found.', ''].join('\n');
+    }
+    const verb = mode === 'fix' ? 'rewritten' : 'with style violations';
+    const rows = violations.map((violation) => {
+        const fixers = violation.fixers.length > 0 ? escapeCell(violation.fixers.join(', ')) : '—';
+        return `| \`${escapeCell(violation.file)}\` | ${fixers} | ${violation.fixers.length} |`;
+    });
+    return [
+        '## PHP CS Fixer',
+        '',
+        `Found **${violations.length}** file(s) ${verb}.`,
+        '',
+        '| File | Fixers | Count |',
+        '| --- | --- | ---: |',
+        ...rows,
+        '',
+    ].join('\n');
+}
+async function writeJobSummary(markdown) {
+    if (!process.env.GITHUB_STEP_SUMMARY) {
+        return;
+    }
+    await core.summary.addRaw(markdown, true).write();
+}
+function emitAnnotations(violations, mode) {
+    for (const violation of violations) {
+        const message = violation.fixers.length > 0
+            ? `Found violation(s) of type: ${violation.fixers.join(', ')}`
+            : 'Found coding standard violations';
+        const properties = {
+            title: 'PHP CS Fixer',
+            file: violation.file,
+        };
+        if (violation.line !== undefined) {
+            properties.startLine = violation.line;
+        }
+        if (mode === 'fix') {
+            core.warning(message, properties);
+        }
+        else {
+            core.error(message, properties);
+        }
+    }
+}
+async function publishReport(violations, mode) {
+    await writeJobSummary(buildSummaryMarkdown(violations, mode));
+    emitAnnotations(violations, mode);
+}
+function failWithoutGenericAnnotation() {
+    process.exitCode = 1;
+}
+
+;// CONCATENATED MODULE: ./src/resolve-config.ts
+
+const DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php';
+function rulesFileName(useFullRules) {
+    return useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php';
+}
+function rulesDownloadUrl(rulesVersion, useFullRules) {
+    return `https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/${rulesVersion}/${rulesFileName(useFullRules)}`;
+}
+async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
+    if (inputs.configPath !== '') {
+        const localPath = (0,external_node_path_namespaceObject.join)(workspace, inputs.configPath);
+        try {
+            await (0,promises_namespaceObject.access)(localPath, external_node_fs_.constants.F_OK);
+        }
+        catch {
+            throw new ActionError(ActionStep.ResolveConfig, ActionErrorCode.ConfigNotFound, `config-path '${inputs.configPath}' was not found in the repository workspace.`);
+        }
+        return inputs.configPath;
+    }
+    const dest = (0,external_node_path_namespaceObject.join)(workspace, DOWNLOADED_CONFIG);
+    try {
+        await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options);
+    }
+    catch (error) {
+        throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error);
+    }
+    return DOWNLOADED_CONFIG;
+}
+
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = require("node:child_process");
+;// CONCATENATED MODULE: ./src/run-fixer.ts
+
+const BASE_FIXER_ARGS = [
+    'fix',
+    '--diff',
+    '--show-progress=none',
+    '--allow-risky=yes',
+    '--format=json',
+];
+function buildFixerArgs(configFile, mode = 'check', paths = []) {
+    const args = [...BASE_FIXER_ARGS];
+    if (mode === 'check') {
+        args.push('--dry-run');
+    }
+    args.push(`--config=${configFile}`, ...paths);
+    return args;
+}
+function spawnPhp(command, args, options) {
+    return new Promise((resolve, reject) => {
+        const child = (0,external_node_child_process_namespaceObject.spawn)(command, args, {
+            cwd: options.cwd,
+            env: options.env,
+            windowsHide: true,
+        });
+        let output = '';
+        child.stdout.on('data', (chunk) => {
+            const text = chunk.toString();
+            output += text;
+            process.stdout.write(text);
+        });
+        child.stderr.on('data', (chunk) => {
+            const text = chunk.toString();
+            output += text;
+            process.stderr.write(text);
+        });
+        child.on('error', reject);
+        child.on('close', (code) => {
+            resolve({ exitCode: code ?? 1, output });
+        });
+    });
+}
+async function runFixer(configFile, settings = {}) {
+    const workspace = settings.workspace ?? process.cwd();
+    const runProcess = settings.runProcess ?? spawnPhp;
+    const mode = settings.mode ?? 'check';
+    const paths = settings.paths ?? [];
+    const configPath = (0,external_node_path_namespaceObject.join)(workspace, configFile);
+    try {
+        await (0,promises_namespaceObject.access)(configPath, external_node_fs_.constants.F_OK);
+    }
+    catch {
+        throw new ActionError(ActionStep.RunFixer, ActionErrorCode.ConfigNotFound, `Resolved config '${configFile}' does not exist.`);
+    }
+    const env = {
+        ...process.env,
+        PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
+    };
+    try {
+        const result = await runProcess('php', [(0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)], { cwd: workspace, env });
+        await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(workspace, 'result.txt'), result.output);
+        return result;
+    }
+    catch (error) {
+        throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error);
+    }
+}
+
+;// CONCATENATED MODULE: ./src/validate.ts
+
+function invalidInput(message) {
+    throw new ActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, message);
+}
+const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
+const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/;
+const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/;
+function validatePhpCsFixerVersion(version) {
+    if (!VERSION_PATTERN.test(version)) {
+        invalidInput(`Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`);
+    }
+}
+function validateUseFullRules(value) {
+    if (value !== 'true' && value !== 'false') {
+        invalidInput(`Invalid use-full-rules '${value}'. Expected true or false.`);
+    }
+}
+function validateGitRef(ref) {
+    if (ref === '') {
+        invalidInput('rules-version must not be empty.');
+    }
+    if (!GIT_REF_PATTERN.test(ref)) {
+        invalidInput(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`);
+    }
+}
+function validateConfigPath(path) {
+    if (path === '') {
+        return;
+    }
+    if (path.startsWith('/') || WINDOWS_ABSOLUTE.test(path) || path.includes('..')) {
+        invalidInput(`Invalid config-path '${path}'. Use a relative path inside the workspace.`);
+    }
+}
+function validateMode(mode) {
+    if (mode !== 'check' && mode !== 'fix') {
+        invalidInput(`Invalid mode '${mode}'. Expected check or fix.`);
+    }
+}
+function parsePaths(raw) {
+    const trimmed = raw.trim();
+    if (trimmed === '') {
+        return [];
+    }
+    return trimmed.split(/\s+/);
+}
+function hasParentSegment(path) {
+    return path.split(/[\\/]/).includes('..');
+}
+function isInsideWorkspace(workspace, candidate) {
+    const root = (0,external_node_path_namespaceObject.resolve)(workspace);
+    const resolved = (0,external_node_path_namespaceObject.resolve)(workspace, candidate);
+    const rel = (0,external_node_path_namespaceObject.relative)(root, resolved);
+    return rel !== '..' && !rel.startsWith(`..${external_node_path_namespaceObject.sep}`) && !(0,external_node_path_namespaceObject.isAbsolute)(rel);
+}
+function validatePaths(raw, workspace = process.cwd()) {
+    for (const path of parsePaths(raw)) {
+        if (path.startsWith('-') ||
+            path.startsWith('/') ||
+            WINDOWS_ABSOLUTE.test(path) ||
+            hasParentSegment(path) ||
+            !isInsideWorkspace(workspace, path)) {
+            invalidInput(`Invalid path '${path}'. Use a relative path inside the workspace.`);
+        }
+    }
+}
+function validateAllInputs(inputs, workspace = process.cwd()) {
+    validatePhpCsFixerVersion(inputs.phpCsFixerVersion);
+    validateUseFullRules(inputs.useFullRules);
+    validateGitRef(inputs.rulesVersion);
+    validateConfigPath(inputs.configPath);
+    validateMode(inputs.mode);
+    validatePaths(inputs.paths, workspace);
+}
+
+;// CONCATENATED MODULE: ./src/run.ts
+
+const defaultDeps = {
+    readInputs: readInputs,
+    downloadFixer: downloadFixer,
+    resolveConfig: resolveConfig,
+    runFixer: runFixer,
+    reportFailure: reportFailure,
+};
+async function executeAction(deps = defaultDeps) {
+    const report = deps.reportFailure ?? reportFailure;
+    const inputs = deps.readInputs();
+    validateAllInputs(inputs);
+    const mode = inputs.mode === 'fix' ? 'fix' : 'check';
+    core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`);
+    await deps.downloadFixer(inputs.phpCsFixerVersion);
+    core.info(inputs.configPath === ''
+        ? `Downloading rules from php-cs-fixer-rules@${inputs.rulesVersion}`
+        : `Using local config: ${inputs.configPath}`);
+    const configFile = await deps.resolveConfig(inputs);
+    const result = await deps.runFixer(configFile, {
+        mode,
+        paths: parsePaths(inputs.paths),
+    });
+    core.setOutput('code-style-result', result.output);
+    const violations = tryParseViolations(result.output);
+    await publishReport(violations, mode);
+    if (result.exitCode === 0) {
+        return result;
+    }
+    if (violations.length > 0) {
+        await report({
+            step: ActionStep.RunFixer,
+            code: ActionErrorCode.StyleViolations,
+            message: `php-cs-fixer reported ${violations.length} file(s) with style violations.`,
+        }, { fail: false });
+        failWithoutGenericAnnotation();
+        return result;
+    }
+    await report({
+        step: ActionStep.RunFixer,
+        code: ActionErrorCode.FixerFailed,
+        message: result.output.trim() || 'php-cs-fixer failed.',
+    });
+    return result;
+}
+async function run(deps = defaultDeps) {
+    const report = deps.reportFailure ?? reportFailure;
+    try {
+        await executeAction(deps);
+    }
+    catch (error) {
+        const tracked = toActionError(ActionStep.Run, ActionErrorCode.Unexpected, error);
+        const payload = {
+            step: tracked.step,
+            code: tracked.code,
+            message: tracked.message,
+        };
+        await report(payload);
+    }
+}
+
+;// CONCATENATED MODULE: ./src/index.ts
+
+void run();
 
 })();
 
