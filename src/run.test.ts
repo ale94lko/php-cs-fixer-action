@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ActionInputs } from './inputs'
+import { DEFAULT_PHP_CS_FIXER_VERSION, type ActionInputs } from './inputs'
 import { executeAction, run } from './run'
 
 const inputs: ActionInputs = {
-  phpCsFixerVersion: 'v3.95.21',
+  phpCsFixerVersion: DEFAULT_PHP_CS_FIXER_VERSION,
   configPath: 'tests/fixtures/.php-cs-fixer.dist.php',
   rulesVersion: 'main',
   useFullRules: 'true',
@@ -61,7 +61,7 @@ describe('executeAction', () => {
       runFixer,
     })
 
-    expect(downloadFixer).toHaveBeenCalledWith('v3.95.21')
+    expect(downloadFixer).toHaveBeenCalledWith(DEFAULT_PHP_CS_FIXER_VERSION)
     expect(resolveConfig).toHaveBeenCalledWith(inputs)
     expect(runFixer).toHaveBeenCalledWith(
       'tests/fixtures/.php-cs-fixer.dist.php',

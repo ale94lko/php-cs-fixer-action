@@ -51,7 +51,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 
 ## Integrity and cache
 
-The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`).
+The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
 
 It then caches the phar with `@actions/cache`, keyed by version + hash. Grant cache write so later CI runs can reuse it:
 

@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 15da0443fd8af680561654aff145f4acd65a382505ac5dbb613565fc6d992ab9
+// php-cs-fixer-action-src-hash 73c8f66f90e4ec9c1528d0baf1a843279539349c43f68467365f716aa7dab7db
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -46254,9 +46254,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_RULES_VERSION = void 0;
+exports.DEFAULT_RULES_VERSION = exports.DEFAULT_PHP_CS_FIXER_VERSION = void 0;
 exports.readInputs = readInputs;
 const core = __importStar(__nccwpck_require__(37484));
+/** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
+exports.DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21';
 /** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
 exports.DEFAULT_RULES_VERSION = 'v1.0.1';
 function read(name, fallbackEnv, defaultValue) {
@@ -46269,7 +46271,7 @@ function read(name, fallbackEnv, defaultValue) {
 function readInputs() {
     const configFromEnv = process.env.CONFIG_PATH ?? process.env.CONFIG_FILE ?? '';
     return {
-        phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', 'v3.95.21'),
+        phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', exports.DEFAULT_PHP_CS_FIXER_VERSION),
         configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
         rulesVersion: read('rules-version', 'RULES_VERSION', exports.DEFAULT_RULES_VERSION),
         useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
