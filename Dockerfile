@@ -1,4 +1,6 @@
-FROM php:8.3-cli-bookworm
+# Pin the official PHP image by digest (Scorecard Pinned-Dependencies).
+# Refresh: docker buildx imagetools inspect php:8.3-cli-bookworm --format '{{.Manifest.Digest}}'
+FROM php:8.3-cli-bookworm@sha256:177529735599a8244b2c903522f029839dce1c2ac4be122fdc00ada4b45a20e4
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
