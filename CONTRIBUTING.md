@@ -52,7 +52,7 @@ Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` se
    git push origin v1.0.4
    ```
 
-4. [`.github/workflows/release.yml`](.github/workflows/release.yml) (`contents: write` only) creates or updates the GitHub Release from those notes and force-updates the floating major tag (`v1` for `v1.x.y`) to the same commit so `uses: ale94lko/php-cs-fixer-action@v1` tracks the latest compatible release.
+4. [`.github/workflows/release.yml`](.github/workflows/release.yml) (top-level `permissions: {}`, job `contents: write`) creates or updates the GitHub Release from those notes and force-updates the floating major tag (`v1` for `v1.x.y`) to the same commit so `uses: ale94lko/php-cs-fixer-action@v1` tracks the latest compatible release.
 
 The workflow does not rewrite `CHANGELOG.md`. After the tag, retitle `Changelog for next` to `Changelog for vX.Y.Z` and add an empty next section in a follow-up commit. Do not push an older `vX.Y.Z` than the current major tag; the major tag is force-updated.
 
