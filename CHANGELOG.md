@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* chore: Replace deprecated `moduleResolution: node` (`node10`) with `module: preserve` and `moduleResolution: bundler` so TypeScript 6/7 typecheck stays valid.
 * feature: Vendor the pinned php-cs-fixer phar in the Docker image and lint fixtures offline (`docker run --network=none`). Local/CI fixture runs use `tests/fixtures/.php-cs-fixer.dist.php` so php-cs-fixer-rules is not required. [#35](https://github.com/ale94lko/php-cs-fixer-action/issues/35)
 * chore: Run `npm audit --omit=dev --audit-level=high` on every push and pull request. [#34](https://github.com/ale94lko/php-cs-fixer-action/issues/34)
 * chore: Rebuild committed `dist/` on same-repo PRs that change `src/` or the lockfile, not only Dependabot.
