@@ -3,6 +3,8 @@
 # Keep GitHub CodeQL default setup disabled: advanced SARIF uploads are rejected
 # while default setup is enabled.
 # https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads/default-setup-enabled
+# Scorecard SAST counts CodeQL checks on merged PRs. Do not add paths filters
+# here: a docs-only commit would then land without a SAST check (#64).
 name: CodeQL
 
 on:

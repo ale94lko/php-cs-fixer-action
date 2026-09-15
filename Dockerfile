@@ -2,6 +2,9 @@
 # Refresh: docker buildx imagetools inspect php:8.3-cli-bookworm --format '{{.Manifest.Digest}}'
 FROM php:8.3-cli-bookworm@sha256:177529735599a8244b2c903522f029839dce1c2ac4be122fdc00ada4b45a20e4
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Bookworm security updates move apt package versions; pin the package set.
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
     && curl -fsSL https://nodejs.org/dist/v24.11.1/node-v24.11.1-linux-x64.tar.xz \
