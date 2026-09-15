@@ -4,6 +4,7 @@ import { constants } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { FIXER_BINARY } from './download-fixer'
+import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
 import type { ActionMode } from './inputs'
 
 export type FixerResult = {
@@ -86,18 +87,26 @@ export async function runFixer(
   try {
     await access(configPath, constants.F_OK)
   } catch {
-    throw new Error(`Resolved config '${configFile}' does not exist.`)
+    throw new ActionError(
+      ActionStep.RunFixer,
+      ActionErrorCode.ConfigNotFound,
+      `Resolved config '${configFile}' does not exist.`,
+    )
   }
 
   const env = {
     ...process.env,
     PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
   }
-  const result = await runProcess(
-    'php',
-    [join(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)],
-    { cwd: workspace, env },
-  )
-  await writeFile(join(workspace, 'result.txt'), result.output)
-  return result
+  try {
+    const result = await runProcess(
+      'php',
+      [join(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)],
+      { cwd: workspace, env },
+    )
+    await writeFile(join(workspace, 'result.txt'), result.output)
+    return result
+  } catch (error) {
+    throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error)
+  }
 }

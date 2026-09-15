@@ -3,12 +3,19 @@ on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
-permissions:
-  contents: write
+
+permissions: {}
+
 jobs:
   build:
     name: Job to deploy badge
     runs-on: ubuntu-latest
+    # Pushing the README badge needs contents: write. Scorecard Token-Permissions
+    # still flags job-level write unless the job is semantic-release / goreleaser /
+    # Maven. Do not raise this to the workflow root; permissions: {} above is
+    # already least privilege.
+    permissions:
+      contents: write
     steps:
       - name: Get Repo Health Score Badge
         uses: ale94lko/repo-health-score@f1d4dbf4d3af9fbce24166e1a51f1bd49a417434 # main
