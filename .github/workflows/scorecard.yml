@@ -1,5 +1,8 @@
 # OpenSSF Scorecard: supply-chain checks for this public GitHub Action.
 # https://github.com/ale94lko/php-cs-fixer-action/issues/27
+# Accepted low scores (not a workflow regression): Fuzzing, Signed-Releases,
+# CII-Best-Practices, and Branch-Protection without SCORECARD_TOKEN.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/53
 # Do not add the README badge until this workflow has succeeded on main.
 # Do not run on pull_request: publish_results only emits
 # supply-chain/branch-protection and supply-chain/online-scm on the default

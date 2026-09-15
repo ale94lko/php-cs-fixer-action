@@ -54,6 +54,19 @@ bash scripts/update-checksums.sh v3.95.21
 
 A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`). It uses top-level `permissions: {}` and grants `contents: write` plus `pull-requests: write` only on the `bump` job. Scorecard **Token-Permissions** still warns on that job-level write ([#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)); GitHub has no narrower scope for pushing a branch and opening a PR.
 
+## OpenSSF Scorecard
+
+[`.github/workflows/scorecard.yml`](.github/workflows/scorecard.yml) runs on `main`, weekly, and `branch_protection_rule`. It does not run on pull requests (`publish_results` only emits `supply-chain/branch-protection` and `supply-chain/online-scm` on the default branch). Add the README badge only after a successful run on `main`.
+
+These checks are **accepted low scores**, not a regression of the Scorecard workflow ([#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)):
+
+- **Fuzzing** — this Action is not a parser or network service. Do not add OSS-Fuzz unless that surface appears ([#71](https://github.com/ale94lko/php-cs-fixer-action/issues/71)).
+- **Signed-Releases** — consumers pin git tags (`@v1.0.3`), not signed npm/provenance artifacts.
+- **CII-Best-Practices** — the OpenSSF Best Practices badge is InProgress and not a current goal ([#67](https://github.com/ale94lko/php-cs-fixer-action/issues/67)).
+- **Branch-Protection (full score)** — without `SCORECARD_TOKEN` (a PAT that can read admin protection settings) Scorecard cannot see every rule on a public repo. Leave `repo_token` commented in `scorecard.yml` unless we add that secret.
+
+**Dangerous-Workflow** is not in that set: `rebuild-dist.yml` no longer uses `pull_request_target`. Dist rebuild is an unprivileged `pull_request` job plus a `workflow_run` Git Data API commit ([#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)). Do not check out `pull_request.head` or `workflow_run.head_sha` in the privileged job.
+
 ## Releasing
 
 Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` section; if that heading is missing or empty, the release workflow uses `Changelog for next`.

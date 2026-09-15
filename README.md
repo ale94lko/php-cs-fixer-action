@@ -166,6 +166,7 @@ Runtime pipeline (`src/run.ts`):
 | `.env.example` | Env vars for Docker / `scripts/ci-local.sh` |
 | `Dockerfile`, `docker-compose.yml` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
 | `.devcontainer/devcontainer.json` | Dev Container (PHP 8.3, Node 24, `npm ci`) |
+| `.github/workflows/scorecard.yml` | OpenSSF Scorecard on `main` / weekly (accepted low scores in CONTRIBUTING / [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)) |
 
 ### Repo health badge
 
