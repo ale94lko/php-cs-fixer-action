@@ -1,0 +1,62 @@
+# Rebuilds committed dist/ on Dependabot PRs so Verify bundled dist can pass
+# without a manual npm run build. pull_request_target is required because
+# workflows triggered by Dependabot get a read-only GITHUB_TOKEN.
+# Restricted to dependabot[bot] on this repository; does not push a bundle
+# that ncc failed to resolve (webpackMissingModule).
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
+name: Rebuild dist
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - package.json
+      - package-lock.json
+      - src/**
+      - scripts/**
+
+concurrency:
+  group: rebuild-dist-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build and verify dist
+        run: |
+          npm run build
+          node scripts/check-dist.cjs
+          node --check dist/index.js
+
+      - name: Commit rebuilt dist
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist
+          if git diff --staged --quiet; then
+            echo 'dist/ already up to date'
+            exit 0
+          fi
+          git commit -m 'chore: rebuild dist after dependency update'
+          git push

@@ -89,7 +89,7 @@ function normalizeDist(root) {
 function assertNoWebpackMissingModule(text) {
   if (text.includes('webpackMissingModule')) {
     throw new Error(
-      'dist/index.js contains webpackMissingModule; ncc could not bundle a dependency. Keep @actions/cache on ^4.1.0 (CJS); 5+ and 6+ are ESM-only.',
+      'dist/index.js contains webpackMissingModule; ncc could not bundle a dependency. Keep @actions/cache on ^4.1.0 and @actions/core on ^1.11.1 (CJS); later majors are ESM-only.',
     )
   }
 }

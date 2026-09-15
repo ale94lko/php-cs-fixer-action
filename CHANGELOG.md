@@ -7,6 +7,7 @@ Changelog for next
 ------------------
 
 * feature: Verify php-cs-fixer.phar with a committed SHA-256 in `checksums.txt` and cache it across CI runs (`@actions/cache`, keyed by version + hash). [#17](https://github.com/ale94lko/php-cs-fixer-action/issues/17)
+* chore: Rebuild committed `dist/` on Dependabot PRs and ignore ESM majors of `@actions/core` and `@actions/cache`.
 * fix: Keep `@actions/cache` on 4.1.0 (CJS) because ncc cannot bundle the ESM-only 5+/6+ packages, and override transitive `uuid` to 11.1.1.
 * fix: Mark `dist/` as generated for CodeQL and escape backslashes in job-summary table cells.
 * feature: Emit file-level GitHub annotations and a job-summary table from the php-cs-fixer JSON report, and fail style checks without a generic `::error::`. [#16](https://github.com/ale94lko/php-cs-fixer-action/issues/16)
