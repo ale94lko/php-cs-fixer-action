@@ -22,7 +22,7 @@ npm run test:coverage
 npm run build
 ```
 
-After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale.
+`npm test` / `npm run test:coverage` are offline (HTTP is mocked). After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale.
 
 Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
 
@@ -31,6 +31,11 @@ bash scripts/ci-local.sh
 ```
 
 Or with Docker:
+
+```bash
+docker build -t php-cs-fixer-action .
+docker run --rm php-cs-fixer-action
+```
 
 ```bash
 docker compose run --rm fixer

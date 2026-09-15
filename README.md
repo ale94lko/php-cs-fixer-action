@@ -49,6 +49,8 @@ Pin a patch tag (`@v1.0.3`) so CI stays on a known release. A floating major pin
 
 ## Examples
 
+Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations) and [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
+
 ### Simple use with default parameters (shared rules from `php-cs-fixer-rules`)
 ```yaml
 name: Fix code styles
@@ -113,18 +115,46 @@ jobs:
       paths: src tests
 ```
 
-## View live
+## CI
 
-- [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461553837?check_suite_focus=true)
-- [Failure test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461551350?check_suite_focus=true)
+Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-cs-fixer-action/actions/workflows/ci.yml):
+
+- [Pass on clean fixtures](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447185) (`action-passes-on-clean-fixtures`)
+- [Fail the Action on violations](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447500) (`action-fails-on-violations`; the workflow job succeeds after asserting that the Action step failed)
+- [Apply fixes to a dirty fixture](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447489) (`action-fixes-dirty-fixture`)
 
 ## Architecture
 
-`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the public inputs and outputs and points `runs.main` at the bundled entrypoint `dist/index.js` (built from `src/index.ts` with `npm run build`).
+
+Runtime pipeline (`src/run.ts`):
+
+1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by Docker and `scripts/ci-local.sh`.
+2. **Validate** (`src/validate.ts`) version tags, booleans, git refs, `config-path`, `mode`, and `paths`.
+3. **Download php-cs-fixer** (`src/download-fixer.ts`) — the pinned `php-cs-fixer.phar` from GitHub Releases.
+4. **Resolve config** (`src/resolve-config.ts`):
+   - If `config-path` is set, use that file from the consumer repository.
+   - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
+5. **Run the fixer** (`src/run-fixer.ts`) — `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended after they are checked to stay inside the workspace.
+6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
+
+| Path | Role |
+|------|------|
+| `action.yml` | Public inputs, outputs, and Node 24 entrypoint |
+| `src/index.ts` | Loads `run()` |
+| `src/run.ts` | Orchestrates validate → download → resolve config → run fixer → report |
+| `dist/index.js` | Bundled file GitHub Actions actually executes |
+| `.env.example` | Env vars for Docker / `scripts/ci-local.sh` |
+| `Dockerfile`, `docker-compose.yml` | PHP 8.3 + Node 24 image for local fixer runs |
+| `.devcontainer/devcontainer.json` | Dev Container (PHP 8.3, Node 24, `npm ci`) |
+
+### Repo health badge
+
+[`.github/workflows/health_score.yml`](.github/workflows/health_score.yml) publishes the README badge on a schedule. It sets `permissions: contents: write` and passes `token: ${{ secrets.GITHUB_TOKEN }}` to [`ale94lko/repo-health-score`](https://github.com/ale94lko/repo-health-score) so the workflow can push the generated badge.
 
 ## Local development
 
-Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+.
+Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh` and Docker). A [Dev Container](.devcontainer/devcontainer.json) provides PHP 8.3, Node 24, and `npm ci`.
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
@@ -135,13 +165,29 @@ npm test
 npm run build
 ```
 
-Run php-cs-fixer against the clean fixtures (downloads the phar, needs network once):
+### Tests (offline)
+
+Unit tests mock HTTP and do not download php-cs-fixer or php-cs-fixer-rules:
+
+```bash
+npm test
+npm run test:coverage
+```
+
+### Run the fixer locally
+
+`scripts/ci-local.sh` and Docker download `php-cs-fixer.phar` at runtime (needs network):
 
 ```bash
 bash scripts/ci-local.sh
 ```
 
-### Docker (one command)
+```bash
+docker build -t php-cs-fixer-action .
+docker run --rm php-cs-fixer-action
+```
+
+Or with Compose:
 
 ```bash
 docker compose run --rm fixer
