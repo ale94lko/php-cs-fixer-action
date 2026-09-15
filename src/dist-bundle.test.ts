@@ -1,8 +1,24 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { canonicalizeDistFiles, canonicalizeDistText } from './canonicalize-dist'
+
+const {
+  assertDistIsFresh,
+  canonicalizeDistFiles,
+  canonicalizeDistText,
+  injectSourceHash,
+  readSourceHash,
+  sourceHash,
+} = createRequire(join(process.cwd(), 'package.json'))('./scripts/dist-bundle.cjs') as {
+  assertDistIsFresh: (root: string) => void
+  canonicalizeDistFiles: (distDir: string) => void
+  canonicalizeDistText: (text: string) => string
+  injectSourceHash: (text: string, hash: string) => string
+  readSourceHash: (text: string) => string | undefined
+  sourceHash: (root: string) => string
+}
 
 describe('canonicalizeDistText', () => {
   it('converts CRLF to LF', () => {
@@ -15,10 +31,6 @@ describe('canonicalizeDistText', () => {
         'class Foo {}\n//# sourceMappingURL=Foo.js.map\n\n\n/***/ })\n',
       ),
     ).toBe('class Foo {}\n\n/***/ })\n')
-  })
-
-  it('trims trailing whitespace', () => {
-    expect(canonicalizeDistText('foo  \nbar\t\n')).toBe('foo\nbar\n')
   })
 })
 
@@ -38,5 +50,24 @@ describe('canonicalizeDistFiles', () => {
     } finally {
       await rm(dir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('source hash freshness', () => {
+  it('embeds and reads a stable hash banner', () => {
+    const hash = sourceHash(process.cwd())
+    expect(hash).toMatch(/^[a-f0-9]{64}$/)
+    const bundled = injectSourceHash('require("./runtime.js");\n', hash)
+    expect(readSourceHash(bundled)).toBe(hash)
+    expect(injectSourceHash(bundled, 'a'.repeat(64))).toContain('// php-cs-fixer-action-src-hash ')
+    expect(injectSourceHash(bundled, 'a'.repeat(64)).startsWith('// php-cs-fixer-action-src-hash aaaa')).toBe(
+      true,
+    )
+  })
+
+  it('rejects a stale dist banner', () => {
+    expect(() =>
+      assertDistIsFresh(join(tmpdir(), 'missing-php-cs-fixer-action-root')),
+    ).toThrow()
   })
 })

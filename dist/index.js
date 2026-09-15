@@ -1,3 +1,4 @@
+// php-cs-fixer-action-src-hash 5000309decb7ec6f78fe014994083b44fe530b80ae29fb711994313936e7aad3
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 

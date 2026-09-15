@@ -22,7 +22,7 @@ npm run test:coverage
 npm run build
 ```
 
-After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale. `npm run build` canonicalizes `dist/` (LF, strips vendor `sourceMappingURL` comments) so a Windows ncc output matches Linux CI. Source maps are excluded from that check because ncc embeds OS-specific paths. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
+After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change. CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
 
 ```bash
 bash scripts/update-checksums.sh v3.95.21
