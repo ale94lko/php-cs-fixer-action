@@ -66,5 +66,6 @@ describe('readInputs', () => {
     expect(dockerfile).toMatch(
       new RegExp(`^ARG PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
     )
+    expect(dockerfile).toMatch(/^FROM php:8\.3-cli-bookworm@sha256:[a-f0-9]{64}$/m)
   })
 })

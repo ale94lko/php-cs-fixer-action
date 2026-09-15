@@ -1,6 +1,7 @@
 import { access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { join } from 'node:path'
+import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
 import type { ActionInputs } from './inputs'
 import { downloadToFile, type DownloadOptions } from './http'
 
@@ -24,12 +25,20 @@ export async function resolveConfig(
     try {
       await access(localPath, constants.F_OK)
     } catch {
-      throw new Error(`config-path '${inputs.configPath}' was not found in the repository workspace.`)
+      throw new ActionError(
+        ActionStep.ResolveConfig,
+        ActionErrorCode.ConfigNotFound,
+        `config-path '${inputs.configPath}' was not found in the repository workspace.`,
+      )
     }
     return inputs.configPath
   }
 
   const dest = join(workspace, DOWNLOADED_CONFIG)
-  await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options)
+  try {
+    await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options)
+  } catch (error) {
+    throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error)
+  }
   return DOWNLOADED_CONFIG
 }

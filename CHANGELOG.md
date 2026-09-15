@@ -7,6 +7,11 @@ Changelog for next
 ------------------
 
 * fix: Stop piping the GitHub Releases API into python in `scripts/bump-php-cs-fixer.sh` so Scorecard no longer reports downloadThenRun. [#69](https://github.com/ale94lko/php-cs-fixer-action/issues/69)
+* fix: Pin the Docker `FROM` image to `php:8.3-cli-bookworm@sha256:…` so Scorecard Pinned-Dependencies no longer flags an unhashed container base. [#70](https://github.com/ale94lko/php-cs-fixer-action/issues/70)
+* fix: Drop workflow-level `actions: write` from `ci.yml` and grant it only on the Action self-test jobs that cache the php-cs-fixer phar. [#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)
+* feature: Report Action failures through one helper (`step`, `code`, `message`) with optional `ERROR_TRACKING_URL` webhook. [#36](https://github.com/ale94lko/php-cs-fixer-action/issues/36)
+* fix: Drop workflow-level write from `health_score.yml` and grant `contents: write` only on the badge job. [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72)
+* fix: Drop workflow-level write from `bump-php-cs-fixer.yml` and grant `contents: write` plus `pull-requests: write` only on the `bump` job. [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)
 * chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
 * fix: Split dist rebuild into an unprivileged `pull_request` build and a `workflow_run` Git Data API commit so Scorecard Dangerous-Workflow is not triggered. [#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)
 * chore: Replace deprecated `moduleResolution: node` (`node10`) with `module: preserve` and `moduleResolution: bundler` so TypeScript 6/7 typecheck stays valid.

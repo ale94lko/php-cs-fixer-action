@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 9815650e3dfaa1b2271843d5e49156be6dc8d2e03037a7aebf481ee574ab11e5
+// php-cs-fixer-action-src-hash 5b3e17fc3fe8ce8d5b8dd613beccbf830720ca4552632610f61ad812c07da54d
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -93267,6 +93267,98 @@ function expectedChecksum(version, table) {
     return hash;
 }
 
+;// CONCATENATED MODULE: ./src/error-tracking.ts
+
+/** Optional webhook for Action failures. No-op when unset; never required in CI. */
+const ERROR_TRACKING_URL_ENV = 'ERROR_TRACKING_URL';
+const ActionStep = {
+    ValidateInputs: 'validate-inputs',
+    DownloadFixer: 'download-fixer',
+    ResolveConfig: 'resolve-config',
+    RunFixer: 'run-fixer',
+    Run: 'run',
+};
+const ActionErrorCode = {
+    InvalidInput: 'INVALID_INPUT',
+    DownloadFailed: 'DOWNLOAD_FAILED',
+    ChecksumMismatch: 'CHECKSUM_MISMATCH',
+    ConfigNotFound: 'CONFIG_NOT_FOUND',
+    FixerFailed: 'FIXER_FAILED',
+    StyleViolations: 'STYLE_VIOLATIONS',
+    Unexpected: 'UNEXPECTED',
+};
+const WEBHOOK_TIMEOUT_MS = 3000;
+class ActionError extends Error {
+    step;
+    code;
+    constructor(step, code, message) {
+        super(message);
+        this.name = 'ActionError';
+        this.step = step;
+        this.code = code;
+    }
+}
+function toActionError(step, code, error) {
+    if (error instanceof ActionError) {
+        return error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return new ActionError(step, code, message);
+}
+function failurePayload(report) {
+    return {
+        step: report.step,
+        code: report.code,
+        message: report.message,
+    };
+}
+function trackingWebhookUrl(env = process.env) {
+    const raw = env[ERROR_TRACKING_URL_ENV]?.trim();
+    if (!raw) {
+        return undefined;
+    }
+    try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return undefined;
+        }
+        return raw;
+    }
+    catch {
+        return undefined;
+    }
+}
+async function postTracking(payload, fetchImpl = fetch) {
+    const url = trackingWebhookUrl();
+    if (!url) {
+        return;
+    }
+    try {
+        await fetchImpl(url, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+            redirect: 'follow',
+            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+        });
+    }
+    catch {
+        core.warning('Optional error tracking webhook failed; continuing.');
+    }
+}
+/**
+ * Single failure path: structured `{step,code,message}` log, GitHub `::error::`
+ * via setFailed (unless `fail: false`), and an optional webhook POST.
+ */
+async function reportFailure(report, options = {}) {
+    const payload = failurePayload(report);
+    core.info(JSON.stringify(payload));
+    if (options.fail !== false) {
+        core.setFailed(payload.message);
+    }
+    await postTracking(payload, options.fetchImpl ?? fetch);
+}
+
 ;// CONCATENATED MODULE: ./src/http.ts
 
 const defaultSleep = (ms) => new Promise((resolve) => {
@@ -93330,42 +93422,54 @@ async function installVerifiedPhar(source, dest, expected, version) {
     }
 }
 async function downloadFixer(version, workspace = process.cwd(), options = {}) {
-    const dest = (0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY);
-    const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()));
-    const expected = expectedChecksum(version, table);
-    const cache = options.cache ?? createGithubPharCache();
-    if (await installVerifiedPhar(dest, dest, expected, version)) {
-        return dest;
-    }
-    const vendored = process.env[VENDORED_PHAR_ENV];
-    if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
-        return dest;
-    }
-    const cached = await cache.restore(version, expected);
-    if (cached) {
-        const cachedHash = await sha256File(cached);
-        try {
-            assertChecksum(cachedHash, expected, version);
-            await (0,promises_namespaceObject.copyFile)(cached, dest);
-            await makeExecutable(dest);
+    try {
+        const dest = (0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY);
+        const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()));
+        const expected = expectedChecksum(version, table);
+        const cache = options.cache ?? createGithubPharCache();
+        if (await installVerifiedPhar(dest, dest, expected, version)) {
             return dest;
         }
-        catch {
-            await (0,promises_namespaceObject.rm)(cached, { force: true });
+        const vendored = process.env[VENDORED_PHAR_ENV];
+        if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
+            return dest;
         }
-    }
-    await downloadToFile(fixerReleaseUrl(version), dest, options);
-    const actual = await sha256File(dest);
-    try {
-        assertChecksum(actual, expected, version);
+        const cached = await cache.restore(version, expected);
+        if (cached) {
+            const cachedHash = await sha256File(cached);
+            try {
+                assertChecksum(cachedHash, expected, version);
+                await (0,promises_namespaceObject.copyFile)(cached, dest);
+                await makeExecutable(dest);
+                return dest;
+            }
+            catch {
+                await (0,promises_namespaceObject.rm)(cached, { force: true });
+            }
+        }
+        await downloadToFile(fixerReleaseUrl(version), dest, options);
+        const actual = await sha256File(dest);
+        try {
+            assertChecksum(actual, expected, version);
+        }
+        catch (error) {
+            await (0,promises_namespaceObject.rm)(dest, { force: true });
+            throw error;
+        }
+        await makeExecutable(dest);
+        await cache.save(version, expected, dest);
+        return dest;
     }
     catch (error) {
-        await (0,promises_namespaceObject.rm)(dest, { force: true });
-        throw error;
+        if (error instanceof ActionError) {
+            throw error;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        const code = message.includes('Checksum mismatch')
+            ? ActionErrorCode.ChecksumMismatch
+            : ActionErrorCode.DownloadFailed;
+        throw new ActionError(ActionStep.DownloadFixer, code, message);
     }
-    await makeExecutable(dest);
-    await cache.save(version, expected, dest);
-    return dest;
 }
 
 ;// CONCATENATED MODULE: ./src/inputs.ts
@@ -93529,12 +93633,17 @@ async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
             await (0,promises_namespaceObject.access)(localPath, external_node_fs_.constants.F_OK);
         }
         catch {
-            throw new Error(`config-path '${inputs.configPath}' was not found in the repository workspace.`);
+            throw new ActionError(ActionStep.ResolveConfig, ActionErrorCode.ConfigNotFound, `config-path '${inputs.configPath}' was not found in the repository workspace.`);
         }
         return inputs.configPath;
     }
     const dest = (0,external_node_path_namespaceObject.join)(workspace, DOWNLOADED_CONFIG);
-    await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options);
+    try {
+        await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options);
+    }
+    catch (error) {
+        throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error);
+    }
     return DOWNLOADED_CONFIG;
 }
 
@@ -93591,38 +93700,46 @@ async function runFixer(configFile, settings = {}) {
         await (0,promises_namespaceObject.access)(configPath, external_node_fs_.constants.F_OK);
     }
     catch {
-        throw new Error(`Resolved config '${configFile}' does not exist.`);
+        throw new ActionError(ActionStep.RunFixer, ActionErrorCode.ConfigNotFound, `Resolved config '${configFile}' does not exist.`);
     }
     const env = {
         ...process.env,
         PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
     };
-    const result = await runProcess('php', [(0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)], { cwd: workspace, env });
-    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(workspace, 'result.txt'), result.output);
-    return result;
+    try {
+        const result = await runProcess('php', [(0,external_node_path_namespaceObject.join)(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)], { cwd: workspace, env });
+        await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(workspace, 'result.txt'), result.output);
+        return result;
+    }
+    catch (error) {
+        throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error);
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/validate.ts
 
+function invalidInput(message) {
+    throw new ActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, message);
+}
 const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
 const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/;
 const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/;
 function validatePhpCsFixerVersion(version) {
     if (!VERSION_PATTERN.test(version)) {
-        throw new Error(`Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`);
+        invalidInput(`Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`);
     }
 }
 function validateUseFullRules(value) {
     if (value !== 'true' && value !== 'false') {
-        throw new Error(`Invalid use-full-rules '${value}'. Expected true or false.`);
+        invalidInput(`Invalid use-full-rules '${value}'. Expected true or false.`);
     }
 }
 function validateGitRef(ref) {
     if (ref === '') {
-        throw new Error('rules-version must not be empty.');
+        invalidInput('rules-version must not be empty.');
     }
     if (!GIT_REF_PATTERN.test(ref)) {
-        throw new Error(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`);
+        invalidInput(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`);
     }
 }
 function validateConfigPath(path) {
@@ -93630,12 +93747,12 @@ function validateConfigPath(path) {
         return;
     }
     if (path.startsWith('/') || WINDOWS_ABSOLUTE.test(path) || path.includes('..')) {
-        throw new Error(`Invalid config-path '${path}'. Use a relative path inside the workspace.`);
+        invalidInput(`Invalid config-path '${path}'. Use a relative path inside the workspace.`);
     }
 }
 function validateMode(mode) {
     if (mode !== 'check' && mode !== 'fix') {
-        throw new Error(`Invalid mode '${mode}'. Expected check or fix.`);
+        invalidInput(`Invalid mode '${mode}'. Expected check or fix.`);
     }
 }
 function parsePaths(raw) {
@@ -93661,7 +93778,7 @@ function validatePaths(raw, workspace = process.cwd()) {
             WINDOWS_ABSOLUTE.test(path) ||
             hasParentSegment(path) ||
             !isInsideWorkspace(workspace, path)) {
-            throw new Error(`Invalid path '${path}'. Use a relative path inside the workspace.`);
+            invalidInput(`Invalid path '${path}'. Use a relative path inside the workspace.`);
         }
     }
 }
@@ -93681,8 +93798,10 @@ const defaultDeps = {
     downloadFixer: downloadFixer,
     resolveConfig: resolveConfig,
     runFixer: runFixer,
+    reportFailure: reportFailure,
 };
 async function executeAction(deps = defaultDeps) {
+    const report = deps.reportFailure ?? reportFailure;
     const inputs = deps.readInputs();
     validateAllInputs(inputs);
     const mode = inputs.mode === 'fix' ? 'fix' : 'check';
@@ -93703,19 +93822,34 @@ async function executeAction(deps = defaultDeps) {
         return result;
     }
     if (violations.length > 0) {
+        await report({
+            step: ActionStep.RunFixer,
+            code: ActionErrorCode.StyleViolations,
+            message: `php-cs-fixer reported ${violations.length} file(s) with style violations.`,
+        }, { fail: false });
         failWithoutGenericAnnotation();
         return result;
     }
-    core.setFailed(result.output.trim() || 'php-cs-fixer failed.');
+    await report({
+        step: ActionStep.RunFixer,
+        code: ActionErrorCode.FixerFailed,
+        message: result.output.trim() || 'php-cs-fixer failed.',
+    });
     return result;
 }
 async function run(deps = defaultDeps) {
+    const report = deps.reportFailure ?? reportFailure;
     try {
         await executeAction(deps);
     }
     catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        core.setFailed(message);
+        const tracked = toActionError(ActionStep.Run, ActionErrorCode.Unexpected, error);
+        const payload = {
+            step: tracked.step,
+            code: tracked.code,
+            message: tracked.message,
+        };
+        await report(payload);
     }
 }
 

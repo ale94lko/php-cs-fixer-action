@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ERROR_TRACKING_URL_ENV } from './error-tracking'
 import { DEFAULT_PHP_CS_FIXER_VERSION, type ActionInputs } from './inputs'
 import { executeAction, run } from './run'
 
@@ -38,7 +39,9 @@ const originalSummary = process.env.GITHUB_STEP_SUMMARY
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
   process.exitCode = undefined
+  delete process.env[ERROR_TRACKING_URL_ENV]
   if (originalSummary === undefined) {
     delete process.env.GITHUB_STEP_SUMMARY
   } else {
@@ -82,6 +85,9 @@ describe('executeAction', () => {
     )
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(process.exitCode).toBe(1)
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringContaining('"code":"STYLE_VIOLATIONS"'),
+    )
   })
 
   it('does not fail the Action when php-cs-fixer is clean', async () => {
@@ -141,6 +147,7 @@ describe('executeAction', () => {
     })
     expect(core.setFailed).toHaveBeenCalledWith('Could not load config')
     expect(core.error).not.toHaveBeenCalled()
+    expect(core.info).toHaveBeenCalledWith(expect.stringContaining('"code":"FIXER_FAILED"'))
   })
 
   it('does not download when inputs are invalid', async () => {
@@ -182,6 +189,7 @@ describe('run', () => {
       runFixer: vi.fn(),
     })
     expect(core.setFailed).toHaveBeenCalledWith('boom')
+    expect(core.info).toHaveBeenCalledWith(expect.stringContaining('"code":"UNEXPECTED"'))
   })
 
   it('stringifies non-Error failures', async () => {
@@ -195,6 +203,58 @@ describe('run', () => {
       runFixer: vi.fn(),
     })
     expect(core.setFailed).toHaveBeenCalledWith('nope')
+  })
+
+  it('reports invalid inputs through the error helper without downloading', async () => {
+    const core = await import('@actions/core')
+    const downloadFixer = vi.fn()
+    const reportFailure = vi.fn().mockResolvedValue(undefined)
+    await run({
+      readInputs: () => ({ ...inputs, phpCsFixerVersion: 'latest' }),
+      downloadFixer,
+      resolveConfig: vi.fn(),
+      runFixer: vi.fn(),
+      reportFailure,
+    })
+    expect(downloadFixer).not.toHaveBeenCalled()
+    expect(reportFailure).toHaveBeenCalledWith(
+      expect.objectContaining({
+        step: 'validate-inputs',
+        code: 'INVALID_INPUT',
+        message: expect.stringMatching(/php-cs-fixer-version/),
+      }),
+    )
+    expect(core.setFailed).not.toHaveBeenCalled()
+  })
+
+  it('reports fixer non-zero exits through the error helper', async () => {
+    const reportFailure = vi.fn().mockResolvedValue(undefined)
+    await run({
+      readInputs: () => inputs,
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('config.php'),
+      runFixer: vi.fn().mockResolvedValue({ exitCode: 1, output: 'Could not load config' }),
+      reportFailure,
+    })
+    expect(reportFailure).toHaveBeenCalledWith(
+      expect.objectContaining({
+        step: 'run-fixer',
+        code: 'FIXER_FAILED',
+        message: 'Could not load config',
+      }),
+    )
+  })
+
+  it('does not POST a tracking webhook when ERROR_TRACKING_URL is unset', async () => {
+    const fetchImpl = vi.fn()
+    vi.stubGlobal('fetch', fetchImpl)
+    await run({
+      readInputs: () => ({ ...inputs, phpCsFixerVersion: 'latest' }),
+      downloadFixer: vi.fn(),
+      resolveConfig: vi.fn(),
+      runFixer: vi.fn(),
+    })
+    expect(fetchImpl).not.toHaveBeenCalled()
   })
 
   it('logs a local config path and does not mention php-cs-fixer-rules', async () => {

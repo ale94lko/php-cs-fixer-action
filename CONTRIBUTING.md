@@ -52,7 +52,7 @@ When bumping the default `php-cs-fixer-version`, keep `checksums.txt` in the sam
 bash scripts/update-checksums.sh v3.95.21
 ```
 
-A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`).
+A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`). It uses top-level `permissions: {}` and grants `contents: write` plus `pull-requests: write` only on the `bump` job. Scorecard **Token-Permissions** still warns on that job-level write ([#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)); GitHub has no narrower scope for pushing a branch and opening a PR.
 
 ## Releasing
 
@@ -90,6 +90,8 @@ docker run --rm --network=none php-cs-fixer-action
 docker compose build
 docker compose run --rm --network none fixer
 ```
+
+The `FROM` line is digest-pinned (`php:8.3-cli-bookworm@sha256:…`). When bumping the PHP image, refresh that digest with `docker buildx imagetools inspect php:8.3-cli-bookworm --format '{{.Manifest.Digest}}'` (or the Hub tag digest) in the same change.
 
 CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `docker-offline` (`docker build` then `docker run --network=none`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`.
 
