@@ -7,6 +7,7 @@ Changelog for next
 ------------------
 
 * feature: Validate Action inputs against committed `action.inputs.schema.json` with Ajv. [#37](https://github.com/ale94lko/php-cs-fixer-action/issues/37)
+* fix: Stop piping the GitHub Releases API into python in `scripts/bump-php-cs-fixer.sh` so Scorecard no longer reports downloadThenRun. [#69](https://github.com/ale94lko/php-cs-fixer-action/issues/69)
 * fix: Pin the Docker `FROM` image to `php:8.3-cli-bookworm@sha256:…` so Scorecard Pinned-Dependencies no longer flags an unhashed container base. [#70](https://github.com/ale94lko/php-cs-fixer-action/issues/70)
 * fix: Drop workflow-level `actions: write` from `ci.yml` and grant it only on the Action self-test jobs that cache the php-cs-fixer phar. [#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)
 * feature: Report Action failures through one helper (`step`, `code`, `message`) with optional `ERROR_TRACKING_URL` webhook. [#36](https://github.com/ale94lko/php-cs-fixer-action/issues/36)
