@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 jobs:
   lint:
@@ -125,6 +124,12 @@ jobs:
 
   action-passes-on-clean-fixtures:
     runs-on: ubuntu-latest
+    # @actions/cache restore/save for the php-cs-fixer phar needs actions: write.
+    # Do not raise this to the workflow root; lint/audit/typecheck/test/docker-offline
+    # do not save that cache.
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -143,6 +148,9 @@ jobs:
 
   action-fails-on-violations:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -182,6 +190,9 @@ jobs:
 
   action-fixes-dirty-fixture:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
