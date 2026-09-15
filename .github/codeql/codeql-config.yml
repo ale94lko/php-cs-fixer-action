@@ -1,0 +1,4 @@
+name: php-cs-fixer-action CodeQL
+paths-ignore:
+  - dist/**
+  - node_modules/**

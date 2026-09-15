@@ -8,6 +8,7 @@ Changelog for next
 
 * feature: Verify php-cs-fixer.phar with a committed SHA-256 in `checksums.txt` and cache it across CI runs (`@actions/cache`, keyed by version + hash). [#17](https://github.com/ale94lko/php-cs-fixer-action/issues/17)
 * fix: Stop byte-comparing ncc output in CI (Windows and Linux bundles differ) and verify a `src-hash` banner in `dist/index.js` instead.
+* fix: Mark `dist/` as generated for CodeQL and escape backslashes in job-summary table cells.
 * feature: Emit file-level GitHub annotations and a job-summary table from the php-cs-fixer JSON report, and fail style checks without a generic `::error::`. [#16](https://github.com/ale94lko/php-cs-fixer-action/issues/16)
 * feature: Add `mode` (`check` by default, or `fix`) and optional `paths` inputs so consumers can apply fixes or limit the run without wrapping the Action. [#15](https://github.com/ale94lko/php-cs-fixer-action/issues/15)
 * feature: Rewrite the Action as a Node 24 TypeScript entrypoint (`dist/index.js`) with ESLint, `tsc`, and Vitest coverage in CI. Public inputs/outputs stay the same. [#19](https://github.com/ale94lko/php-cs-fixer-action/issues/19)

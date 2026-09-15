@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 5000309decb7ec6f78fe014994083b44fe530b80ae29fb711994313936e7aad3
+// php-cs-fixer-action-src-hash 1c5dae3fa5384e73b5292d7dd6c218893e8258ea1934c90e5483fcbae17776a7
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -46389,7 +46389,7 @@ function tryParseViolations(output, workspace = process.cwd()) {
     }
 }
 function escapeCell(value) {
-    return value.replace(/\|/g, '\\|');
+    return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 }
 function buildSummaryMarkdown(violations, mode) {
     if (violations.length === 0) {

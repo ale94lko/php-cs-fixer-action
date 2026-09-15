@@ -106,4 +106,13 @@ describe('buildSummaryMarkdown', () => {
   it('describes a clean run', () => {
     expect(buildSummaryMarkdown([], 'check')).toContain('No coding standard violations found.')
   })
+
+  it('escapes backslashes before pipes in table cells', () => {
+    const markdown = buildSummaryMarkdown(
+      [{ file: 'src\\foo|bar.php', fixers: ['a|b'] }],
+      'check',
+    )
+    expect(markdown).toContain('src\\\\foo\\|bar.php')
+    expect(markdown).toContain('a\\|b')
+  })
 })
