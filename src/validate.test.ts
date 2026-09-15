@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ActionError } from './error-tracking'
 import {
   parsePaths,
   validateAllInputs,
@@ -79,10 +80,18 @@ describe('validateAllInputs', () => {
     expect(() => validateAllInputs(valid)).not.toThrow()
   })
 
-  it('fails closed on a bad version', () => {
-    expect(() => validateAllInputs({ ...valid, phpCsFixerVersion: 'latest' })).toThrow(
-      /php-cs-fixer-version/,
-    )
+  it('fails closed on a bad version with a typed ActionError', () => {
+    try {
+      validateAllInputs({ ...valid, phpCsFixerVersion: 'latest' })
+      expect.unreachable('expected validation to throw')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ActionError)
+      expect(error).toMatchObject({
+        step: 'validate-inputs',
+        code: 'INVALID_INPUT',
+      })
+      expect((error as Error).message).toMatch(/php-cs-fixer-version/)
+    }
   })
 
   it('fails closed on an unknown mode', () => {
