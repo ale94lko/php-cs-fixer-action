@@ -1,0 +1,4 @@
+# SHA-256 checksums for php-cs-fixer.phar (GitHub Releases).
+# Format: <sha256>  <tag>
+# Update with: bash scripts/update-checksums.sh [tag]
+58c4ae1af0c73b7bcb658387e88d2d60db3181a9e93af687e7c5594358a4cf7d  v3.95.21
