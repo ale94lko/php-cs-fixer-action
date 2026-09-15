@@ -34,6 +34,7 @@ shfmt -d -i 2 scripts tests/*.sh
 actionlint
 bash tests/extract-release-notes.test.sh
 bash tests/vendor-php-cs-fixer.test.sh
+bash tests/bump-php-cs-fixer.test.sh
 bash tests/commit-dist-tree.test.sh
 ```
 
