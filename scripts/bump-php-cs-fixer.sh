@@ -10,7 +10,7 @@ cd "${ROOT_DIR}"
 set_output() {
   local key="$1" value="$2"
   if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-    printf '%s=%s\n' "${key}" "${value}" >> "${GITHUB_OUTPUT}"
+    printf '%s=%s\n' "${key}" "${value}" >>"${GITHUB_OUTPUT}"
   fi
 }
 
