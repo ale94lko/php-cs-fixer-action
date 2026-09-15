@@ -52,6 +52,9 @@ jobs:
       - name: Test changelog release-notes extraction
         run: bash tests/extract-release-notes.test.sh
 
+      - name: Test php-cs-fixer checksum lookup
+        run: bash tests/vendor-php-cs-fixer.test.sh
+
       - name: Lint GitHub Actions workflows
         run: actionlint -color
 

@@ -33,6 +33,7 @@ npm run audit:prod
 shfmt -d -i 2 scripts tests/*.sh
 actionlint
 bash tests/extract-release-notes.test.sh
+bash tests/vendor-php-cs-fixer.test.sh
 ```
 
 Format shell scripts with `shfmt -w -i 2 scripts tests/*.sh` (CI runs `shfmt -d -i 2` on `scripts/` and `tests/*.sh`). `.editorconfig` sets UTF-8, LF, and trim-whitespace so Windows checkouts do not drift.
