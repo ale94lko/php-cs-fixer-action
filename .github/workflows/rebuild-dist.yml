@@ -13,6 +13,7 @@ on:
       - package-lock.json
       - src/**
       - scripts/**
+      - action.inputs.schema.json
 
 concurrency:
   group: rebuild-dist-${{ github.event.pull_request.number }}
