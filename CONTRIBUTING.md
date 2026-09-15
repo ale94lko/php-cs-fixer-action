@@ -37,6 +37,11 @@ bash scripts/ci-local.sh
 Or with Docker:
 
 ```bash
+docker build -t php-cs-fixer-action .
+docker run --rm php-cs-fixer-action
+```
+
+```bash
 docker compose run --rm fixer
 ```
 
