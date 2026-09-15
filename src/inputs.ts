@@ -1,5 +1,8 @@
 import * as core from '@actions/core'
 
+/** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
+export const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21'
+
 /** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
 export const DEFAULT_RULES_VERSION = 'v1.0.1'
 
@@ -25,7 +28,7 @@ function read(name: string, fallbackEnv: string, defaultValue: string): string {
 export function readInputs(): ActionInputs {
   const configFromEnv = process.env.CONFIG_PATH ?? process.env.CONFIG_FILE ?? ''
   return {
-    phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', 'v3.95.21'),
+    phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', DEFAULT_PHP_CS_FIXER_VERSION),
     configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
     rulesVersion: read('rules-version', 'RULES_VERSION', DEFAULT_RULES_VERSION),
     useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),

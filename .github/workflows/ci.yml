@@ -91,7 +91,6 @@ jobs:
       - name: PHP Code Style
         uses: ./
         with:
-          php-cs-fixer-version: v3.95.21
           config-path: tests/fixtures/.php-cs-fixer.dist.php
           mode: check
 
@@ -115,7 +114,6 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
-          php-cs-fixer-version: v3.95.21
           config-path: tests/fixtures/.php-cs-fixer.dist.php
           mode: check
 
@@ -149,7 +147,6 @@ jobs:
       - name: PHP Code Style
         uses: ./
         with:
-          php-cs-fixer-version: v3.95.21
           config-path: tests/fixtures/.php-cs-fixer.dist.php
           mode: fix
           paths: tests/fixtures/Dirty.php

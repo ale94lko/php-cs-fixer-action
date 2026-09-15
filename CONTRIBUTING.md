@@ -22,11 +22,15 @@ npm run test:coverage
 npm run build
 ```
 
-After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change. Dependabot PRs that touch `package.json` or `package-lock.json` get `dist/` rebuilt automatically; do not merge a bump if that workflow fails (`ncc` cannot bundle ESM-only `@actions/cache` 5+/6+ or `@actions/core` 2+/3+). CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. Keep `@actions/cache` on `^4.1.0` and `@actions/core` on `^1.11.1`. `dist/` is marked generated so CodeQL scans `src/` rather than the ncc vendor bundle. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
+After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change. Dependabot PRs that touch `package.json` or `package-lock.json` get `dist/` rebuilt automatically; do not merge a bump if that workflow fails (`ncc` cannot bundle ESM-only `@actions/cache` 5+/6+ or `@actions/core` 2+/3+). CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. Keep `@actions/cache` on `^4.1.0` and `@actions/core` on `^1.11.1`. `dist/` is marked generated so CodeQL scans `src/` rather than the ncc vendor bundle.
+
+When bumping the default `php-cs-fixer-version`, keep `checksums.txt` in the same change:
 
 ```bash
 bash scripts/update-checksums.sh v3.95.21
 ```
+
+A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`).
 
 Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
 
