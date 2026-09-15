@@ -21,10 +21,17 @@ current_default() {
 latest_release_tag() {
   local url="https://api.github.com/repos/PHP-CS-Fixer/PHP-CS-Fixer/releases/latest"
   local args=(-fsSL -H "Accept: application/vnd.github+json")
+  local payload tag
   if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     args+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
   fi
-  curl "${args[@]}" "${url}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])'
+  # Write the JSON to a file first. Piping curl into python is Scorecard
+  # Pinned-Dependencies downloadThenRun (the latest tag cannot be hash-pinned).
+  payload="$(mktemp)"
+  curl "${args[@]}" -o "${payload}" "${url}"
+  tag="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["tag_name"])' "${payload}")"
+  rm -f "${payload}"
+  printf '%s\n' "${tag}"
 }
 
 CURRENT="$(current_default)"
