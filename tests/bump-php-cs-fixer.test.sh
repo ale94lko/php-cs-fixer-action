@@ -13,7 +13,8 @@ fail() {
 if grep -E 'curl[^\n]*\|[[:space:]]*python3' "${SCRIPT}"; then
   fail "scripts/bump-php-cs-fixer.sh must not pipe curl into python3"
 fi
-grep -q -- '-o "${payload}"' "${SCRIPT}" ||
+pattern="-o \"\${payload}\""
+grep -Fq -- "${pattern}" "${SCRIPT}" ||
   fail "expected curl to write the GitHub API body to a file"
 grep -Fq 'json.load(open(sys.argv[1]' "${SCRIPT}" ||
   fail "expected python3 to parse a file path, not stdin"
