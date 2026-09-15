@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* fix: Pin the Docker `FROM` image to `php:8.3-cli-bookworm@sha256:…` so Scorecard Pinned-Dependencies no longer flags an unhashed container base. [#70](https://github.com/ale94lko/php-cs-fixer-action/issues/70)
 * chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
 * fix: Split dist rebuild into an unprivileged `pull_request` build and a `workflow_run` Git Data API commit so Scorecard Dangerous-Workflow is not triggered. [#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)
 * chore: Replace deprecated `moduleResolution: node` (`node10`) with `module: preserve` and `moduleResolution: bundler` so TypeScript 6/7 typecheck stays valid.
