@@ -11,6 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Repo Health Score Badge
-        uses: ale94lko/repo-health-score@main
+        uses: ale94lko/repo-health-score@f1d4dbf4d3af9fbce24166e1a51f1bd49a417434 # main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

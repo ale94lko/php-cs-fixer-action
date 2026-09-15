@@ -1,5 +1,7 @@
 version: 2
 updates:
+  # SHA-pinned uses: lines need a version comment (# vX.Y.Z) so Dependabot
+  # can still open weekly bump PRs. See GitHub's Dependabot Actions docs.
   - package-ecosystem: github-actions
     directory: /
     schedule:
