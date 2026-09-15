@@ -35,11 +35,22 @@ jobs:
           sudo install -m 755 /tmp/shfmt /usr/local/bin/shfmt
           shfmt --version
 
+      - name: Install actionlint
+        run: |
+          curl -fsSL -o /tmp/actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  /tmp/actionlint.tar.gz" | sha256sum -c
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+          sudo install -m 755 /tmp/actionlint /usr/local/bin/actionlint
+          actionlint -version
+
       - name: Lint shell scripts
         run: shellcheck --source-path=SCRIPTDIR --external-sources scripts/*.sh
 
       - name: Check shell script formatting
         run: shfmt -d -i 2 scripts
+
+      - name: Lint GitHub Actions workflows
+        run: actionlint -color
 
   typecheck:
     runs-on: ubuntu-latest
@@ -114,7 +125,9 @@ jobs:
           coverage: none
 
       - name: Write a dirty fixture
-        run: printf '%s\n' '<?php' 'class foo{' 'function Bar(){' '$x=1;' '}' '}' > tests/fixtures/Dirty.php
+        run: |
+          # shellcheck disable=SC2016 # PHP snippet must keep $x unexpanded
+          printf '%s\n' '<?php' 'class foo{' 'function Bar(){' '$x=1;' '}' '}' > tests/fixtures/Dirty.php
 
       - name: PHP Code Style
         id: fixer
@@ -125,8 +138,10 @@ jobs:
           mode: check
 
       - name: Expect the action to fail without a generic workflow error
+        env:
+          FIXER_OUTCOME: ${{ steps.fixer.outcome }}
         run: |
-          if [[ "${{ steps.fixer.outcome }}" != "failure" ]]; then
+          if [[ "${FIXER_OUTCOME}" != "failure" ]]; then
             echo "Expected coding-standard violations to fail the action"
             exit 1
           fi
@@ -149,7 +164,9 @@ jobs:
           coverage: none
 
       - name: Write a dirty fixture
-        run: printf '%s\n' '<?php' 'class foo{' 'function Bar(){' '$x=1;' '}' '}' > tests/fixtures/Dirty.php
+        run: |
+          # shellcheck disable=SC2016 # PHP snippet must keep $x unexpanded
+          printf '%s\n' '<?php' 'class foo{' 'function Bar(){' '$x=1;' '}' '}' > tests/fixtures/Dirty.php
 
       - name: PHP Code Style
         uses: ./

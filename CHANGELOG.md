@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* chore: Lint GitHub Actions workflows with actionlint in CI. [#28](https://github.com/ale94lko/php-cs-fixer-action/issues/28)
 * feature: Add OpenSSF Scorecard on `main` / weekly and upload SARIF to code scanning. [#27](https://github.com/ale94lko/php-cs-fixer-action/issues/27)
 * feature: Add CodeQL analysis for JavaScript/TypeScript and GitHub Actions workflows. [#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)
 * chore: Add EditorConfig and fail CI when shell scripts are not `shfmt`-clean. [#20](https://github.com/ale94lko/php-cs-fixer-action/issues/20)
