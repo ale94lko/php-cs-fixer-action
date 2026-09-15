@@ -1,5 +1,8 @@
 # Analyzes JavaScript/TypeScript and GitHub Actions workflows with CodeQL.
 # https://github.com/ale94lko/php-cs-fixer-action/issues/26
+# Keep GitHub CodeQL default setup disabled: advanced SARIF uploads are rejected
+# while default setup is enabled.
+# https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads/default-setup-enabled
 name: CodeQL
 
 on:
