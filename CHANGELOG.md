@@ -19,6 +19,7 @@ Changelog for next
 * fix: Point ShellCheck at `source-path=SCRIPTDIR` so sourced helpers resolve from each script directory in CI.
 * docs: Document both shared-rules and local-config usage modes.
 * docs: Point README usage examples at `@v1.0.3` and explain patch vs major pinning. [#25](https://github.com/ale94lko/php-cs-fixer-action/issues/25)
+* docs: Add copy-pasteable consumer workflows, expand the Architecture section, and replace stale live-run links with current CI jobs. [#24](https://github.com/ale94lko/php-cs-fixer-action/issues/24)
 
 Changelog for v1.0.2
 --------------------

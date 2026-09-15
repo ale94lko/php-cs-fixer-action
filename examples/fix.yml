@@ -1,0 +1,49 @@
+# Copy this file to `.github/workflows/php-cs-fixer-fix.yml` in a consuming repository.
+#
+# `mode: fix` writes php-cs-fixer changes into the job workspace. This example
+# then commits and pushes them back to the pull-request branch.
+#
+# `permissions.contents: write` lets the default `GITHUB_TOKEN` push to the
+# same repository. Pull requests from forks cannot be updated with that token;
+# use a PAT or skip the commit step for those events.
+
+name: Fix PHP Code Style
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Apply coding standards
+        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        with:
+          mode: fix
+          paths: src tests
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No coding-standard changes to commit"
+            exit 0
+          fi
+          git commit -m "style: apply php-cs-fixer"
+          git push
