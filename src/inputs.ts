@@ -1,5 +1,8 @@
 import * as core from '@actions/core'
 
+/** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
+export const DEFAULT_RULES_VERSION = 'v1.0.1'
+
 export type ActionMode = 'check' | 'fix'
 
 export type ActionInputs = {
@@ -24,7 +27,7 @@ export function readInputs(): ActionInputs {
   return {
     phpCsFixerVersion: read('php-cs-fixer-version', 'PHP_CS_FIXER_VERSION', 'v3.95.21'),
     configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
-    rulesVersion: read('rules-version', 'RULES_VERSION', 'main'),
+    rulesVersion: read('rules-version', 'RULES_VERSION', DEFAULT_RULES_VERSION),
     useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
     mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
     paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),

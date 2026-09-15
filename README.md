@@ -36,13 +36,15 @@ Rules can come from:
 
 Pin a patch tag (`@v1.0.3`) so CI stays on a known release. A floating major pin (`@v1`) would pick up compatible 1.x updates automatically, but that tag is not published yet — keep using the latest patch tag until it is.
 
+When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` with another tag, branch (for example `main`), or commit SHA when you want a different ref.
+
 ## Parameters
 
 | Name | Description | Required | Default | Values |
 |----------|:----------:|:----------:|:----------:|:----------:|
 | php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.95.21` | v`X.X.X` |
 | config-path | Path to a local php-cs-fixer config in your repo. When set, skips downloading from php-cs-fixer-rules | `false` | _(empty)_ | e.g. `.php-cs-fixer.dist.php` |
-| rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `main` | `main`, `v1.0.1`, SHA… |
+| rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `v1.0.1` | `v1.0.1`, `main`, SHA… |
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
@@ -63,7 +65,7 @@ If the cache service is unavailable (local runs, missing permission, fork PR), t
 
 ## Examples
 
-### Simple use with default parameters (shared rules from `php-cs-fixer-rules`)
+### Simple use with default parameters (shared rules pinned to `v1.0.1`)
 ```yaml
 name: Fix code styles
 on: [pull_request]
@@ -75,6 +77,7 @@ jobs:
 
       - name: PHP Code Style
         uses: ale94lko/php-cs-fixer-action@v1.0.3
+        # rules-version defaults to v1.0.1; omit or override as needed
 ```
 
 ### Use a config file from your own repository
@@ -85,12 +88,12 @@ jobs:
 +     config-path: .php-cs-fixer.dist.php
 ```
 
-### Pin shared rules to a specific ref
+### Override the shared rules ref (tag, branch, or SHA)
 ```diff
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
-+     rules-version: v1.0.1
++     rules-version: main
 +     use-full-rules: true
 ```
 
