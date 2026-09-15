@@ -1,51 +1,32 @@
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import type { ActionInputs, ActionMode } from './inputs'
+import { SCHEMA_DEFAULTS, assertInputsSchema } from './inputs.schema'
 
 function invalidInput(message: string): never {
   throw new ActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, message)
 }
 
-const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/
-const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/
 const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/
 
 export function validatePhpCsFixerVersion(version: string): void {
-  if (!VERSION_PATTERN.test(version)) {
-    invalidInput(
-      `Invalid php-cs-fixer-version '${version}'. Expected a release tag like v3.95.21.`,
-    )
-  }
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, phpCsFixerVersion: version })
 }
 
 export function validateUseFullRules(value: string): void {
-  if (value !== 'true' && value !== 'false') {
-    invalidInput(`Invalid use-full-rules '${value}'. Expected true or false.`)
-  }
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, useFullRules: value })
 }
 
 export function validateGitRef(ref: string): void {
-  if (ref === '') {
-    invalidInput('rules-version must not be empty.')
-  }
-  if (!GIT_REF_PATTERN.test(ref)) {
-    invalidInput(`Invalid rules-version '${ref}'. Use a tag, branch, or SHA.`)
-  }
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, rulesVersion: ref })
 }
 
 export function validateConfigPath(path: string): void {
-  if (path === '') {
-    return
-  }
-  if (path.startsWith('/') || WINDOWS_ABSOLUTE.test(path) || path.includes('..')) {
-    invalidInput(`Invalid config-path '${path}'. Use a relative path inside the workspace.`)
-  }
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, configPath: path })
 }
 
 export function validateMode(mode: string): asserts mode is ActionMode {
-  if (mode !== 'check' && mode !== 'fix') {
-    invalidInput(`Invalid mode '${mode}'. Expected check or fix.`)
-  }
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, mode })
 }
 
 export function parsePaths(raw: string): string[] {
@@ -68,6 +49,7 @@ function isInsideWorkspace(workspace: string, candidate: string): boolean {
 }
 
 export function validatePaths(raw: string, workspace = process.cwd()): void {
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, paths: raw })
   for (const path of parsePaths(raw)) {
     if (
       path.startsWith('-') ||
@@ -82,10 +64,6 @@ export function validatePaths(raw: string, workspace = process.cwd()): void {
 }
 
 export function validateAllInputs(inputs: ActionInputs, workspace = process.cwd()): void {
-  validatePhpCsFixerVersion(inputs.phpCsFixerVersion)
-  validateUseFullRules(inputs.useFullRules)
-  validateGitRef(inputs.rulesVersion)
-  validateConfigPath(inputs.configPath)
-  validateMode(inputs.mode)
+  assertInputsSchema(inputs)
   validatePaths(inputs.paths, workspace)
 }

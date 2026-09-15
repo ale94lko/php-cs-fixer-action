@@ -23,7 +23,7 @@ function hashedSourceFiles(root) {
     const name = path.replace(/\\/g, '/')
     return name.endsWith('.ts') && !name.endsWith('.test.ts') && !name.endsWith('/test-setup.ts')
   })
-  return [...sources, join(root, 'package.json'), join(root, 'package-lock.json')].sort((a, b) =>
+  return [...sources, join(root, 'package.json'), join(root, 'package-lock.json'), join(root, 'action.inputs.schema.json')].sort((a, b) =>
     a.replace(/\\/g, '/').localeCompare(b.replace(/\\/g, '/')),
   )
 }

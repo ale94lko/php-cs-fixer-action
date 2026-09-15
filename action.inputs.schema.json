@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ale94lko/php-cs-fixer-action/blob/main/action.inputs.schema.json",
+  "title": "php-cs-fixer-action inputs",
+  "description": "Typed contract for action.yml inputs. GitHub Actions always pass strings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "php-cs-fixer-version",
+    "config-path",
+    "rules-version",
+    "use-full-rules",
+    "mode",
+    "paths"
+  ],
+  "properties": {
+    "php-cs-fixer-version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "php-cs-fixer GitHub release tag (vX.Y.Z)."
+    },
+    "config-path": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!/)(?![A-Za-z]:[\\\\/]).+$",
+      "description": "Empty, or a relative path inside the workspace (no .. or absolute paths)."
+    },
+    "rules-version": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._/-]+$",
+      "description": "Git ref of ale94lko/php-cs-fixer-rules."
+    },
+    "use-full-rules": {
+      "type": "string",
+      "enum": ["true", "false"]
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["check", "fix"]
+    },
+    "paths": {
+      "type": "string",
+      "pattern": "^$|^(?:(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)(?:\\s+(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)*$",
+      "description": "Empty (use config finder) or space-separated relative workspace paths."
+    }
+  }
+}
