@@ -7,6 +7,7 @@ Changelog for next
 ------------------
 
 * fix: Drop workflow-level `actions: write` from `ci.yml` and grant it only on the Action self-test jobs that cache the php-cs-fixer phar. [#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)
+* fix: Drop workflow-level write from `health_score.yml` and grant `contents: write` only on the badge job. [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72)
 * fix: Drop workflow-level write from `bump-php-cs-fixer.yml` and grant `contents: write` plus `pull-requests: write` only on the `bump` job. [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)
 * chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
 * fix: Split dist rebuild into an unprivileged `pull_request` build and a `workflow_run` Git Data API commit so Scorecard Dangerous-Workflow is not triggered. [#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)
