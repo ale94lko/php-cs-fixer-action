@@ -1,10 +1,13 @@
 import { chmod, copyFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { assertChecksum, createGithubPharCache, sha256File, type PharCache } from './cache'
 import { expectedChecksum, loadChecksums, resolveChecksumsPath } from './checksums'
 import { downloadToFile, type DownloadOptions } from './http'
 
 export const FIXER_BINARY = 'php-cs-fixer'
+
+/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+export const VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR'
 
 export type DownloadFixerOptions = DownloadOptions & {
   checksumsPath?: string
@@ -24,6 +27,25 @@ async function makeExecutable(path: string): Promise<void> {
   }
 }
 
+async function installVerifiedPhar(
+  source: string,
+  dest: string,
+  expected: string,
+  version: string,
+): Promise<boolean> {
+  try {
+    const hash = await sha256File(source)
+    assertChecksum(hash, expected, version)
+    if (resolve(source) !== resolve(dest)) {
+      await copyFile(source, dest)
+    }
+    await makeExecutable(dest)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function downloadFixer(
   version: string,
   workspace = process.cwd(),
@@ -33,6 +55,15 @@ export async function downloadFixer(
   const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()))
   const expected = expectedChecksum(version, table)
   const cache = options.cache ?? createGithubPharCache()
+
+  if (await installVerifiedPhar(dest, dest, expected, version)) {
+    return dest
+  }
+
+  const vendored = process.env[VENDORED_PHAR_ENV]
+  if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
+    return dest
+  }
 
   const cached = await cache.restore(version, expected)
   if (cached) {

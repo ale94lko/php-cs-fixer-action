@@ -197,6 +197,18 @@ describe('run', () => {
     expect(core.setFailed).toHaveBeenCalledWith('nope')
   })
 
+  it('logs a local config path and does not mention php-cs-fixer-rules', async () => {
+    const core = await import('@actions/core')
+    await executeAction({
+      readInputs: () => inputs,
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('tests/fixtures/.php-cs-fixer.dist.php'),
+      runFixer: vi.fn().mockResolvedValue({ exitCode: 0, output: JSON.stringify({ files: [] }) }),
+    })
+    expect(core.info).toHaveBeenCalledWith('Using local config: tests/fixtures/.php-cs-fixer.dist.php')
+    expect(core.info).not.toHaveBeenCalledWith(expect.stringMatching(/php-cs-fixer-rules/))
+  })
+
   it('logs the shared-rules path when config-path is empty', async () => {
     const core = await import('@actions/core')
     await executeAction({

@@ -37,6 +37,18 @@ describe('resolveConfig', () => {
     ).resolves.toBe('local.php')
   })
 
+  it('does not download php-cs-fixer-rules for the local fixture config', async () => {
+    const fetchImpl = vi.fn()
+    await expect(
+      resolveConfig(
+        { ...base, configPath: 'tests/fixtures/.php-cs-fixer.dist.php' },
+        process.cwd(),
+        { fetchImpl },
+      ),
+    ).resolves.toBe('tests/fixtures/.php-cs-fixer.dist.php')
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
   it('fails when config-path is missing', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     await expect(resolveConfig({ ...base, configPath: 'missing.php' }, workspace)).rejects.toThrow(

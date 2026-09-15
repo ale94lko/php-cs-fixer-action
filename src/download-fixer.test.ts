@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, writeFile, access } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PharCache } from './cache'
-import { downloadFixer, fixerReleaseUrl } from './download-fixer'
+import { downloadFixer, fixerReleaseUrl, VENDORED_PHAR_ENV } from './download-fixer'
 
 function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
@@ -14,6 +14,10 @@ const noopCache: PharCache = {
   restore: async () => undefined,
   save: async () => undefined,
 }
+
+afterEach(() => {
+  delete process.env[VENDORED_PHAR_ENV]
+})
 
 describe('fixerReleaseUrl', () => {
   it('points at the GitHub release phar for the given tag', () => {
@@ -124,6 +128,61 @@ describe('downloadFixer', () => {
         delayMs: 1,
       }),
     ).rejects.toThrow(/Download failed \(500\)/)
+  })
+
+  it('reuses a workspace phar with a matching checksum without downloading', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const dest = join(workspace, 'php-cs-fixer')
+    await writeFile(dest, 'phar')
+    const fetchImpl = vi.fn()
+    const restore = vi.fn()
+
+    await downloadFixer('v3.95.21', workspace, {
+      fetchImpl,
+      checksums: new Map([['v3.95.21', sha256('phar')]]),
+      cache: { restore, save: vi.fn() },
+    })
+
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(restore).not.toHaveBeenCalled()
+    await expect(readFile(dest, 'utf8')).resolves.toBe('phar')
+  })
+
+  it('reuses PHP_CS_FIXER_PHAR without downloading', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const vendored = join(workspace, 'vendored.phar')
+    await writeFile(vendored, 'phar')
+    process.env[VENDORED_PHAR_ENV] = vendored
+    const fetchImpl = vi.fn()
+
+    await downloadFixer('v3.95.21', workspace, {
+      fetchImpl,
+      checksums: new Map([['v3.95.21', sha256('phar')]]),
+      cache: noopCache,
+    })
+
+    expect(fetchImpl).not.toHaveBeenCalled()
+    await expect(readFile(join(workspace, 'php-cs-fixer'), 'utf8')).resolves.toBe('phar')
+  })
+
+  it('downloads when a vendored phar fails the checksum', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const vendored = join(workspace, 'vendored.phar')
+    await writeFile(vendored, 'stale')
+    process.env[VENDORED_PHAR_ENV] = vendored
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new TextEncoder().encode('phar').buffer,
+    })
+
+    await downloadFixer('v3.95.21', workspace, {
+      fetchImpl,
+      checksums: new Map([['v3.95.21', sha256('phar')]]),
+      cache: noopCache,
+    })
+
+    expect(fetchImpl).toHaveBeenCalledOnce()
+    await expect(readFile(join(workspace, 'php-cs-fixer'), 'utf8')).resolves.toBe('phar')
   })
 
   it('loads checksums.txt when no table is injected', async () => {

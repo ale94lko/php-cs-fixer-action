@@ -139,6 +139,7 @@ Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-c
 - [Pass on clean fixtures](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447185) (`action-passes-on-clean-fixtures`)
 - [Fail the Action on violations](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447500) (`action-fails-on-violations`; the workflow job succeeds after asserting that the Action step failed)
 - [Apply fixes to a dirty fixture](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447489) (`action-fixes-dirty-fixture`)
+- `docker-offline` builds the image (vendors php-cs-fixer) and lints the fixtures with `--network=none`
 
 ## Architecture
 
@@ -148,7 +149,7 @@ Runtime pipeline (`src/run.ts`):
 
 1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by Docker and `scripts/ci-local.sh`.
 2. **Validate** (`src/validate.ts`) version tags, booleans, git refs, `config-path`, `mode`, and `paths`.
-3. **Download php-cs-fixer** (`src/download-fixer.ts`) — the pinned `php-cs-fixer.phar` from GitHub Releases.
+3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified workspace or `PHP_CS_FIXER_PHAR` binary (Docker vendors it at build time), else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
 4. **Resolve config** (`src/resolve-config.ts`):
    - If `config-path` is set, use that file from the consumer repository.
    - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
@@ -162,13 +163,13 @@ Runtime pipeline (`src/run.ts`):
 | `src/run.ts` | Orchestrates validate → download → resolve config → run fixer → report |
 | `dist/index.js` | Bundled file GitHub Actions actually executes |
 | `.env.example` | Env vars for Docker / `scripts/ci-local.sh` |
-| `Dockerfile`, `docker-compose.yml` | PHP 8.3 + Node 24 image for local fixer runs |
+| `Dockerfile`, `docker-compose.yml` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
 | `.devcontainer/devcontainer.json` | Dev Container (PHP 8.3, Node 24, `npm ci`) |
 
 ### Repo health badge
 
 [`.github/workflows/health_score.yml`](.github/workflows/health_score.yml) publishes the README badge on a schedule. It sets `permissions: contents: write` and passes `token: ${{ secrets.GITHUB_TOKEN }}` to [`ale94lko/repo-health-score`](https://github.com/ale94lko/repo-health-score) so the workflow can push the generated badge.
-`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar (SHA-256 from `checksums.txt`, restored from the Actions cache when possible), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the inputs. `src/` validates them, resolves php-cs-fixer (vendored phar, Actions cache, or a SHA-256-verified download from `checksums.txt`), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 
@@ -186,30 +187,33 @@ npm run build
 
 ### Tests (offline)
 
-Unit tests mock HTTP and do not download php-cs-fixer or php-cs-fixer-rules:
+Unit tests mock HTTP and do not download php-cs-fixer or php-cs-fixer-rules. CI Action jobs (`action-passes-on-clean-fixtures`, `action-fails-on-violations`, `action-fixes-dirty-fixture`) pass `config-path: tests/fixtures/.php-cs-fixer.dist.php`, so they never hit php-cs-fixer-rules.
 
 ```bash
 npm test
 npm run test:coverage
 ```
 
-### Run the fixer locally
+### Run the fixer locally (offline after `docker build`)
 
-`scripts/ci-local.sh` and Docker download `php-cs-fixer.phar` at runtime (needs network):
+`scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar.
 
 ```bash
 bash scripts/ci-local.sh
 ```
 
+The Docker image vendors the pinned phar at **build** time (checksum from `checksums.txt`) and defaults to the local fixture config, so linting the fixtures does not download php-cs-fixer or php-cs-fixer-rules at start:
+
 ```bash
 docker build -t php-cs-fixer-action .
-docker run --rm php-cs-fixer-action
+docker run --rm --network=none php-cs-fixer-action
 ```
 
-Or with Compose:
+Or with Compose (phar lives at `/opt/php-cs-fixer/php-cs-fixer`, outside the `.:/app` mount):
 
 ```bash
-docker compose run --rm fixer
+docker compose build
+docker compose run --rm --network none fixer
 ```
 
 ## Contributing
