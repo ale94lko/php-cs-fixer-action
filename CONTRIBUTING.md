@@ -69,6 +69,8 @@ These checks are **accepted low scores**, not a regression of the Scorecard work
 
 **Token-Permissions** workflow roots are `permissions: {}`, `contents: read`, or `read-all`. Write is only on the jobs that need it: `actions: write` for php-cs-fixer cache in CI ([#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)), `contents: write` for release / badge / bump / dist commit ([#65](https://github.com/ale94lko/php-cs-fixer-action/issues/65), [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72), [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73), [#61](https://github.com/ale94lko/php-cs-fixer-action/issues/61)). Scorecard still **warns** on those job-level writes (it only ignores semantic-release / goreleaser / Maven). Do not raise write back to the workflow root ([#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)).
 
+**SAST** — CodeQL already runs on every `push` and `pull_request` to `main` with no path filters ([#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)). Scorecard still reports 9/10 when a commit in its recent sample had no CodeQL check on the associated PR (the CodeQL bootstrap PR, and a direct push `7920f49`). That is a closing window, not a missing workflow ([#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)). Do not push commits to `main` outside a pull request, and do not add `paths` filters to `codeql.yml`.
+
 ## Releasing
 
 Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` section; if that heading is missing or empty, the release workflow uses `Changelog for next`.

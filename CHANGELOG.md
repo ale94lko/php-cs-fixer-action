@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* docs: Record the Scorecard SAST 9/10 gap (historical commits without a CodeQL PR check). [#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)
 * docs: Record that GitHub Actions write tokens are scoped to jobs; remaining Scorecard Token-Permissions findings are job-level warnings. [#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)
 * docs: Record which OpenSSF Scorecard checks are accepted low scores. [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)
 * feature: Validate Action inputs against committed `action.inputs.schema.json` with Ajv. [#37](https://github.com/ale94lko/php-cs-fixer-action/issues/37)
