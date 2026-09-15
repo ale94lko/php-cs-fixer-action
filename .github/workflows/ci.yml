@@ -205,3 +205,15 @@ jobs:
             cat tests/fixtures/Dirty.php
             exit 1
           fi
+
+  docker-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build image with vendored php-cs-fixer
+        run: docker build -t php-cs-fixer-action .
+
+      - name: Lint fixtures without network
+        run: docker run --rm --network=none php-cs-fixer-action

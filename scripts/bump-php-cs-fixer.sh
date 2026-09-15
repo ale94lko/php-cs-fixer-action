@@ -86,7 +86,15 @@ if n != 1:
     raise SystemExit(f"failed to patch action.yml ({n} replacements)")
 action.write_text(updated, encoding="utf-8")
 
-for rel in ("README.md", "docker-compose.yml", "CONTRIBUTING.md"):
+for rel in (
+    "README.md",
+    "docker-compose.yml",
+    "CONTRIBUTING.md",
+    "Dockerfile",
+    ".env.example",
+    "scripts/ci-local.sh",
+    "scripts/vendor-php-cs-fixer.sh",
+):
     path = root / rel
     path.write_text(path.read_text(encoding="utf-8").replace(old, new), encoding="utf-8")
 PY

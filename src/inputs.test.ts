@@ -62,5 +62,9 @@ describe('readInputs', () => {
     )
     expect(fixerMatch?.[1]).toBe(DEFAULT_PHP_CS_FIXER_VERSION)
     expect(rulesMatch?.[1]).toBe(DEFAULT_RULES_VERSION)
+    const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf8')
+    expect(dockerfile).toMatch(
+      new RegExp(`^ARG PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
+    )
   })
 })

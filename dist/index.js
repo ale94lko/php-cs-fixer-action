@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 6bb121a8cb0cf9414d4bab495169b3b67fc07216fad104ce5a3194a84e745a54
+// php-cs-fixer-action-src-hash 9815650e3dfaa1b2271843d5e49156be6dc8d2e03037a7aebf481ee574ab11e5
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -46121,7 +46121,7 @@ function expectedChecksum(version, table) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FIXER_BINARY = void 0;
+exports.VENDORED_PHAR_ENV = exports.FIXER_BINARY = void 0;
 exports.fixerReleaseUrl = fixerReleaseUrl;
 exports.downloadFixer = downloadFixer;
 const promises_1 = __nccwpck_require__(51455);
@@ -46130,6 +46130,8 @@ const cache_1 = __nccwpck_require__(97377);
 const checksums_1 = __nccwpck_require__(73219);
 const http_1 = __nccwpck_require__(76803);
 exports.FIXER_BINARY = 'php-cs-fixer';
+/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+exports.VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR';
 function fixerReleaseUrl(version) {
     return `https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${version}/php-cs-fixer.phar`;
 }
@@ -46141,11 +46143,32 @@ async function makeExecutable(path) {
         // chmod is optional on Windows runners
     }
 }
+async function installVerifiedPhar(source, dest, expected, version) {
+    try {
+        const hash = await (0, cache_1.sha256File)(source);
+        (0, cache_1.assertChecksum)(hash, expected, version);
+        if ((0, node_path_1.resolve)(source) !== (0, node_path_1.resolve)(dest)) {
+            await (0, promises_1.copyFile)(source, dest);
+        }
+        await makeExecutable(dest);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 async function downloadFixer(version, workspace = process.cwd(), options = {}) {
     const dest = (0, node_path_1.join)(workspace, exports.FIXER_BINARY);
     const table = options.checksums ?? (await (0, checksums_1.loadChecksums)(options.checksumsPath ?? (0, checksums_1.resolveChecksumsPath)()));
     const expected = (0, checksums_1.expectedChecksum)(version, table);
     const cache = options.cache ?? (0, cache_1.createGithubPharCache)();
+    if (await installVerifiedPhar(dest, dest, expected, version)) {
+        return dest;
+    }
+    const vendored = process.env[exports.VENDORED_PHAR_ENV];
+    if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
+        return dest;
+    }
     const cached = await cache.restore(version, expected);
     if (cached) {
         const cachedHash = await (0, cache_1.sha256File)(cached);

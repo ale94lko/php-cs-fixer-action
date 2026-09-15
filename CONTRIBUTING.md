@@ -13,7 +13,7 @@ cp .env.example .env
 npm ci
 ```
 
-From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a downloaded phar.
+From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a GitHub-release phar (vendored into the Docker image, otherwise downloaded and checksum-verified).
 
 ```bash
 npm ci
@@ -70,24 +70,25 @@ The workflow does not rewrite `CHANGELOG.md`. After the tag, retitle `Changelog 
 
 ## Local fixer
 
-Run php-cs-fixer against the clean fixtures (needs PHP 8.3+ and network to download the phar):
+Run php-cs-fixer against the clean fixtures. `scripts/ci-local.sh` defaults to `tests/fixtures/.php-cs-fixer.dist.php` (no php-cs-fixer-rules). The first run without a verified `php-cs-fixer` binary or `PHP_CS_FIXER_PHAR` still needs network to download the phar:
 
 ```bash
 bash scripts/ci-local.sh
 ```
 
-Or with Docker:
+Docker vendors the pinned phar during `docker build` (verified against `checksums.txt`). After that, lint the fixtures **offline**:
 
 ```bash
 docker build -t php-cs-fixer-action .
-docker run --rm php-cs-fixer-action
+docker run --rm --network=none php-cs-fixer-action
 ```
 
 ```bash
-docker compose run --rm fixer
+docker compose build
+docker compose run --rm --network none fixer
 ```
 
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `docker-offline` (`docker build` then `docker run --network=none`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
