@@ -1,0 +1,48 @@
+# Analyzes JavaScript/TypeScript and GitHub Actions workflows with CodeQL.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/26
+# Keep GitHub CodeQL default setup disabled: advanced SARIF uploads are rejected
+# while default setup is enabled.
+# https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads/default-setup-enabled
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '18 5 * * 1'
+
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
+          - language: actions
+            build-mode: none
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          config-file: .github/codeql/codeql-config.yml
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
