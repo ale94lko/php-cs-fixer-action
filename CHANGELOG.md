@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* docs: Record that Scorecard CI-Tests is 10 (26/26); keep CI on every PR with no path filters. [#66](https://github.com/ale94lko/php-cs-fixer-action/issues/66)
 * ci: Lint the Dockerfile with Hadolint so Scorecard SAST is 10 and code-scanning alert #42 can close. [#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)
 * docs: Record that GitHub Actions write tokens are scoped to jobs; remaining Scorecard Token-Permissions findings are job-level warnings. [#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)
 * docs: Record which OpenSSF Scorecard checks are accepted low scores. [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)
