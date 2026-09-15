@@ -10,6 +10,8 @@ const base: ActionInputs = {
   configPath: '',
   rulesVersion: 'v1.0.1',
   useFullRules: 'true',
+  mode: 'check',
+  paths: '',
 }
 
 describe('rules selection', () => {

@@ -4,6 +4,7 @@ import { constants } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { FIXER_BINARY } from './download-fixer'
+import type { ActionMode } from './inputs'
 
 export type FixerResult = {
   exitCode: number
@@ -16,15 +17,34 @@ export type RunProcess = (
   options: { cwd: string; env: NodeJS.ProcessEnv },
 ) => Promise<FixerResult>
 
-export const FIXER_ARGS = [
+export type RunFixerSettings = {
+  workspace?: string
+  runProcess?: RunProcess
+  mode?: ActionMode
+  paths?: string[]
+}
+
+export const BASE_FIXER_ARGS = [
   'fix',
   '--verbose',
   '--diff',
   '--show-progress=none',
   '--allow-risky=yes',
-  '--dry-run',
   '--format=txt',
 ] as const
+
+export function buildFixerArgs(
+  configFile: string,
+  mode: ActionMode = 'check',
+  paths: string[] = [],
+): string[] {
+  const args: string[] = [...BASE_FIXER_ARGS]
+  if (mode === 'check') {
+    args.push('--dry-run')
+  }
+  args.push(`--config=${configFile}`, ...paths)
+  return args
+}
 
 export function spawnPhp(
   command: string,
@@ -57,9 +77,12 @@ export function spawnPhp(
 
 export async function runFixer(
   configFile: string,
-  workspace = process.cwd(),
-  runProcess: RunProcess = spawnPhp,
+  settings: RunFixerSettings = {},
 ): Promise<FixerResult> {
+  const workspace = settings.workspace ?? process.cwd()
+  const runProcess = settings.runProcess ?? spawnPhp
+  const mode = settings.mode ?? 'check'
+  const paths = settings.paths ?? []
   const configPath = join(workspace, configFile)
   try {
     await access(configPath, constants.F_OK)
@@ -73,7 +96,7 @@ export async function runFixer(
   }
   const result = await runProcess(
     'php',
-    [join(workspace, FIXER_BINARY), ...FIXER_ARGS, `--config=${configFile}`],
+    [join(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)],
     { cwd: workspace, env },
   )
   await writeFile(join(workspace, 'result.txt'), result.output)

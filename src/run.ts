@@ -3,7 +3,7 @@ import { downloadFixer } from './download-fixer'
 import { readInputs, type ActionInputs } from './inputs'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
-import { validateAllInputs } from './validate'
+import { parsePaths, validateAllInputs } from './validate'
 
 export const VIOLATIONS_MESSAGE =
   'PHP CS Fixer found coding standard violations. See the detailed report above for files, fixers and diffs.'
@@ -36,7 +36,10 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   )
   const configFile = await deps.resolveConfig(inputs)
 
-  const result = await deps.runFixer(configFile)
+  const result = await deps.runFixer(configFile, {
+    mode: inputs.mode === 'fix' ? 'fix' : 'check',
+    paths: parsePaths(inputs.paths),
+  })
   core.setOutput('code-style-result', result.output)
 
   if (result.exitCode !== 0) {

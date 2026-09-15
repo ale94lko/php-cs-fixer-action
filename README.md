@@ -8,11 +8,11 @@
   </a>
 </p>
 
-> A GitHub Action to check PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
+> A GitHub Action to check or fix PHP Coding Standards using [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer).
 
-When style violations are found, the Action fails and prints a detailed console report (affected files, applied fixers and diffs) so you know exactly what to fix.
+By default (`mode: check`) the Action runs `--dry-run`: when style violations are found it fails and prints a detailed console report (affected files, applied fixers and diffs). Set `mode: fix` to write those changes in the workspace.
 
-This is a Node 24 TypeScript Action (`dist/index.js`). Public inputs and the `code-style-result` output are unchanged from the previous composite Action. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar.
+This is a Node 24 TypeScript Action (`dist/index.js`). Default behavior stays check-only so existing workflows keep failing on violations without rewriting files. The runner still needs PHP 8.3+ (for example `shivammathur/setup-php`) because php-cs-fixer itself is a PHP phar.
 
 Rules can come from:
 
@@ -42,6 +42,8 @@ Rules can come from:
 | config-path | Path to a local php-cs-fixer config in your repo. When set, skips downloading from php-cs-fixer-rules | `false` | _(empty)_ | e.g. `.php-cs-fixer.dist.php` |
 | rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `main` | `main`, `v1.0.1`, SHA… |
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
+| mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
+| paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
 
 ## Examples
 
@@ -92,6 +94,23 @@ jobs:
 +     php-cs-fixer-version: v3.95.21
 ```
 
+### Check only (default)
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    with:
+      mode: check
+```
+
+### Apply fixes to selected paths
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    with:
+      mode: fix
+      paths: src tests
+```
+
 ## View live
 
 - [Successful test](https://github.com/ale94lko/php-cs-fixer-action/runs/7461553837?check_suite_focus=true)
@@ -99,7 +118,7 @@ jobs:
 
 ## Architecture
 
-`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --dry-run`. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the inputs. `src/` validates them, downloads the php-cs-fixer phar, resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 

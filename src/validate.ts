@@ -1,4 +1,5 @@
-import type { ActionInputs } from './inputs'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
+import type { ActionInputs, ActionMode } from './inputs'
 
 const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/
 const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/
@@ -36,9 +37,50 @@ export function validateConfigPath(path: string): void {
   }
 }
 
-export function validateAllInputs(inputs: ActionInputs): void {
+export function validateMode(mode: string): asserts mode is ActionMode {
+  if (mode !== 'check' && mode !== 'fix') {
+    throw new Error(`Invalid mode '${mode}'. Expected check or fix.`)
+  }
+}
+
+export function parsePaths(raw: string): string[] {
+  const trimmed = raw.trim()
+  if (trimmed === '') {
+    return []
+  }
+  return trimmed.split(/\s+/)
+}
+
+function hasParentSegment(path: string): boolean {
+  return path.split(/[\\/]/).includes('..')
+}
+
+function isInsideWorkspace(workspace: string, candidate: string): boolean {
+  const root = resolve(workspace)
+  const resolved = resolve(workspace, candidate)
+  const rel = relative(root, resolved)
+  return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)
+}
+
+export function validatePaths(raw: string, workspace = process.cwd()): void {
+  for (const path of parsePaths(raw)) {
+    if (
+      path.startsWith('-') ||
+      path.startsWith('/') ||
+      WINDOWS_ABSOLUTE.test(path) ||
+      hasParentSegment(path) ||
+      !isInsideWorkspace(workspace, path)
+    ) {
+      throw new Error(`Invalid path '${path}'. Use a relative path inside the workspace.`)
+    }
+  }
+}
+
+export function validateAllInputs(inputs: ActionInputs, workspace = process.cwd()): void {
   validatePhpCsFixerVersion(inputs.phpCsFixerVersion)
   validateUseFullRules(inputs.useFullRules)
   validateGitRef(inputs.rulesVersion)
   validateConfigPath(inputs.configPath)
+  validateMode(inputs.mode)
+  validatePaths(inputs.paths, workspace)
 }

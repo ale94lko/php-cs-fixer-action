@@ -1,10 +1,14 @@
 import * as core from '@actions/core'
 
+export type ActionMode = 'check' | 'fix'
+
 export type ActionInputs = {
   phpCsFixerVersion: string
   configPath: string
   rulesVersion: string
   useFullRules: string
+  mode: string
+  paths: string
 }
 
 function read(name: string, fallbackEnv: string, defaultValue: string): string {
@@ -22,5 +26,7 @@ export function readInputs(): ActionInputs {
     configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
     rulesVersion: read('rules-version', 'RULES_VERSION', 'main'),
     useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
+    mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
+    paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
   }
 }

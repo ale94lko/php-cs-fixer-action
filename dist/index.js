@@ -31546,6 +31546,8 @@ function readInputs() {
         configPath: read('config-path', 'CONFIG_PATH', configFromEnv),
         rulesVersion: read('rules-version', 'RULES_VERSION', 'main'),
         useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
+        mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
+        paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
     };
 }
 
@@ -31598,7 +31600,8 @@ async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FIXER_ARGS = void 0;
+exports.BASE_FIXER_ARGS = void 0;
+exports.buildFixerArgs = buildFixerArgs;
 exports.spawnPhp = spawnPhp;
 exports.runFixer = runFixer;
 const node_child_process_1 = __nccwpck_require__(1421);
@@ -31607,15 +31610,22 @@ const node_fs_1 = __nccwpck_require__(3024);
 const promises_2 = __nccwpck_require__(1455);
 const node_path_1 = __nccwpck_require__(6760);
 const download_fixer_1 = __nccwpck_require__(3230);
-exports.FIXER_ARGS = [
+exports.BASE_FIXER_ARGS = [
     'fix',
     '--verbose',
     '--diff',
     '--show-progress=none',
     '--allow-risky=yes',
-    '--dry-run',
     '--format=txt',
 ];
+function buildFixerArgs(configFile, mode = 'check', paths = []) {
+    const args = [...exports.BASE_FIXER_ARGS];
+    if (mode === 'check') {
+        args.push('--dry-run');
+    }
+    args.push(`--config=${configFile}`, ...paths);
+    return args;
+}
 function spawnPhp(command, args, options) {
     return new Promise((resolve, reject) => {
         const child = (0, node_child_process_1.spawn)(command, args, {
@@ -31640,7 +31650,11 @@ function spawnPhp(command, args, options) {
         });
     });
 }
-async function runFixer(configFile, workspace = process.cwd(), runProcess = spawnPhp) {
+async function runFixer(configFile, settings = {}) {
+    const workspace = settings.workspace ?? process.cwd();
+    const runProcess = settings.runProcess ?? spawnPhp;
+    const mode = settings.mode ?? 'check';
+    const paths = settings.paths ?? [];
     const configPath = (0, node_path_1.join)(workspace, configFile);
     try {
         await (0, promises_1.access)(configPath, node_fs_1.constants.F_OK);
@@ -31652,7 +31666,7 @@ async function runFixer(configFile, workspace = process.cwd(), runProcess = spaw
         ...process.env,
         PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
     };
-    const result = await runProcess('php', [(0, node_path_1.join)(workspace, download_fixer_1.FIXER_BINARY), ...exports.FIXER_ARGS, `--config=${configFile}`], { cwd: workspace, env });
+    const result = await runProcess('php', [(0, node_path_1.join)(workspace, download_fixer_1.FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)], { cwd: workspace, env });
     await (0, promises_2.writeFile)((0, node_path_1.join)(workspace, 'result.txt'), result.output);
     return result;
 }
@@ -31724,7 +31738,10 @@ async function executeAction(deps = defaultDeps) {
         ? `Downloading rules from php-cs-fixer-rules@${inputs.rulesVersion}`
         : `Using local config: ${inputs.configPath}`);
     const configFile = await deps.resolveConfig(inputs);
-    const result = await deps.runFixer(configFile);
+    const result = await deps.runFixer(configFile, {
+        mode: inputs.mode === 'fix' ? 'fix' : 'check',
+        paths: (0, validate_1.parsePaths)(inputs.paths),
+    });
     core.setOutput('code-style-result', result.output);
     if (result.exitCode !== 0) {
         core.setFailed(exports.VIOLATIONS_MESSAGE);
@@ -31745,7 +31762,7 @@ async function run(deps = defaultDeps) {
 /***/ }),
 
 /***/ 397:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
@@ -31754,7 +31771,11 @@ exports.validatePhpCsFixerVersion = validatePhpCsFixerVersion;
 exports.validateUseFullRules = validateUseFullRules;
 exports.validateGitRef = validateGitRef;
 exports.validateConfigPath = validateConfigPath;
+exports.validateMode = validateMode;
+exports.parsePaths = parsePaths;
+exports.validatePaths = validatePaths;
 exports.validateAllInputs = validateAllInputs;
+const node_path_1 = __nccwpck_require__(6760);
 const VERSION_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
 const GIT_REF_PATTERN = /^[A-Za-z0-9._/-]+$/;
 const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/;
@@ -31784,11 +31805,45 @@ function validateConfigPath(path) {
         throw new Error(`Invalid config-path '${path}'. Use a relative path inside the workspace.`);
     }
 }
-function validateAllInputs(inputs) {
+function validateMode(mode) {
+    if (mode !== 'check' && mode !== 'fix') {
+        throw new Error(`Invalid mode '${mode}'. Expected check or fix.`);
+    }
+}
+function parsePaths(raw) {
+    const trimmed = raw.trim();
+    if (trimmed === '') {
+        return [];
+    }
+    return trimmed.split(/\s+/);
+}
+function hasParentSegment(path) {
+    return path.split(/[\\/]/).includes('..');
+}
+function isInsideWorkspace(workspace, candidate) {
+    const root = (0, node_path_1.resolve)(workspace);
+    const resolved = (0, node_path_1.resolve)(workspace, candidate);
+    const rel = (0, node_path_1.relative)(root, resolved);
+    return rel !== '..' && !rel.startsWith(`..${node_path_1.sep}`) && !(0, node_path_1.isAbsolute)(rel);
+}
+function validatePaths(raw, workspace = process.cwd()) {
+    for (const path of parsePaths(raw)) {
+        if (path.startsWith('-') ||
+            path.startsWith('/') ||
+            WINDOWS_ABSOLUTE.test(path) ||
+            hasParentSegment(path) ||
+            !isInsideWorkspace(workspace, path)) {
+            throw new Error(`Invalid path '${path}'. Use a relative path inside the workspace.`);
+        }
+    }
+}
+function validateAllInputs(inputs, workspace = process.cwd()) {
     validatePhpCsFixerVersion(inputs.phpCsFixerVersion);
     validateUseFullRules(inputs.useFullRules);
     validateGitRef(inputs.rulesVersion);
     validateConfigPath(inputs.configPath);
+    validateMode(inputs.mode);
+    validatePaths(inputs.paths, workspace);
 }
 
 

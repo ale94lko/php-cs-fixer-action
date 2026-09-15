@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  parsePaths,
   validateAllInputs,
   validateConfigPath,
   validateGitRef,
+  validateMode,
+  validatePaths,
   validatePhpCsFixerVersion,
   validateUseFullRules,
 } from './validate'
@@ -13,6 +16,8 @@ const valid: ActionInputs = {
   configPath: '',
   rulesVersion: 'main',
   useFullRules: 'true',
+  mode: 'check',
+  paths: '',
 }
 
 describe('validatePhpCsFixerVersion', () => {
@@ -77,5 +82,43 @@ describe('validateAllInputs', () => {
     expect(() => validateAllInputs({ ...valid, phpCsFixerVersion: 'latest' })).toThrow(
       /php-cs-fixer-version/,
     )
+  })
+
+  it('fails closed on an unknown mode', () => {
+    expect(() => validateAllInputs({ ...valid, mode: 'lint' })).toThrow(/Expected check or fix/)
+  })
+})
+
+describe('validateMode', () => {
+  it('accepts check and fix', () => {
+    expect(() => validateMode('check')).not.toThrow()
+    expect(() => validateMode('fix')).not.toThrow()
+  })
+
+  it('rejects unknown values', () => {
+    expect(() => validateMode('dry-run')).toThrow(/Expected check or fix/)
+    expect(() => validateMode('')).toThrow(/Expected check or fix/)
+  })
+})
+
+describe('parsePaths', () => {
+  it('splits on whitespace and treats empty as no paths', () => {
+    expect(parsePaths('')).toEqual([])
+    expect(parsePaths('  src   tests/Unit  ')).toEqual(['src', 'tests/Unit'])
+  })
+})
+
+describe('validatePaths', () => {
+  it('allows empty and relative workspace paths', () => {
+    expect(() => validatePaths('')).not.toThrow()
+    expect(() => validatePaths('src tests/fixtures/Dirty.php')).not.toThrow()
+  })
+
+  it('rejects traversal, absolute paths and option-like tokens', () => {
+    expect(() => validatePaths('../secrets.php')).toThrow(/relative path/)
+    expect(() => validatePaths('/etc/passwd')).toThrow(/relative path/)
+    expect(() => validatePaths('C:\\Windows\\secrets.php')).toThrow(/relative path/)
+    expect(() => validatePaths('tests/../../etc/passwd')).toThrow(/relative path/)
+    expect(() => validatePaths('--allow-risky=yes')).toThrow(/relative path/)
   })
 })

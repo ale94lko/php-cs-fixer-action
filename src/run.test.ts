@@ -7,6 +7,8 @@ const inputs: ActionInputs = {
   configPath: 'tests/fixtures/.php-cs-fixer.dist.php',
   rulesVersion: 'main',
   useFullRules: 'true',
+  mode: 'check',
+  paths: '',
 }
 
 vi.mock('@actions/core', () => ({
@@ -36,6 +38,10 @@ describe('executeAction', () => {
 
     expect(downloadFixer).toHaveBeenCalledWith('v3.95.21')
     expect(resolveConfig).toHaveBeenCalledWith(inputs)
+    expect(runFixer).toHaveBeenCalledWith(
+      'tests/fixtures/.php-cs-fixer.dist.php',
+      expect.objectContaining({ mode: 'check', paths: [] }),
+    )
     expect(core.setOutput).toHaveBeenCalledWith('code-style-result', 'diff')
     expect(core.setFailed).toHaveBeenCalledWith(VIOLATIONS_MESSAGE)
   })
@@ -51,6 +57,20 @@ describe('executeAction', () => {
     expect(core.setFailed).not.toHaveBeenCalled()
   })
 
+  it('forwards fix mode and parsed paths to the fixer', async () => {
+    const runFixer = vi.fn().mockResolvedValue({ exitCode: 0, output: 'fixed' })
+    await executeAction({
+      readInputs: () => ({ ...inputs, mode: 'fix', paths: 'src tests' }),
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('config.php'),
+      runFixer,
+    })
+    expect(runFixer).toHaveBeenCalledWith(
+      'config.php',
+      expect.objectContaining({ mode: 'fix', paths: ['src', 'tests'] }),
+    )
+  })
+
   it('does not download when inputs are invalid', async () => {
     const downloadFixer = vi.fn()
     await expect(
@@ -61,6 +81,19 @@ describe('executeAction', () => {
         runFixer: vi.fn(),
       }),
     ).rejects.toThrow(/php-cs-fixer-version/)
+    expect(downloadFixer).not.toHaveBeenCalled()
+  })
+
+  it('does not download when mode is unknown', async () => {
+    const downloadFixer = vi.fn()
+    await expect(
+      executeAction({
+        readInputs: () => ({ ...inputs, mode: 'lint' }),
+        downloadFixer,
+        resolveConfig: vi.fn(),
+        runFixer: vi.fn(),
+      }),
+    ).rejects.toThrow(/Expected check or fix/)
     expect(downloadFixer).not.toHaveBeenCalled()
   })
 })

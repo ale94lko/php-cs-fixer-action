@@ -14,6 +14,8 @@ describe('readInputs', () => {
     delete process.env.CONFIG_FILE
     delete process.env.RULES_VERSION
     delete process.env.USE_FULL_RULES
+    delete process.env.PHP_CS_FIXER_MODE
+    delete process.env.PHP_CS_FIXER_PATHS
   })
 
   it('uses documented defaults', () => {
@@ -22,6 +24,8 @@ describe('readInputs', () => {
       configPath: '',
       rulesVersion: 'main',
       useFullRules: 'true',
+      mode: 'check',
+      paths: '',
     })
   })
 
@@ -36,5 +40,11 @@ describe('readInputs', () => {
   it('prefers CONFIG_FILE when CONFIG_PATH is unset (local/docker)', () => {
     process.env.CONFIG_FILE = 'tests/fixtures/.php-cs-fixer.dist.php'
     expect(readInputs().configPath).toBe('tests/fixtures/.php-cs-fixer.dist.php')
+  })
+
+  it('reads mode and paths from env fallbacks', () => {
+    process.env.PHP_CS_FIXER_MODE = 'fix'
+    process.env.PHP_CS_FIXER_PATHS = 'src tests'
+    expect(readInputs()).toMatchObject({ mode: 'fix', paths: 'src tests' })
   })
 })

@@ -36,7 +36,7 @@ Or with Docker:
 docker compose run --rm fixer
 ```
 
-CI jobs: `lint`, `typecheck`, `test` (Vitest + coverage thresholds), a passing Action run on clean fixtures, and a failing Action run on a dirty fixture. The dirty-fixture job is expected to print PHP CS Fixer errors; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint`, `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to print PHP CS Fixer errors; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
