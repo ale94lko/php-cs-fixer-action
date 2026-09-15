@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* feature: Publish GitHub Releases from `CHANGELOG.md` when a `vX.Y.Z` tag is pushed, and move the floating major tag (`v1`). [#29](https://github.com/ale94lko/php-cs-fixer-action/issues/29)
 * chore: Lint GitHub Actions workflows with actionlint in CI. [#28](https://github.com/ale94lko/php-cs-fixer-action/issues/28)
 * feature: Add OpenSSF Scorecard on `main` / weekly and upload SARIF to code scanning. [#27](https://github.com/ale94lko/php-cs-fixer-action/issues/27)
 * feature: Add CodeQL analysis for JavaScript/TypeScript and GitHub Actions workflows. [#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)

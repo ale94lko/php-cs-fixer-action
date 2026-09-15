@@ -1,0 +1,51 @@
+# Publish a GitHub Release from CHANGELOG.md when a version tag is pushed.
+# https://github.com/ale94lko/php-cs-fixer-action/issues/29
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Creating the GitHub Release and moving vN requires contents: write.
+    # Scorecard Token-Permissions still flags this unless the job matches
+    # semantic-release, goreleaser, or mvn release:prepare.
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Extract release notes
+        env:
+          TAG: ${{ github.ref_name }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: bash scripts/extract-release-notes.sh
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: |
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release edit "${TAG}" --notes-file "${NOTES_FILE}"
+          else
+            gh release create "${TAG}" --title "${TAG}" --notes-file "${NOTES_FILE}"
+          fi
+
+      - name: Update floating major tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: bash scripts/update-major-tag.sh
