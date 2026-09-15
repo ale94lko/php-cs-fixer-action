@@ -22,7 +22,7 @@ npm run test:coverage
 npm run build
 ```
 
-After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
+After changing `src/`, commit the rebuilt `dist/` in the same change. CI fails if `dist/` is stale. `npm run build` rewrites `dist/` to LF so a Windows ncc output matches Linux CI. When bumping the default `php-cs-fixer-version`, update `checksums.txt` with:
 
 ```bash
 bash scripts/update-checksums.sh v3.95.21
