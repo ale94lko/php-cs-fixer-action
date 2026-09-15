@@ -8,3 +8,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # ncc 0.45 cannot bundle ESM-only @actions/cache 5+ / 6+ (webpackMissingModule).
+      - dependency-name: "@actions/cache"
+        update-types: ["version-update:semver-major"]

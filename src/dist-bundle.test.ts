@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 const {
   assertDistIsFresh,
+  assertNoWebpackMissingModule,
   canonicalizeDistFiles,
   canonicalizeDistText,
   injectSourceHash,
@@ -13,6 +14,7 @@ const {
   sourceHash,
 } = createRequire(join(process.cwd(), 'package.json'))('./scripts/dist-bundle.cjs') as {
   assertDistIsFresh: (root: string) => void
+  assertNoWebpackMissingModule: (text: string) => void
   canonicalizeDistFiles: (distDir: string) => void
   canonicalizeDistText: (text: string) => string
   injectSourceHash: (text: string, hash: string) => string
@@ -69,5 +71,14 @@ describe('source hash freshness', () => {
     expect(() =>
       assertDistIsFresh(join(tmpdir(), 'missing-php-cs-fixer-action-root')),
     ).toThrow()
+  })
+
+  it('rejects a bundle that ncc failed to resolve', () => {
+    expect(() =>
+      assertNoWebpackMissingModule(
+        'const cache = __nccwpck_require__(Object(function webpackMissingModule() { throw new Error("Cannot find module") }()))',
+      ),
+    ).toThrow(/webpackMissingModule/)
+    expect(() => assertNoWebpackMissingModule('const cache = require("./cache.js")\n')).not.toThrow()
   })
 })
