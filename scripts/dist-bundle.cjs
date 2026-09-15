@@ -86,19 +86,30 @@ function normalizeDist(root) {
   writeFileSync(indexPath, injectSourceHash(body, sourceHash(root)))
 }
 
+function assertNoWebpackMissingModule(text) {
+  if (text.includes('webpackMissingModule')) {
+    throw new Error(
+      'dist/index.js contains webpackMissingModule; ncc could not bundle a dependency. Keep @actions/cache on ^4.1.0 (CJS); 5+ and 6+ are ESM-only.',
+    )
+  }
+}
+
 function assertDistIsFresh(root) {
   const expected = sourceHash(root)
-  const found = readSourceHash(readFileSync(join(root, 'dist/index.js'), 'utf8'))
+  const index = readFileSync(join(root, 'dist/index.js'), 'utf8')
+  const found = readSourceHash(index)
   if (found !== expected) {
     throw new Error(
       `dist/index.js is stale (src-hash ${found ?? 'missing'}, expected ${expected}). Run npm run build and commit dist/.`,
     )
   }
+  assertNoWebpackMissingModule(index)
 }
 
 module.exports = {
   SOURCE_HASH_MARKER,
   assertDistIsFresh,
+  assertNoWebpackMissingModule,
   canonicalizeDistFiles,
   canonicalizeDistText,
   injectSourceHash,
