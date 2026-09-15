@@ -31,8 +31,10 @@ Rules can come from:
 - Include the following in your action:
   ```yaml
   - name: php-cs-fixer
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
   ```
+
+Pin a patch tag (`@v1.0.3`) so CI stays on a known release. A floating major pin (`@v1`) would pick up compatible 1.x updates automatically, but that tag is not published yet — keep using the latest patch tag until it is.
 
 ## Parameters
 
@@ -58,13 +60,13 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@v1.0.2
+        uses: ale94lko/php-cs-fixer-action@v1.0.3
 ```
 
 ### Use a config file from your own repository
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     config-path: .php-cs-fixer.dist.php
 ```
@@ -72,7 +74,7 @@ jobs:
 ### Pin shared rules to a specific ref
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     rules-version: v1.0.1
 +     use-full-rules: true
@@ -81,7 +83,7 @@ jobs:
 ### Use the minimal shared ruleset
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     use-full-rules: false
 ```
@@ -89,7 +91,7 @@ jobs:
 ### Override php-cs-fixer version
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     php-cs-fixer-version: v3.95.21
 ```
@@ -97,7 +99,7 @@ jobs:
 ### Check only (default)
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
     with:
       mode: check
 ```
@@ -105,7 +107,7 @@ jobs:
 ### Apply fixes to selected paths
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.2
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
     with:
       mode: fix
       paths: src tests

@@ -15,6 +15,7 @@ Changelog for next
 * feature: Add ShellCheck, input-validation tests, fixture-based Action CI, Dependabot, Docker Compose, and a root CONTRIBUTING.md.
 * fix: Point ShellCheck at `source-path=SCRIPTDIR` so sourced helpers resolve from each script directory in CI.
 * docs: Document both shared-rules and local-config usage modes.
+* docs: Point README usage examples at `@v1.0.3` and explain patch vs major pinning. [#25](https://github.com/ale94lko/php-cs-fixer-action/issues/25)
 
 Changelog for v1.0.2
 --------------------
