@@ -1,5 +1,12 @@
 import * as core from '@actions/core'
 import { downloadFixer } from './download-fixer'
+import {
+  ActionErrorCode,
+  ActionStep,
+  reportFailure,
+  toActionError,
+  type FailureReport,
+} from './error-tracking'
 import { readInputs, type ActionInputs } from './inputs'
 import { failWithoutGenericAnnotation, publishReport, tryParseViolations } from './report'
 import { resolveConfig } from './resolve-config'
@@ -11,6 +18,7 @@ export type ActionDeps = {
   downloadFixer: typeof downloadFixer
   resolveConfig: typeof resolveConfig
   runFixer: typeof runFixer
+  reportFailure?: typeof reportFailure
 }
 
 const defaultDeps: ActionDeps = {
@@ -18,9 +26,11 @@ const defaultDeps: ActionDeps = {
   downloadFixer,
   resolveConfig,
   runFixer,
+  reportFailure,
 }
 
 export async function executeAction(deps: ActionDeps = defaultDeps): Promise<FixerResult | void> {
+  const report = deps.reportFailure ?? reportFailure
   const inputs = deps.readInputs()
   validateAllInputs(inputs)
   const mode = inputs.mode === 'fix' ? 'fix' : 'check'
@@ -49,19 +59,34 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   }
 
   if (violations.length > 0) {
+    await report({
+      step: ActionStep.RunFixer,
+      code: ActionErrorCode.StyleViolations,
+      message: `php-cs-fixer reported ${violations.length} file(s) with style violations.`,
+    }, { fail: false })
     failWithoutGenericAnnotation()
     return result
   }
 
-  core.setFailed(result.output.trim() || 'php-cs-fixer failed.')
+  await report({
+    step: ActionStep.RunFixer,
+    code: ActionErrorCode.FixerFailed,
+    message: result.output.trim() || 'php-cs-fixer failed.',
+  })
   return result
 }
 
 export async function run(deps: ActionDeps = defaultDeps): Promise<void> {
+  const report = deps.reportFailure ?? reportFailure
   try {
     await executeAction(deps)
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    core.setFailed(message)
+    const tracked = toActionError(ActionStep.Run, ActionErrorCode.Unexpected, error)
+    const payload: FailureReport = {
+      step: tracked.step,
+      code: tracked.code,
+      message: tracked.message,
+    }
+    await report(payload)
   }
 }

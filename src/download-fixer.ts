@@ -2,6 +2,7 @@ import { chmod, copyFile, rm } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { assertChecksum, createGithubPharCache, sha256File, type PharCache } from './cache'
 import { expectedChecksum, loadChecksums, resolveChecksumsPath } from './checksums'
+import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import { downloadToFile, type DownloadOptions } from './http'
 
 export const FIXER_BINARY = 'php-cs-fixer'
@@ -51,42 +52,53 @@ export async function downloadFixer(
   workspace = process.cwd(),
   options: DownloadFixerOptions = {},
 ): Promise<string> {
-  const dest = join(workspace, FIXER_BINARY)
-  const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()))
-  const expected = expectedChecksum(version, table)
-  const cache = options.cache ?? createGithubPharCache()
-
-  if (await installVerifiedPhar(dest, dest, expected, version)) {
-    return dest
-  }
-
-  const vendored = process.env[VENDORED_PHAR_ENV]
-  if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
-    return dest
-  }
-
-  const cached = await cache.restore(version, expected)
-  if (cached) {
-    const cachedHash = await sha256File(cached)
-    try {
-      assertChecksum(cachedHash, expected, version)
-      await copyFile(cached, dest)
-      await makeExecutable(dest)
-      return dest
-    } catch {
-      await rm(cached, { force: true })
-    }
-  }
-
-  await downloadToFile(fixerReleaseUrl(version), dest, options)
-  const actual = await sha256File(dest)
   try {
-    assertChecksum(actual, expected, version)
+    const dest = join(workspace, FIXER_BINARY)
+    const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()))
+    const expected = expectedChecksum(version, table)
+    const cache = options.cache ?? createGithubPharCache()
+
+    if (await installVerifiedPhar(dest, dest, expected, version)) {
+      return dest
+    }
+
+    const vendored = process.env[VENDORED_PHAR_ENV]
+    if (vendored && (await installVerifiedPhar(vendored, dest, expected, version))) {
+      return dest
+    }
+
+    const cached = await cache.restore(version, expected)
+    if (cached) {
+      const cachedHash = await sha256File(cached)
+      try {
+        assertChecksum(cachedHash, expected, version)
+        await copyFile(cached, dest)
+        await makeExecutable(dest)
+        return dest
+      } catch {
+        await rm(cached, { force: true })
+      }
+    }
+
+    await downloadToFile(fixerReleaseUrl(version), dest, options)
+    const actual = await sha256File(dest)
+    try {
+      assertChecksum(actual, expected, version)
+    } catch (error) {
+      await rm(dest, { force: true })
+      throw error
+    }
+    await makeExecutable(dest)
+    await cache.save(version, expected, dest)
+    return dest
   } catch (error) {
-    await rm(dest, { force: true })
-    throw error
+    if (error instanceof ActionError) {
+      throw error
+    }
+    const message = error instanceof Error ? error.message : String(error)
+    const code = message.includes('Checksum mismatch')
+      ? ActionErrorCode.ChecksumMismatch
+      : ActionErrorCode.DownloadFailed
+    throw new ActionError(ActionStep.DownloadFixer, code, message)
   }
-  await makeExecutable(dest)
-  await cache.save(version, expected, dest)
-  return dest
 }

@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* feature: Report Action failures through one helper (`step`, `code`, `message`) with optional `ERROR_TRACKING_URL` webhook. [#36](https://github.com/ale94lko/php-cs-fixer-action/issues/36)
 * fix: Drop workflow-level write from `health_score.yml` and grant `contents: write` only on the badge job. [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72)
 * fix: Drop workflow-level write from `bump-php-cs-fixer.yml` and grant `contents: write` plus `pull-requests: write` only on the `bump` job. [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)
 * chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
