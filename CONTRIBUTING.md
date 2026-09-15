@@ -13,6 +13,15 @@ cp .env.example .env
 npm ci
 ```
 
+From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a downloaded phar.
+
+```bash
+npm ci
+npm audit --omit=dev --audit-level=high
+```
+
+CI fails that job on high or critical advisories. Do not waive those without an explicit, reviewed exception.
+
 ## Quality checks
 
 ```bash
@@ -20,6 +29,7 @@ npm run lint
 npm run typecheck
 npm run test:coverage
 npm run build
+npm run audit:prod
 shfmt -d -i 2 scripts tests/*.sh
 actionlint
 bash tests/extract-release-notes.test.sh
@@ -77,7 +87,7 @@ docker run --rm php-cs-fixer-action
 docker compose run --rm fixer
 ```
 
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 

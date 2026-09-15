@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* chore: Run `npm audit --omit=dev --audit-level=high` on every push and pull request. [#34](https://github.com/ale94lko/php-cs-fixer-action/issues/34)
 * chore: Pin GitHub Actions in `.github/workflows/` to commit SHAs with version comments so Dependabot can still bump them. [#30](https://github.com/ale94lko/php-cs-fixer-action/issues/30)
 * feature: Publish GitHub Releases from `CHANGELOG.md` when a `vX.Y.Z` tag is pushed, and move the floating major tag (`v1`). [#29](https://github.com/ale94lko/php-cs-fixer-action/issues/29)
 * chore: Lint GitHub Actions workflows with actionlint in CI. [#28](https://github.com/ale94lko/php-cs-fixer-action/issues/28)
