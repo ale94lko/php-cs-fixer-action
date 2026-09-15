@@ -22,15 +22,15 @@ while IFS= read -r line || [[ -n "${line}" ]]; do
   tag="${line##* }"
   digest="${line%% *}"
   if [[ "${tag}" == "${VERSION}" && "${digest}" =~ ^[a-fA-F0-9]{64}$ ]]; then
-    printf '%s  %s\n' "${HASH}" "${VERSION}" >> "${OUT}"
+    printf '%s  %s\n' "${HASH}" "${VERSION}" >>"${OUT}"
     replaced=1
   else
-    printf '%s\n' "${line}" >> "${OUT}"
+    printf '%s\n' "${line}" >>"${OUT}"
   fi
-done < "${CHECKSUMS}"
+done <"${CHECKSUMS}"
 
 if [[ "${replaced}" -eq 0 ]]; then
-  printf '%s  %s\n' "${HASH}" "${VERSION}" >> "${OUT}"
+  printf '%s  %s\n' "${HASH}" "${VERSION}" >>"${OUT}"
 fi
 
 mv "${OUT}" "${CHECKSUMS}"
