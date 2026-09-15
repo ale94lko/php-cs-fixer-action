@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "ncc build src/index.ts -o dist --source-map --license licenses",
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses && node scripts/normalize-dist.cjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
