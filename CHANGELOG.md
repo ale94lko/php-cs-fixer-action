@@ -7,6 +7,8 @@ Changelog for next
 ------------------
 
 * ci: Require Conventional Commits on PRs via commitlint (SHA-pinned). [#91](https://github.com/ale94lko/php-cs-fixer-action/issues/91)
+* ci: Upload an informational `npm outdated` report in CI and add a weekly dependency-freshness workflow. [#90](https://github.com/ale94lko/php-cs-fixer-action/issues/90)
+* docs: Add a Scope subsection stating this repo is a GitHub Action, not IaC. [#88](https://github.com/ale94lko/php-cs-fixer-action/issues/88)
 * docs: Record Scorecard Code-Review policy and add CODEOWNERS so new PRs get a maintainer approval. [#68](https://github.com/ale94lko/php-cs-fixer-action/issues/68)
 * docs: Record that Scorecard CI-Tests is 10 (26/26); keep CI on every PR with no path filters. [#66](https://github.com/ale94lko/php-cs-fixer-action/issues/66)
 * ci: Lint the Dockerfile with Hadolint so Scorecard SAST is 10 and code-scanning alert #42 can close. [#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)
