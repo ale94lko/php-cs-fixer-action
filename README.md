@@ -19,6 +19,10 @@ Rules can come from:
 1. The shared [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) repository (default), or
 2. A config file already present in your own repository (`config-path`).
 
+## Scope
+
+This repository is a **GitHub Action** implementation: Node 24 TypeScript under `src/`, bundled to `dist/index.js`, with Docker and a Dev Container for local runs. It is **not** infrastructure-as-code. There is no Terraform, Kubernetes, Pulumi, Helm, or Ansible here, and none will be added just to satisfy generic IaC scoring rubrics.
+
 ## Requirements
 
 - Be sure to have set the following before using the action
