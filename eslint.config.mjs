@@ -9,6 +9,7 @@ export default tseslint.config(
       'node_modules/**',
       'scripts/**',
       'eslint.config.mjs',
+      'commitlint.config.mjs',
       'vitest.config.ts',
     ],
   },
