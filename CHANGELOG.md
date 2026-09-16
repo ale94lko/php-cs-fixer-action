@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* test: Add a loopback HTTP integration test for `downloadFixer` checksum verification and cache reuse. [#92](https://github.com/ale94lko/php-cs-fixer-action/issues/92)
 * ci: Require Conventional Commits on PRs via commitlint (SHA-pinned). [#91](https://github.com/ale94lko/php-cs-fixer-action/issues/91)
 * ci: Upload an informational `npm outdated` report in CI and add a weekly dependency-freshness workflow. [#90](https://github.com/ale94lko/php-cs-fixer-action/issues/90)
 * docs: Add a Scope subsection stating this repo is a GitHub Action, not IaC. [#88](https://github.com/ale94lko/php-cs-fixer-action/issues/88)
