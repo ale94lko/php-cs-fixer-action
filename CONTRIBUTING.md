@@ -118,6 +118,10 @@ CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes 
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
+## Commits and tests
+
+**Pair source with specs.** Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR: pair `src/*.ts` changes with `src/*.test.ts` (or `tests/*.sh` / `tests/integration/*.test.ts`). One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Do not rewrite old history to invent that pairing.
+
 ## Workflow
 
 1. Search [existing issues](https://github.com/ale94lko/php-cs-fixer-action/issues) before opening a new one.
