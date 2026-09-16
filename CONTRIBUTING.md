@@ -114,7 +114,7 @@ docker compose run --rm --network none fixer
 
 The `FROM` line is digest-pinned (`php:8.3-cli-bookworm@sha256:…`). When bumping the PHP image, refresh that digest with `docker buildx imagetools inspect php:8.3-cli-bookworm --format '{{.Manifest.Digest}}'` (or the Hub tag digest) in the same change.
 
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds), `docker-offline` (`docker build` then `docker run --network=none`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `typecheck`, `test` (Vitest + coverage thresholds, including `tests/integration/`), `docker-offline` (`docker build` then `docker run --network=none`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
