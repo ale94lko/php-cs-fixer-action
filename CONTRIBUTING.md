@@ -120,7 +120,7 @@ CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes 
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) on every PR commit. Allowed types: `feat`, `fix`, `chore`, `test`, `docs`, `ci`, `refactor` (for example `feat: add paths input`, `fix: fail closed on checksum mismatch`). CI runs `commitlint` on `pull_request` only so historical `main` SHAs are not rewritten or re-linted.
 
-Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR: pair `src/*.ts` changes with `src/*.test.ts` (or `tests/*.sh` / `tests/integration/*.test.ts`). One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Do not rewrite old history to invent that pairing.
+**Pair source with specs.** Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR: pair `src/*.ts` changes with `src/*.test.ts` (or `tests/*.sh` / `tests/integration/*.test.ts`). One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Do not rewrite old history to invent that pairing.
 
 ## Workflow
 
