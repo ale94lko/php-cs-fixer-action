@@ -1,0 +1,48 @@
+name: Dependency freshness
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  outdated:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Report outdated dependencies
+        run: |
+          set +e
+          npm outdated --long > outdated.txt 2>&1
+          status=$?
+          cat outdated.txt
+          {
+            echo '## npm outdated'
+            echo
+            if [[ ! -s outdated.txt ]]; then
+              echo '_All dependencies are within their declared ranges (or npm reported nothing)._'
+            else
+              echo '```'
+              cat outdated.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          # npm outdated exits 1 when packages are outdated; that is informational here.
+          if [[ "$status" -gt 1 ]]; then
+            exit "$status"
+          fi
+          exit 0

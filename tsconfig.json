@@ -11,6 +11,6 @@
     "types": ["node"],
     "rootDir": "."
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/integration/**/*.ts"],
   "exclude": ["dist", "coverage", "node_modules"]
 }

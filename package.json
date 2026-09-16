@@ -27,6 +27,8 @@
     "ajv": "^8.20.0"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/types": "^19.8.1",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.5.1",
     "@vercel/ncc": "^0.45.0",
