@@ -99,6 +99,8 @@ permissions:
 
 If the cache service is unavailable (local runs, missing permission, fork PR), the Action downloads again and still verifies the checksum.
 
+Phar and shared-rules downloads use HTTPS only, a request timeout, a maximum body size, and redirects limited to github.com / *.githubusercontent.com.
+
 ## Examples
 
 Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them), and [`examples/only-changed.yml`](examples/only-changed.yml) (PR-scoped changed PHP files). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
@@ -232,7 +234,7 @@ Runtime pipeline (`src/run.ts`):
 ### Repo health badge
 
 [`.github/workflows/health_score.yml`](.github/workflows/health_score.yml) publishes the README badge on a schedule. It uses workflow-level `permissions: {}` and grants `contents: write` only on the badge job, then passes `token: ${{ secrets.GITHUB_TOKEN }}` to [`ale94lko/repo-health-score`](https://github.com/ale94lko/repo-health-score) so that job can push the generated badge.
-`action.yml` declares the inputs. [`action.inputs.schema.json`](action.inputs.schema.json) is the machine-readable contract; `src/` validates against it with Ajv, resolves php-cs-fixer (vendored phar, Actions cache, or a SHA-256-verified download from `checksums.txt`), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. Failures (invalid inputs, download/config errors, fixer non-zero exit) go through one helper that logs JSON `{step,code,message}` and `core.setFailed`. Set `ERROR_TRACKING_URL` to POST that payload to an http(s) webhook; it is optional and unset by default. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the inputs. [`action.inputs.schema.json`](action.inputs.schema.json) is the machine-readable contract; `src/` validates against it with Ajv, resolves php-cs-fixer (vendored phar, Actions cache, or a SHA-256-verified download from `checksums.txt`), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. Failures (invalid inputs, download/config errors, fixer non-zero exit) go through one helper that logs JSON `{step,code,message}` and `core.setFailed`. Set `ERROR_TRACKING_URL` to POST that payload to an HTTPS webhook (no redirects); it is optional and unset by default. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 

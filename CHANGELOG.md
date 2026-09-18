@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* security: Harden downloads with timeout, maxBytes, and allowlisted HTTPS redirects; webhooks are HTTPS-only with `redirect: error`. [#125](https://github.com/ale94lko/php-cs-fixer-action/issues/125)
 * feature: Add `only-changed` / `base-ref` to derive PHP paths from `git diff` (with workspace validation). [#124](https://github.com/ale94lko/php-cs-fixer-action/issues/124)
 * fix: Stop defaulting `PHP_CS_FIXER_IGNORE_ENV`; document `setUnsupportedPhpVersionAllowed` / `--allow-unsupported-php-version` before php-cs-fixer 4.0. [#123](https://github.com/ale94lko/php-cs-fixer-action/issues/123)
 * feature: Add `allow-risky` input (`yes`/`no`, default `yes` for backward compatibility) instead of hardcoding `--allow-risky=yes`. [#122](https://github.com/ale94lko/php-cs-fixer-action/issues/122)
