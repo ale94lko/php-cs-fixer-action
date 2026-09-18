@@ -37,6 +37,24 @@ We prefer all communications to be in English or Spanish.
 
 We follow the principle of [Coordinated Vulnerability Disclosure](https://www.iso.org/standard/72311.html).
 
+## Vulnerability response process
+
+1. Acknowledge private reports within **14 days** (usually sooner).
+2. Triage severity and reproduce when possible.
+3. Develop and test a fix on a private branch when needed.
+4. Release a patched tag and document the issue in `CHANGELOG.md` / a GitHub Security Advisory without unnecessary delay.
+5. Credit reporters who want recognition (see below).
+
+There is no separate security team beyond the [maintainers](GOVERNANCE.md#roles-and-responsibilities).
+
+## Credit
+
+For vulnerabilities resolved in the last 12 months, we credit reporter(s) in the GitHub Security Advisory and/or `CHANGELOG.md`, unless they request anonymity. If none were resolved in that window, there is nothing to credit yet.
+
+## Security expectations
+
+What the Action does and does not guarantee for consumers is summarized in the [assurance case](docs/assurance-case.md) (threat model, trust boundaries, secure design, and common weakness mitigations).
+
 ## Download integrity threat model
 
 This Action downloads `php-cs-fixer.phar` from [PHP-CS-Fixer GitHub Releases](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases)

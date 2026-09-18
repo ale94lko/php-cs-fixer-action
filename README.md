@@ -29,6 +29,20 @@ Rules can come from:
   - uses: actions/checkout@v5
   ```
 
+## Quick start
+
+Add the Action to a workflow (check mode). See [Setup](#setup) for inputs and [Integrity and cache](#integrity-and-cache) for permissions:
+
+```yaml
+- uses: actions/checkout@v5
+- uses: shivammathur/setup-php@v2
+  with:
+    php-version: '8.3'
+- uses: ale94lko/php-cs-fixer-action@v1
+```
+
+Contributors installing the repo locally should use [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Achievements: [docs/achievements.md](docs/achievements.md).
+
 ## Setup
 
 - Include the following in your action:
