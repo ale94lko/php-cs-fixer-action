@@ -51,6 +51,7 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   const result = await deps.runFixer(configFile, {
     mode,
     paths: parsePaths(inputs.paths),
+    allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
   })
   core.setOutput('code-style-result', result.output)
 

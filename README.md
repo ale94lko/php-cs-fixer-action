@@ -65,6 +65,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
+| allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
 
 ## Integrity and cache
 
@@ -147,6 +148,16 @@ jobs:
     with:
       mode: fix
       paths: src tests
+```
+
+### Disable risky fixers
+Risky rules can change behavior in surprising ways. The Action defaults to `allow-risky: yes` so existing workflows keep the previous hardcoded `--allow-risky=yes` behavior. Opt out explicitly when you want only non-risky fixers:
+
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
++   with:
++     allow-risky: no
 ```
 
 ## CI

@@ -15,6 +15,7 @@ const base: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  allowRisky: 'yes',
 }
 
 describe('rules selection', () => {

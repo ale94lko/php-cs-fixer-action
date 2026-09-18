@@ -11,7 +11,8 @@
     "rules-version",
     "use-full-rules",
     "mode",
-    "paths"
+    "paths",
+    "allow-risky"
   ],
   "properties": {
     "php-cs-fixer-version": {
@@ -42,6 +43,11 @@
       "type": "string",
       "pattern": "^$|^(?:(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)(?:\\s+(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)*$",
       "description": "Empty (use config finder) or space-separated relative workspace paths."
+    },
+    "allow-risky": {
+      "type": "string",
+      "enum": ["yes", "no"],
+      "description": "Passed to php-cs-fixer as --allow-risky. Default yes preserves prior Action behavior."
     }
   }
 }

@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import {
+  DEFAULT_ALLOW_RISKY,
   DEFAULT_PHP_CS_FIXER_VERSION,
   DEFAULT_RULES_VERSION,
   type ActionInputs,
@@ -20,6 +21,7 @@ export type SchemaInputs = {
   'use-full-rules': string
   mode: string
   paths: string
+  'allow-risky': string
 }
 
 export function inputsSchemaPath(root = join(__dirname, '..')): string {
@@ -38,6 +40,7 @@ export function toSchemaInputs(inputs: ActionInputs): SchemaInputs {
     'use-full-rules': inputs.useFullRules,
     mode: inputs.mode,
     paths: inputs.paths,
+    'allow-risky': inputs.allowRisky,
   }
 }
 
@@ -48,6 +51,7 @@ export const SCHEMA_DEFAULTS: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  allowRisky: DEFAULT_ALLOW_RISKY,
 }
 
 let compiled: ValidateFunction<SchemaInputs> | undefined
@@ -78,6 +82,8 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
       return `Invalid php-cs-fixer-version '${value}'. Expected a release tag like v3.95.21.`
     case 'use-full-rules':
       return `Invalid use-full-rules '${value}'. Expected true or false.`
+    case 'allow-risky':
+      return `Invalid allow-risky '${value}'. Expected yes or no.`
     case 'rules-version':
       return value === ''
         ? 'rules-version must not be empty.'
