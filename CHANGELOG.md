@@ -6,6 +6,9 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+Changelog for v1.1.0
+--------------------
+
 * feature: Optional `sarif-file` input writes SARIF 2.1.0 from style violations for `github/codeql-action/upload-sarif`. [#132](https://github.com/ale94lko/php-cs-fixer-action/issues/132)
 * docs: Align README and `examples/` Action pins on `@v1` and clarify major vs patch pinning. [#133](https://github.com/ale94lko/php-cs-fixer-action/issues/133)
 * feature: Accept newline-separated `paths` and a JSON array form so path names may contain spaces. [#131](https://github.com/ale94lko/php-cs-fixer-action/issues/131)

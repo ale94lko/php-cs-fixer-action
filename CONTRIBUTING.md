@@ -56,7 +56,7 @@ Format shell scripts with `shfmt -w -i 2 scripts tests/*.sh` (CI runs `shfmt -d 
 
 Lint workflows with [`actionlint`](https://github.com/rhysd/actionlint) (`actionlint` from the repo root, or `actionlint -color`). It checks `.github/workflows/` only; composite `action.yml` is not supported. CI pins [v1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12). Install locally from the [actionlint README](https://github.com/rhysd/actionlint#installation). When `shellcheck` is on `PATH`, actionlint also lints `run:` scripts.
 
-Every `uses:` in `.github/workflows/` is pinned to a 40-character commit SHA with a version comment (for example `actions/checkout@3d3c42e5… # v7.0.1`). Do not switch those back to mutable tags (`@v7`, `@main`). Dependabot's `github-actions` ecosystem still opens weekly PRs because it reads the version comment. `uses: ./` in CI is the local Action and stays unpinned. Consumer examples under `examples/` use the floating major tag (`@v1`); document patch pins (`@v1.0.3`) only when a frozen release is required.
+Every `uses:` in `.github/workflows/` is pinned to a 40-character commit SHA with a version comment (for example `actions/checkout@3d3c42e5… # v7.0.1`). Do not switch those back to mutable tags (`@v7`, `@main`). Dependabot's `github-actions` ecosystem still opens weekly PRs because it reads the version comment. `uses: ./` in CI is the local Action and stays unpinned. Consumer examples under `examples/` use the floating major tag (`@v1`); document patch pins (`@v1.1.0`) only when a frozen release is required.
 
 After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in the same change when you can. Same-repo PRs that touch `package.json`, `package-lock.json`, `src/`, or `scripts/` get `dist/` rebuilt automatically: `Rebuild dist` runs on `pull_request` (read-only, checks out the PR, uploads an artifact) and `Commit rebuilt dist` runs on `workflow_run` (write token, default-branch checkout only, Git Data API). Scorecard **Token-Permissions** still warns on that job-level `contents: write` ([#65](https://github.com/ale94lko/php-cs-fixer-action/issues/65), [#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)); GitHub has no narrower scope than `contents: write` for creating commits. Fork PRs still need a local `npm run build`. Do not check out `pull_request.head` or `workflow_run.head_sha` in the privileged job — that is the Scorecard **Dangerous-Workflow** pattern ([#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)). Do not merge if `Rebuild dist` fails (`ncc` cannot bundle ESM-only `@actions/cache` 5+/6+ or `@actions/core` 2+/3+). CI checks a `src-hash` banner in `dist/index.js` instead of a byte-for-byte ncc diff, because Windows and Linux ncc output is not identical. Keep `@actions/cache` on `^4.1.0` and `@actions/core` on `^1.11.1` (see [`docs/dependency-notes.md`](docs/dependency-notes.md) for overrides and the `webpackMissingModule` guard). `dist/` is marked generated and ignored in `.github/codeql/codeql-config.yml` so CodeQL scans `src/` rather than the ncc vendor bundle. CodeQL runs on push/PR to `main` and weekly (`.github/workflows/codeql.yml`). OpenSSF Scorecard runs on `main` and weekly (`.github/workflows/scorecard.yml`), not on pull requests: `publish_results` only publishes `supply-chain/branch-protection` and `supply-chain/online-scm` on the default branch, and a PR SARIF upload makes the "Code scanning results / Scorecard" check fail with "2 configurations not found". Add the README badge only after a successful run on `main`.
 
@@ -97,7 +97,7 @@ Keep changes small: one fix or feature per commit/PR, including the tests that p
 These checks are **accepted low scores**, not a regression of the Scorecard workflow ([#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)):
 
 - **Fuzzing** — this Action is not a parser or network service. Do not add OSS-Fuzz unless that surface appears ([#71](https://github.com/ale94lko/php-cs-fixer-action/issues/71)).
-- **Signed-Releases** — consumers pin git tags (`@v1` / `@v1.0.3`), not signed npm/provenance artifacts.
+- **Signed-Releases** — consumers pin git tags (`@v1` / `@v1.1.0`), not signed npm/provenance artifacts.
 - **CII-Best-Practices** — Passing badge achieved ([project 6296](https://www.bestpractices.dev/projects/6296)); Silver docs are in `GOVERNANCE.md` and `docs/`. Scorecard should report 10 for Passing after the next run on `main` ([#67](https://github.com/ale94lko/php-cs-fixer-action/issues/67)).
 - **Branch-Protection (full score)** — without `SCORECARD_TOKEN` (a PAT that can read admin protection settings) Scorecard cannot see every rule on a public repo. Leave `repo_token` commented in `scorecard.yml` unless we add that secret.
 
@@ -120,8 +120,8 @@ Notes always come from `CHANGELOG.md`. Prefer a filled `Changelog for vX.Y.Z` se
 3. Tag and push a stable version:
 
    ```bash
-   git tag v1.0.4
-   git push origin v1.0.4
+   git tag v1.1.0
+   git push origin v1.1.0
    ```
 
 4. [`.github/workflows/release.yml`](.github/workflows/release.yml) (top-level `permissions: {}`, job `contents: write`) creates or updates the GitHub Release from those notes and force-updates the floating major tag (`v1` for `v1.x.y`) to the same commit so `uses: ale94lko/php-cs-fixer-action@v1` tracks the latest compatible release. Scorecard reports that job-level write; GitHub has no narrower `releases` scope, and Scorecard only ignores `contents: write` for semantic-release / goreleaser / Maven.

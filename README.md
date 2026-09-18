@@ -51,7 +51,7 @@ Contributors installing the repo locally should run the one-command check in [Lo
     uses: ale94lko/php-cs-fixer-action@v1
   ```
 
-Snippets and [`examples/`](examples/) use the floating major tag **`@v1`** (latest compatible 1.x). Prefer that for most workflows. Pin a patch tag (`@v1.0.3`) only when you need a frozen release. Publishing a `vX.Y.Z` GitHub Release force-updates `@v1` to the same commit. The `version` in `package.json` on `main` may be ahead of the latest published Action tag — pin Action tags, not that field.
+Snippets and [`examples/`](examples/) use the floating major tag **`@v1`** (latest compatible 1.x). Prefer that for most workflows. Pin a patch tag (`@v1.1.0`) only when you need a frozen release. Publishing a `vX.Y.Z` GitHub Release force-updates `@v1` to the same commit. The `version` in `package.json` on `main` may be ahead of the latest published Action tag — pin Action tags, not that field.
 
 When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` only with a ref that already has digests in [`rules-checksums.txt`](rules-checksums.txt) (or add pins with `bash scripts/update-rules-checksums.sh <tag>`). Unpinned refs fail closed; prefer `config-path` for a local consumer config.
 
