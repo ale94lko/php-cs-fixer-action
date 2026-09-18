@@ -78,6 +78,9 @@ describe('resolveConfig', () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
+      status: 200,
+      headers: { get: () => null },
+      body: null,
       arrayBuffer: async () => new TextEncoder().encode('<?php return [];').buffer,
     })
     const writeFileImpl = vi.fn().mockResolvedValue(undefined)
@@ -92,7 +95,7 @@ describe('resolveConfig', () => {
 
     expect(fetchImpl).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/v1.0.1/.php-cs-fixer.dist.min.php',
-      expect.anything(),
+      expect.objectContaining({ redirect: 'manual' }),
     )
   })
 })

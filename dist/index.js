@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash d3aa50b5847b37d5ed32beabab4a4d71bd3110a3a8658e02a38f83de173450a1
+// php-cs-fixer-action-src-hash 676d389e2a6580882dde31139f1953a0ee59bea80fddd01173d11dfee23239f7
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -100712,7 +100712,8 @@ function trackingWebhookUrl(env = process.env) {
     }
     try {
         const parsed = new URL(raw);
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        // HTTPS-only to reduce SSRF / cleartext risk for optional failure webhooks.
+        if (parsed.protocol !== 'https:') {
             return undefined;
         }
         return raw;
@@ -100731,7 +100732,7 @@ async function postTracking(payload, fetchImpl = fetch) {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload),
-            redirect: 'follow',
+            redirect: 'error',
             signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
         });
     }
@@ -100953,23 +100954,118 @@ function expectedChecksum(version, table) {
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
+const DEFAULT_DOWNLOAD_TIMEOUT_MS = 60_000;
+const DEFAULT_MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024;
+const DEFAULT_MAX_REDIRECTS = 5;
 const defaultSleep = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms);
 });
+/** github.com and *.githubusercontent.com (release assets / raw content). */
+function isAllowedDownloadHost(hostname) {
+    const host = hostname.toLowerCase();
+    return host === 'github.com' || host.endsWith('.githubusercontent.com');
+}
+function assertAllowedDownloadUrl(url) {
+    let parsed;
+    try {
+        parsed = new URL(url);
+    }
+    catch {
+        throw new Error(`Invalid download URL: ${url}`);
+    }
+    if (parsed.protocol !== 'https:') {
+        throw new Error(`Download URL must be HTTPS: ${url}`);
+    }
+    if (!isAllowedDownloadHost(parsed.hostname)) {
+        throw new Error(`Download host not allowed: ${parsed.hostname}. Allowed: github.com and *.githubusercontent.com`);
+    }
+    return parsed;
+}
+async function readResponseBodyLimited(response, maxBytes) {
+    const contentLength = response.headers.get('content-length');
+    if (contentLength !== null && contentLength !== '') {
+        const declared = Number(contentLength);
+        if (Number.isFinite(declared) && declared > maxBytes) {
+            throw new Error(`Download Content-Length ${declared} exceeds maxBytes ${maxBytes}`);
+        }
+    }
+    if (!response.body || typeof response.body.getReader !== 'function') {
+        const data = Buffer.from(await response.arrayBuffer());
+        if (data.length > maxBytes) {
+            throw new Error(`Download body ${data.length} exceeds maxBytes ${maxBytes}`);
+        }
+        return data;
+    }
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
+    try {
+        for (;;) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            if (!value) {
+                continue;
+            }
+            total += value.byteLength;
+            if (total > maxBytes) {
+                throw new Error(`Download body exceeds maxBytes ${maxBytes}`);
+            }
+            chunks.push(value);
+        }
+    }
+    finally {
+        try {
+            reader.releaseLock();
+        }
+        catch {
+            // ignore
+        }
+    }
+    return Buffer.concat(chunks);
+}
+/** Fetch with HTTPS allowlist hosts and no cross-host escape via redirects. */
+async function fetchAllowedDownload(url, options) {
+    let current = assertAllowedDownloadUrl(url).toString();
+    for (let hop = 0; hop <= options.maxRedirects; hop++) {
+        const response = await options.fetchImpl(current, {
+            redirect: 'manual',
+            signal: AbortSignal.timeout(options.timeoutMs),
+        });
+        if (response.status >= 300 && response.status < 400) {
+            const location = response.headers.get('location');
+            if (!location) {
+                throw new Error(`Redirect ${response.status} without Location from ${current}`);
+            }
+            const next = new URL(location, current);
+            assertAllowedDownloadUrl(next.toString());
+            current = next.toString();
+            continue;
+        }
+        return response;
+    }
+    throw new Error(`Too many redirects (max ${options.maxRedirects}) fetching ${url}`);
+}
 async function downloadToFile(url, dest, options = {}) {
     const fetchImpl = options.fetchImpl ?? fetch;
     const writeFileImpl = options.writeFileImpl ?? promises_namespaceObject.writeFile;
     const retries = options.retries ?? 3;
     const delayMs = options.delayMs ?? 2000;
     const sleep = options.sleep ?? defaultSleep;
+    const timeoutMs = options.timeoutMs ?? DEFAULT_DOWNLOAD_TIMEOUT_MS;
+    const maxBytes = options.maxBytes ?? DEFAULT_MAX_DOWNLOAD_BYTES;
+    const maxRedirects = options.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
+    // Fail closed before retries when the URL itself is disallowed.
+    assertAllowedDownloadUrl(url);
     let lastError;
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-            const response = await fetchImpl(url, { redirect: 'follow' });
+            const response = await fetchAllowedDownload(url, { fetchImpl, timeoutMs, maxRedirects });
             if (!response.ok) {
                 throw new Error(`Download failed (${response.status}) from ${url}`);
             }
-            const data = Buffer.from(await response.arrayBuffer());
+            const data = await readResponseBodyLimited(response, maxBytes);
             await writeFileImpl(dest, data);
             return;
         }

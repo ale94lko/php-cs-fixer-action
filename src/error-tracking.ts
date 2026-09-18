@@ -73,7 +73,8 @@ export function trackingWebhookUrl(env: NodeJS.ProcessEnv = process.env): string
   }
   try {
     const parsed = new URL(raw)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    // HTTPS-only to reduce SSRF / cleartext risk for optional failure webhooks.
+    if (parsed.protocol !== 'https:') {
       return undefined
     }
     return raw
@@ -95,7 +96,7 @@ async function postTracking(
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
-      redirect: 'follow',
+      redirect: 'error',
       signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
     })
   } catch {
