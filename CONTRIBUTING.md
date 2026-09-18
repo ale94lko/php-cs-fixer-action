@@ -14,6 +14,8 @@ bash scripts/dev-check.sh
 
 `scripts/dev-check.sh` creates `.env` from `.env.example` when missing, then runs `npm ci`, `npm run test:coverage`, and `bash scripts/ci-local.sh` (Action entrypoint on the fixture config). A green run is the done-condition for local verification before you open a PR. Consumers who only *use* the Action should follow the [README Setup](README.md#setup) section instead.
 
+Do **not** set `PHP_CS_FIXER_IGNORE_ENV` in `.env` or CI — it is deprecated upstream and will be removed in php-cs-fixer 4.0. The fixture config uses `setUnsupportedPhpVersionAllowed(true)`; see [README — Unsupported PHP versions](README.md#unsupported-php-versions).
+
 Optional longer setup (lint/typecheck/build) when you are changing `src/`:
 
 ```bash

@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 8f02cde6a863046a2bb4780f044af4ab9007b9e4891461ac8395c831b9528ed7
+// php-cs-fixer-action-src-hash fa428ecc43eab6e03b321942af1459ac038009c900be0bdb91ea7ebb316f8dfe
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101273,10 +101273,9 @@ async function runFixer(configFile, settings = {}) {
     catch {
         throw new ActionError(ActionStep.RunFixer, ActionErrorCode.ConfigNotFound, `Resolved config '${configFile}' does not exist.`);
     }
-    const env = {
-        ...process.env,
-        PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
-    };
+    const env = { ...process.env };
+    // Do not inject deprecated PHP_CS_FIXER_IGNORE_ENV. Prefer Config::setUnsupportedPhpVersionAllowed(true)
+    // or --allow-unsupported-php-version=yes (see README). Consumers may still set the env themselves.
     try {
         const result = await runProcess('php', [(0,external_node_path_namespaceObject.join)(runtimeDir, FIXER_BINARY), ...buildFixerArgs(configPath, mode, paths, allowRisky)], { cwd: workspace, env });
         await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(runtimeDir, RESULT_FILE), result.output);

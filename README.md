@@ -67,6 +67,22 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
 | allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
 
+### Unsupported PHP versions
+
+php-cs-fixer only supports a declared range of PHP versions. This Action **does not** set the deprecated `PHP_CS_FIXER_IGNORE_ENV` variable (removed in php-cs-fixer 4.0). Prefer one of:
+
+1. **Config** (recommended for `config-path` consumers and shared rule packages):
+
+```php
+return (new PhpCsFixer\Config())
+    ->setUnsupportedPhpVersionAllowed(true)
+    // ...
+```
+
+2. **CLI** (if you wrap the phar yourself): `--allow-unsupported-php-version=yes`
+
+Setting `PHP_CS_FIXER_IGNORE_ENV` in the job environment still works during the 3.x transition, but it emits a deprecation warning and will break on 4.0.
+
 ## Integrity and cache
 
 The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
