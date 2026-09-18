@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash c9438b456c935580af27c06064728d8c8f35d7a9fa0e1ceccbb34f81265441de
+// php-cs-fixer-action-src-hash 0d5cf5a93eefe1d478c7523a1032762a1df231d4bb80b293b0e477ea3ff973fd
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -100677,6 +100677,7 @@ const ActionErrorCode = {
     ChecksumMismatch: 'CHECKSUM_MISMATCH',
     ConfigNotFound: 'CONFIG_NOT_FOUND',
     FixerFailed: 'FIXER_FAILED',
+    PhpNotFound: 'PHP_NOT_FOUND',
     StyleViolations: 'STYLE_VIOLATIONS',
     Unexpected: 'UNEXPECTED',
 };
@@ -101453,6 +101454,19 @@ const BASE_FIXER_ARGS = [
     '--show-progress=none',
     '--format=json',
 ];
+const PHP_NOT_FOUND_MESSAGE = 'php was not found on PATH. Install PHP 8.3+ (for example shivammathur/setup-php) before running this Action.';
+/** True when spawn/runProcess failed because the php binary is missing. */
+function isPhpMissingError(error) {
+    if (!error || typeof error !== 'object') {
+        return false;
+    }
+    const err = error;
+    if (err.code === 'ENOENT') {
+        return true;
+    }
+    const message = typeof err.message === 'string' ? err.message : '';
+    return /spawn php.*ENOENT/i.test(message);
+}
 function buildFixerArgs(configFile, mode = 'check', paths = [], allowRisky = 'yes') {
     const args = [
         BASE_FIXER_ARGS[0],
@@ -101514,6 +101528,9 @@ async function runFixer(configFile, settings = {}) {
         return result;
     }
     catch (error) {
+        if (isPhpMissingError(error)) {
+            throw new ActionError(ActionStep.RunFixer, ActionErrorCode.PhpNotFound, PHP_NOT_FOUND_MESSAGE);
+        }
         throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error);
     }
 }

@@ -20,6 +20,7 @@ export const ActionErrorCode = {
   ChecksumMismatch: 'CHECKSUM_MISMATCH',
   ConfigNotFound: 'CONFIG_NOT_FOUND',
   FixerFailed: 'FIXER_FAILED',
+  PhpNotFound: 'PHP_NOT_FOUND',
   StyleViolations: 'STYLE_VIOLATIONS',
   Unexpected: 'UNEXPECTED',
 } as const

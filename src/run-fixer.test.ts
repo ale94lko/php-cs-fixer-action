@@ -5,7 +5,23 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { buildFixerArgs, runFixer, spawnPhp } from './run-fixer'
+import { ActionErrorCode } from './error-tracking'
+import {
+  buildFixerArgs,
+  isPhpMissingError,
+  PHP_NOT_FOUND_MESSAGE,
+  runFixer,
+  spawnPhp,
+} from './run-fixer'
+
+describe('isPhpMissingError', () => {
+  it('detects ENOENT from spawn', () => {
+    const err = Object.assign(new Error('spawn php ENOENT'), { code: 'ENOENT' })
+    expect(isPhpMissingError(err)).toBe(true)
+    expect(isPhpMissingError(new Error('other'))).toBe(false)
+    expect(isPhpMissingError(null)).toBe(false)
+  })
+})
 
 describe('runFixer', () => {
   it('fails when the resolved config is missing', async () => {
@@ -13,6 +29,34 @@ describe('runFixer', () => {
     await expect(runFixer('missing.php', { workspace, runProcess: vi.fn() })).rejects.toThrow(
       /does not exist/,
     )
+  })
+
+  it('fails with PHP_NOT_FOUND when php is missing from PATH', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+
+    const enoent = Object.assign(new Error('spawn php ENOENT'), { code: 'ENOENT' })
+    const runProcess = vi.fn().mockRejectedValue(enoent)
+
+    await expect(
+      runFixer('config.php', { workspace, runtimeDir: workspace, runProcess }),
+    ).rejects.toMatchObject({
+      code: ActionErrorCode.PhpNotFound,
+      message: PHP_NOT_FOUND_MESSAGE,
+    })
+    expect(PHP_NOT_FOUND_MESSAGE).toMatch(/shivammathur\/setup-php/)
+  })
+
+  it('maps other spawn failures to FIXER_FAILED', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+
+    const runProcess = vi.fn().mockRejectedValue(new Error('EACCES'))
+    await expect(
+      runFixer('config.php', { workspace, runtimeDir: workspace, runProcess }),
+    ).rejects.toMatchObject({ code: ActionErrorCode.FixerFailed })
   })
 
   it('runs php-cs-fixer dry-run and writes result.txt under the runtime dir', async () => {
@@ -75,6 +119,15 @@ describe('runFixer', () => {
     )
     expect(result.exitCode).toBe(2)
     expect(result.output).toBe('err')
+  })
+
+  it('spawnPhp rejects with ENOENT when the command is missing', async () => {
+    await expect(
+      spawnPhp('php-cs-fixer-action-missing-binary-128', [], {
+        cwd: process.cwd(),
+        env: process.env,
+      }),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
   })
 
   it('returns success when php-cs-fixer exits 0', async () => {

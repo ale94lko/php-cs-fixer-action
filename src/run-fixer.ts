@@ -39,6 +39,22 @@ export const BASE_FIXER_ARGS = [
   '--format=json',
 ] as const
 
+export const PHP_NOT_FOUND_MESSAGE =
+  'php was not found on PATH. Install PHP 8.3+ (for example shivammathur/setup-php) before running this Action.'
+
+/** True when spawn/runProcess failed because the php binary is missing. */
+export function isPhpMissingError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+  const err = error as NodeJS.ErrnoException
+  if (err.code === 'ENOENT') {
+    return true
+  }
+  const message = typeof err.message === 'string' ? err.message : ''
+  return /spawn php.*ENOENT/i.test(message)
+}
+
 export function buildFixerArgs(
   configFile: string,
   mode: ActionMode = 'check',
@@ -121,6 +137,9 @@ export async function runFixer(
     await writeFile(join(runtimeDir, RESULT_FILE), result.output)
     return result
   } catch (error) {
+    if (isPhpMissingError(error)) {
+      throw new ActionError(ActionStep.RunFixer, ActionErrorCode.PhpNotFound, PHP_NOT_FOUND_MESSAGE)
+    }
     throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error)
   }
 }
