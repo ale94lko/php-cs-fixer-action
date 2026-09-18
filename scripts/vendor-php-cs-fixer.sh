@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 # Download php-cs-fixer.phar, verify SHA-256 from checksums.txt, install to DEST.
 # Usage:
 #   bash scripts/vendor-php-cs-fixer.sh [tag] [dest] [checksums.txt]

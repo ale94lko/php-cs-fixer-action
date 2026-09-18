@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 #!/usr/bin/env node
 /**
  * Print a top-level JSON string field from a file.

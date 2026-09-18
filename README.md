@@ -41,7 +41,7 @@ Add the Action to a workflow (check mode). See [Setup](#setup) for inputs and [I
 - uses: ale94lko/php-cs-fixer-action@v1
 ```
 
-Contributors installing the repo locally should use [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Achievements: [docs/achievements.md](docs/achievements.md).
+Contributors installing the repo locally should use [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Starter tasks: [docs/small-tasks.md](docs/small-tasks.md). Achievements: [docs/achievements.md](docs/achievements.md).
 
 ## Setup
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 # Extract GitHub Release notes from CHANGELOG.md.
 # Prefers "Changelog for $TAG" when that section has entries; otherwise
 # uses "Changelog for next".

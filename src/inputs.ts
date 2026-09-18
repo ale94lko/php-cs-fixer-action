@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import * as core from '@actions/core'
 
 /** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */

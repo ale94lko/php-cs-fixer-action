@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as actionsCache from '@actions/cache'

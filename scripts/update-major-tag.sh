@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 # Force-update the floating major tag (v1) so uses: ...@v1 tracks this release.
 # Usage: TAG=v1.0.4 bash scripts/update-major-tag.sh
 set -euo pipefail

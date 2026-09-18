@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, writeFile, access } from 'node:fs/promises'
 import { tmpdir } from 'node:os'

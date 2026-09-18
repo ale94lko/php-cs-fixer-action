@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ERROR_TRACKING_URL_ENV } from './error-tracking'
 import { DEFAULT_PHP_CS_FIXER_VERSION, type ActionInputs } from './inputs'

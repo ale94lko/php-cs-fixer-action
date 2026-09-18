@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* docs: Add OpenSSF Gold docs (code review, security review, hardening, small tasks), SPDX headers, and 90%/80% coverage thresholds.
 * docs: Add OpenSSF Silver governance, architecture, roadmap, and assurance-case docs.
 * docs: Embed the OpenSSF Best Practices Passing badge and note Scorecard CII is Passing ([project 6296](https://www.bestpractices.dev/projects/6296)).
 * docs: Prefer GitHub Security Advisories for private vulnerability reports.

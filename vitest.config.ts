@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -11,10 +14,10 @@ export default defineConfig({
       exclude: ['src/index.ts', 'src/**/*.test.ts', 'src/test-setup.ts'],
       reporter: ['text', 'lcov'],
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 70,
-        statements: 80,
+        lines: 90,
+        functions: 90,
+        branches: 80,
+        statements: 90,
       },
     },
   },

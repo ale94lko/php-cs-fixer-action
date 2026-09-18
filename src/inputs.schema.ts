@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'

@@ -37,6 +37,19 @@ If one maintainer becomes unavailable, the other can continue those tasks within
 
 The bus factor is **2** (both CODEOWNERS maintainers). See also [access continuity](#access-continuity).
 
+## Unassociated contributors
+
+Significant contributors [@ale94lko](https://github.com/ale94lko) and [@leoflavio1989](https://github.com/leoflavio1989) are **unassociated**: they are independent individuals (not the same employer/organization controlling both accounts). Both appear in [`.github/CODEOWNERS`](.github/CODEOWNERS) and can review and merge.
+
+## Two-factor authentication (2FA)
+
+Anyone with permission to push to this repository, merge to `main`, publish releases, or access private vulnerability reports **MUST** enable GitHub two-factor authentication on their account.
+
+- **Required:** GitHub account 2FA enabled ([GitHub 2FA docs](https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa)).
+- **Preferred (secure 2FA):** TOTP authenticator app and/or security keys / passkeys — not SMS-only 2FA.
+
+Maintainers confirm 2FA is enabled before receiving admin or Security Advisories access.
+
 ## Developer Certificate of Origin (DCO)
 
 Non-trivial contributions should include a `Signed-off-by` line in each commit, asserting the [Developer Certificate of Origin](https://developercertificate.org/). See [CONTRIBUTING.md](CONTRIBUTING.md#developer-certificate-of-origin-dco).

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
