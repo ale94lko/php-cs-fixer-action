@@ -45,12 +45,20 @@ describe('extractJsonObject', () => {
 })
 
 describe('firstChangedLine', () => {
-  it('reads the original hunk line', () => {
+  it('prefers the new (+) side of an edited-file hunk', () => {
+    expect(firstChangedLine('@@ -10,3 +15,5 @@\n context\n-old\n+new\n')).toBe(15)
+  })
+
+  it('uses the + side when old and new starts match', () => {
     expect(firstChangedLine(sampleDiff)).toBe(2)
   })
 
-  it('uses line 1 when the hunk starts at 0', () => {
+  it('uses the + side for new-file hunks (@@ -0,0 +1,…)', () => {
     expect(firstChangedLine('@@ -0,0 +1,3 @@\n+<?php\n')).toBe(1)
+  })
+
+  it('falls back to the old side for pure-deletion hunks', () => {
+    expect(firstChangedLine('@@ -8,2 +0,0 @@\n-gone\n')).toBe(8)
   })
 
   it('returns undefined without a hunk header', () => {

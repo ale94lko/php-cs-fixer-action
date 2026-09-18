@@ -31,12 +31,19 @@ export function extractJsonObject(output: string): unknown {
   return JSON.parse(output.slice(start, end + 1)) as unknown
 }
 
+/**
+ * First line for GitHub annotations: prefer the post-image (`+`) side of the
+ * unified-diff hunk so annotations land on the fixed/new file content.
+ */
 export function firstChangedLine(diff: string): number | undefined {
-  const match = /@@ -(\d+)/.exec(diff)
-  if (!match) {
+  const hunk = /@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(diff)
+  if (!hunk) {
     return undefined
   }
-  const line = Number(match[1])
+  const newSide = Number(hunk[2])
+  const oldSide = Number(hunk[1])
+  // Prefer + side when present; fall back to - side for pure-deletion hunks (+0).
+  const line = newSide >= 1 ? newSide : oldSide >= 1 ? oldSide : 1
   if (!Number.isFinite(line) || line < 1) {
     return 1
   }
