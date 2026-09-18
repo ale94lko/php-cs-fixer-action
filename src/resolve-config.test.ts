@@ -80,8 +80,12 @@ describe('resolveConfig', () => {
     const writeFileImpl = vi.fn().mockResolvedValue(undefined)
 
     await expect(
-      resolveConfig({ ...base, useFullRules: 'false' }, workspace, { fetchImpl, writeFileImpl }),
-    ).resolves.toBe(DOWNLOADED_CONFIG)
+      resolveConfig({ ...base, useFullRules: 'false' }, workspace, {
+        fetchImpl,
+        writeFileImpl,
+        runtimeDir: workspace,
+      }),
+    ).resolves.toBe(join(workspace, DOWNLOADED_CONFIG))
 
     expect(fetchImpl).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/v1.0.1/.php-cs-fixer.dist.min.php',

@@ -5,10 +5,11 @@ import { spawn } from 'node:child_process'
 import { access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { FIXER_BINARY } from './download-fixer'
 import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
 import type { ActionMode } from './inputs'
+import { RESULT_FILE, ensureActionRuntimeDir } from './runtime-dir'
 
 export type FixerResult = {
   exitCode: number
@@ -23,6 +24,8 @@ export type RunProcess = (
 
 export type RunFixerSettings = {
   workspace?: string
+  /** Directory for the phar and JSON report (defaults to RUNNER_TEMP/php-cs-fixer-action). */
+  runtimeDir?: string
   runProcess?: RunProcess
   mode?: ActionMode
   paths?: string[]
@@ -83,10 +86,11 @@ export async function runFixer(
   settings: RunFixerSettings = {},
 ): Promise<FixerResult> {
   const workspace = settings.workspace ?? process.cwd()
+  const runtimeDir = settings.runtimeDir ?? (await ensureActionRuntimeDir())
   const runProcess = settings.runProcess ?? spawnPhp
   const mode = settings.mode ?? 'check'
   const paths = settings.paths ?? []
-  const configPath = join(workspace, configFile)
+  const configPath = isAbsolute(configFile) ? configFile : join(workspace, configFile)
   try {
     await access(configPath, constants.F_OK)
   } catch {
@@ -104,10 +108,10 @@ export async function runFixer(
   try {
     const result = await runProcess(
       'php',
-      [join(workspace, FIXER_BINARY), ...buildFixerArgs(configFile, mode, paths)],
+      [join(runtimeDir, FIXER_BINARY), ...buildFixerArgs(configPath, mode, paths)],
       { cwd: workspace, env },
     )
-    await writeFile(join(workspace, 'result.txt'), result.output)
+    await writeFile(join(runtimeDir, RESULT_FILE), result.output)
     return result
   } catch (error) {
     throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error)

@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* fix: Keep the php-cs-fixer phar, downloaded shared config, and JSON report under `RUNNER_TEMP` (not the consumer checkout); stage only intended paths in `examples/fix.yml`. [#120](https://github.com/ale94lko/php-cs-fixer-action/issues/120)
 * fix: Reject `rules-version` values with `..`, empty segments, or URL path escape so shared-rules downloads stay under `ale94lko/php-cs-fixer-rules`. [#119](https://github.com/ale94lko/php-cs-fixer-action/issues/119)
 * docs: Document one-command local verification via `bash scripts/dev-check.sh`. [#118](https://github.com/ale94lko/php-cs-fixer-action/issues/118)
 * test: Unit-cover `commit-dist-tree` helpers and `normalizeDist` without network. [#116](https://github.com/ale94lko/php-cs-fixer-action/issues/116)
