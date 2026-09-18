@@ -28,6 +28,18 @@ describe('rules selection', () => {
       'https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/v1.0.1/.php-cs-fixer.dist.min.php',
     )
   })
+
+  it('keeps slash refs under the php-cs-fixer-rules raw path', () => {
+    expect(rulesDownloadUrl('release/1.0', 'true')).toBe(
+      'https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/release/1.0/.php-cs-fixer.dist.php',
+    )
+  })
+
+  it('rejects rules-version values that URL-normalize outside the rules repo', () => {
+    expect(() => rulesDownloadUrl('../../PHP-CS-Fixer/PHP-CS-Fixer/v3.64.0', 'true')).toThrow(
+      /Use a tag, branch, or SHA/,
+    )
+  })
 })
 
 describe('resolveConfig', () => {

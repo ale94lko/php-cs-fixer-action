@@ -74,4 +74,18 @@ describe('action.inputs.schema.json', () => {
     )
     expect(() => assertInputsSchema({ ...valid, paths: '--allow-risky=yes' })).toThrow(/Invalid path/)
   })
+
+  it('rejects rules-version path traversal and empty path segments', () => {
+    expect(() =>
+      assertInputsSchema({
+        ...valid,
+        rulesVersion: '../../PHP-CS-Fixer/PHP-CS-Fixer/v3.64.0',
+      }),
+    ).toThrow(/rules-version/)
+    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'release//v1' })).toThrow(
+      /rules-version/,
+    )
+    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'main/' })).toThrow(/rules-version/)
+    expect(() => assertInputsSchema({ ...valid, rulesVersion: '/main' })).toThrow(/rules-version/)
+  })
 })

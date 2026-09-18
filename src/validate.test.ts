@@ -63,6 +63,19 @@ describe('validateGitRef', () => {
     expect(() => validateGitRef('main;rm -rf /')).toThrow(/Use a tag, branch, or SHA/)
     expect(() => validateGitRef('')).toThrow(/must not be empty/)
   })
+
+  it('rejects path traversal, empty segments, and path escape', () => {
+    expect(() => validateGitRef('../../PHP-CS-Fixer/PHP-CS-Fixer/v3.64.0')).toThrow(
+      /Use a tag, branch, or SHA/,
+    )
+    expect(() => validateGitRef('foo/../bar')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('foo//bar')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('/main')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('main/')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('foo/./bar')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('.')).toThrow(/Use a tag, branch, or SHA/)
+    expect(() => validateGitRef('..')).toThrow(/Use a tag, branch, or SHA/)
+  })
 })
 
 describe('validateConfigPath', () => {

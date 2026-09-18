@@ -14,8 +14,22 @@ export function rulesFileName(useFullRules: string): string {
   return useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php'
 }
 
+const RULES_RAW_ORIGIN = 'https://raw.githubusercontent.com'
+const RULES_REPO_PREFIX = '/ale94lko/php-cs-fixer-rules/'
+
+/** Build the download URL; reject refs that URL-normalize outside this rules repo. */
 export function rulesDownloadUrl(rulesVersion: string, useFullRules: string): string {
-  return `https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/${rulesVersion}/${rulesFileName(useFullRules)}`
+  const file = rulesFileName(useFullRules)
+  const expectedPath = `${RULES_REPO_PREFIX}${rulesVersion}/${file}`
+  const url = new URL(`${RULES_RAW_ORIGIN}${expectedPath}`)
+  if (url.origin !== RULES_RAW_ORIGIN || url.pathname !== expectedPath) {
+    throw new ActionError(
+      ActionStep.ResolveConfig,
+      ActionErrorCode.InvalidInput,
+      `Invalid rules-version '${rulesVersion}'. Use a tag, branch, or SHA.`,
+    )
+  }
+  return url.toString()
 }
 
 export async function resolveConfig(
