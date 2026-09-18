@@ -62,7 +62,7 @@ These checks are **accepted low scores**, not a regression of the Scorecard work
 
 - **Fuzzing** — this Action is not a parser or network service. Do not add OSS-Fuzz unless that surface appears ([#71](https://github.com/ale94lko/php-cs-fixer-action/issues/71)).
 - **Signed-Releases** — consumers pin git tags (`@v1.0.3`), not signed npm/provenance artifacts.
-- **CII-Best-Practices** — the OpenSSF Best Practices badge is InProgress and not a current goal ([#67](https://github.com/ale94lko/php-cs-fixer-action/issues/67)).
+- **CII-Best-Practices** — Passing badge achieved ([project 6296](https://www.bestpractices.dev/projects/6296)); Scorecard should report 10 after the next run on `main` ([#67](https://github.com/ale94lko/php-cs-fixer-action/issues/67)).
 - **Branch-Protection (full score)** — without `SCORECARD_TOKEN` (a PAT that can read admin protection settings) Scorecard cannot see every rule on a public repo. Leave `repo_token` commented in `scorecard.yml` unless we add that secret.
 
 **Dangerous-Workflow** is not in that set: `rebuild-dist.yml` no longer uses `pull_request_target`. Dist rebuild is an unprivileged `pull_request` job plus a `workflow_run` Git Data API commit ([#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)). Do not check out `pull_request.head` or `workflow_run.head_sha` in the privileged job.

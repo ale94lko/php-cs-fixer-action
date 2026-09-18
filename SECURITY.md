@@ -10,8 +10,10 @@ report it to me as described below.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them to me by sending an email to
-[ale94lko@gmail.com](mailto:ale94lko@gmail.com).
+Instead, please report them privately using one of:
+
+1. [GitHub Security Advisories](https://github.com/ale94lko/php-cs-fixer-action/security/advisories/new) (preferred), or
+2. Email [ale94lko@gmail.com](mailto:ale94lko@gmail.com).
 
 Please include the requested information listed below (as much as you can
 provide) to help me better understand the nature and scope of the possible

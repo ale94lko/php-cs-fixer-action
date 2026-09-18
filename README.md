@@ -3,6 +3,9 @@
   <a href="https://github.com/ale94lko/php-cs-fixer-action/blob/main/LICENSE" target="_blank">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" />
   </a>
+  <a href="https://www.bestpractices.dev/projects/6296">
+    <img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/6296/badge" />
+  </a>
   <a href="https://github.com/ale94lko/repo-health-score">
     <img src="https://github.com/ale94lko/php-cs-fixer-action/blob/output/badge.svg"/>
   </a>
