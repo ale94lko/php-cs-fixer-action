@@ -7,8 +7,14 @@ import { join } from 'node:path'
 import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
 import type { ActionInputs } from './inputs'
 import { downloadToFile, type DownloadOptions } from './http'
+import { ensureActionRuntimeDir } from './runtime-dir'
 
 export const DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php'
+
+export type ResolveConfigOptions = DownloadOptions & {
+  /** Directory for downloaded shared rules (defaults to RUNNER_TEMP/php-cs-fixer-action). */
+  runtimeDir?: string
+}
 
 export function rulesFileName(useFullRules: string): string {
   return useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php'
@@ -35,7 +41,7 @@ export function rulesDownloadUrl(rulesVersion: string, useFullRules: string): st
 export async function resolveConfig(
   inputs: ActionInputs,
   workspace = process.cwd(),
-  options: DownloadOptions = {},
+  options: ResolveConfigOptions = {},
 ): Promise<string> {
   if (inputs.configPath !== '') {
     const localPath = join(workspace, inputs.configPath)
@@ -51,11 +57,12 @@ export async function resolveConfig(
     return inputs.configPath
   }
 
-  const dest = join(workspace, DOWNLOADED_CONFIG)
+  const destDir = options.runtimeDir ?? (await ensureActionRuntimeDir())
+  const dest = join(destDir, DOWNLOADED_CONFIG)
   try {
     await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options)
   } catch (error) {
     throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error)
   }
-  return DOWNLOADED_CONFIG
+  return dest
 }

@@ -202,6 +202,7 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
         return runFixer(configFile, {
           ...settings,
           workspace,
+          runtimeDir: workspace,
           runProcess: async (): Promise<FixerResult> => {
             if (mode === 'fix') {
               await writeFile(join(workspace, dirtyRel), FIXED_PHP)

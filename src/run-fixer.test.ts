@@ -15,18 +15,23 @@ describe('runFixer', () => {
     )
   })
 
-  it('runs php-cs-fixer dry-run and writes result.txt', async () => {
+  it('runs php-cs-fixer dry-run and writes result.txt under the runtime dir', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const { writeFile, readFile } = await import('node:fs/promises')
     await writeFile(join(workspace, 'config.php'), '<?php\n')
 
     const runProcess = vi.fn().mockResolvedValue({ exitCode: 8, output: 'violations' })
-    const result = await runFixer('config.php', { workspace, runProcess })
+    const configPath = join(workspace, 'config.php')
+    const result = await runFixer('config.php', {
+      workspace,
+      runtimeDir: workspace,
+      runProcess,
+    })
 
     expect(result.exitCode).toBe(8)
     expect(runProcess).toHaveBeenCalledWith(
       'php',
-      expect.arrayContaining([...buildFixerArgs('config.php'), '--dry-run', '--config=config.php']),
+      [join(workspace, 'php-cs-fixer'), ...buildFixerArgs(configPath)],
       expect.objectContaining({ cwd: workspace }),
     )
     await expect(readFile(join(workspace, 'result.txt'), 'utf8')).resolves.toBe('violations')
@@ -58,7 +63,7 @@ describe('runFixer', () => {
 
     const runProcess = vi.fn().mockResolvedValue({ exitCode: 0, output: 'ok' })
     await expect(
-      runFixer('config.php', { workspace, runProcess }),
+      runFixer('config.php', { workspace, runtimeDir: workspace, runProcess }),
     ).resolves.toMatchObject({
       exitCode: 0,
     })
@@ -72,6 +77,7 @@ describe('runFixer', () => {
     const runProcess = vi.fn().mockResolvedValue({ exitCode: 0, output: 'fixed' })
     await runFixer('config.php', {
       workspace,
+      runtimeDir: workspace,
       runProcess,
       mode: 'fix',
       paths: ['src'],
@@ -80,7 +86,7 @@ describe('runFixer', () => {
     const args = runProcess.mock.calls[0]?.[1] as string[]
     expect(args).not.toContain('--dry-run')
     expect(args).toContain('src')
-    expect(args).toContain('--config=config.php')
+    expect(args).toContain(`--config=${join(workspace, 'config.php')}`)
   })
 })
 

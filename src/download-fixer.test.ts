@@ -31,7 +31,7 @@ describe('fixerReleaseUrl', () => {
 })
 
 describe('downloadFixer', () => {
-  it('writes the phar into the workspace after a matching checksum', async () => {
+  it('writes the phar into the runtime dir after a matching checksum', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
@@ -133,7 +133,7 @@ describe('downloadFixer', () => {
     ).rejects.toThrow(/Download failed \(500\)/)
   })
 
-  it('reuses a workspace phar with a matching checksum without downloading', async () => {
+  it('reuses a runtime-dir phar with a matching checksum without downloading', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const dest = join(workspace, 'php-cs-fixer')
     await writeFile(dest, 'phar')

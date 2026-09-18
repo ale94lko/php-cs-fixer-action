@@ -40,7 +40,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          # Stage only the paths the Action was asked to fix — never `git add -A`,
+          # so Action runtime files (phar / report / downloaded config under
+          # RUNNER_TEMP) cannot be committed even if a consumer misconfigures.
+          git add -- src tests
           if git diff --cached --quiet; then
             echo "No coding-standard changes to commit"
             exit 0

@@ -165,11 +165,11 @@ Runtime pipeline (`src/run.ts`):
 
 1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by `scripts/ci-local.sh`.
 2. **Validate** (`src/validate.ts`) against [`action.inputs.schema.json`](action.inputs.schema.json) with [Ajv](https://ajv.js.org/), then keep `paths` inside the workspace.
-3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified workspace or `PHP_CS_FIXER_PHAR` binary, else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
+3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified binary under `RUNNER_TEMP/php-cs-fixer-action` (or `PHP_CS_FIXER_PHAR`), else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
 4. **Resolve config** (`src/resolve-config.ts`):
    - If `config-path` is set, use that file from the consumer repository.
-   - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
-5. **Run the fixer** (`src/run-fixer.ts`) — `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended after they are checked to stay inside the workspace.
+   - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`) into `RUNNER_TEMP`, not the checkout.
+5. **Run the fixer** (`src/run-fixer.ts`) — `php <runtime>/php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). The JSON report is written under `RUNNER_TEMP`. Optional `paths` are appended after they are checked to stay inside the workspace.
 6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
 
 | Path | Role |
@@ -221,7 +221,7 @@ npm run test:coverage
 
 ### Fixer only
 
-`scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar (checksum from `checksums.txt`). It defaults to the local fixture config so php-cs-fixer-rules is not required:
+`scripts/ci-local.sh` reuses a verified `php-cs-fixer` under `RUNNER_TEMP`/`os.tmpdir()` or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar (checksum from `checksums.txt`). It defaults to the local fixture config so php-cs-fixer-rules is not required:
 
 ```bash
 bash scripts/ci-local.sh

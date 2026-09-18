@@ -7,6 +7,7 @@ import { assertChecksum, createGithubPharCache, sha256File, type PharCache } fro
 import { expectedChecksum, loadChecksums, resolveChecksumsPath } from './checksums'
 import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import { downloadToFile, type DownloadOptions } from './http'
+import { ensureActionRuntimeDir } from './runtime-dir'
 
 export const FIXER_BINARY = 'php-cs-fixer'
 
@@ -52,11 +53,13 @@ async function installVerifiedPhar(
 
 export async function downloadFixer(
   version: string,
-  workspace = process.cwd(),
+  /** Directory for the phar (defaults to RUNNER_TEMP/php-cs-fixer-action). */
+  runtimeDir?: string,
   options: DownloadFixerOptions = {},
 ): Promise<string> {
   try {
-    const dest = join(workspace, FIXER_BINARY)
+    const destDir = runtimeDir ?? (await ensureActionRuntimeDir())
+    const dest = join(destDir, FIXER_BINARY)
     const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()))
     const expected = expectedChecksum(version, table)
     const cache = options.cache ?? createGithubPharCache()
