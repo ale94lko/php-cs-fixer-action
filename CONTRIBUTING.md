@@ -4,11 +4,19 @@ Thanks for helping improve this GitHub Action. Please also read the [Code of Con
 
 ## Development setup (quick start for contributors)
 
-Requires Node.js 24+. From a clone you can install dependencies and run the quality gate in a few commands:
+Requires **Node.js 24+** and **PHP 8.3+** on your PATH. From a clean clone, the one-command local check is:
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
+bash scripts/dev-check.sh
+```
+
+`scripts/dev-check.sh` creates `.env` from `.env.example` when missing, then runs `npm ci`, `npm run test:coverage`, and `bash scripts/ci-local.sh` (Action entrypoint on the fixture config). A green run is the done-condition for local verification before you open a PR. Consumers who only *use* the Action should follow the [README Setup](README.md#setup) section instead.
+
+Optional longer setup (lint/typecheck/build) when you are changing `src/`:
+
+```bash
 cp .env.example .env
 npm ci
 npm run lint
@@ -16,8 +24,6 @@ npm run typecheck
 npm run test:coverage
 npm run build
 ```
-
-That installs the support environment (including Vitest) needed to change the Action and run its tests. Consumers who only *use* the Action should follow the [README Setup](README.md#setup) section instead.
 
 From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a GitHub-release phar (downloaded and checksum-verified, or pointed at via `PHP_CS_FIXER_PHAR`).
 
@@ -116,7 +122,7 @@ The workflow does not rewrite `CHANGELOG.md`. After the tag, retitle `Changelog 
 
 ## Local fixer
 
-Run php-cs-fixer against the clean fixtures. `scripts/ci-local.sh` defaults to `tests/fixtures/.php-cs-fixer.dist.php` (no php-cs-fixer-rules). The first run without a verified `php-cs-fixer` binary or `PHP_CS_FIXER_PHAR` still needs network to download the phar:
+Run php-cs-fixer against the clean fixtures. Prefer the one-command path (`bash scripts/dev-check.sh`) when starting from a clean clone. Alone, `scripts/ci-local.sh` defaults to `tests/fixtures/.php-cs-fixer.dist.php` (no php-cs-fixer-rules). The first run without a verified `php-cs-fixer` binary or `PHP_CS_FIXER_PHAR` still needs network to download the phar:
 
 ```bash
 bash scripts/ci-local.sh

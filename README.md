@@ -41,7 +41,7 @@ Add the Action to a workflow (check mode). See [Setup](#setup) for inputs and [I
 - uses: ale94lko/php-cs-fixer-action@v1
 ```
 
-Contributors installing the repo locally should use [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Starter tasks: [docs/small-tasks.md](docs/small-tasks.md). Achievements: [docs/achievements.md](docs/achievements.md).
+Contributors installing the repo locally should run the one-command check in [Local development](#local-development) (details in [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors)). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Starter tasks: [docs/small-tasks.md](docs/small-tasks.md). Achievements: [docs/achievements.md](docs/achievements.md).
 
 ## Setup
 
@@ -189,19 +189,28 @@ Runtime pipeline (`src/run.ts`):
 
 ## Local development
 
-Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh`).
+Requires **Node.js 24+** and **PHP 8.3+** on your PATH. From a clean clone, one command installs dependencies, runs the coverage gate, and executes the Action against the fixture config:
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
+bash scripts/dev-check.sh
+```
+
+That script copies `.env.example` → `.env` when needed, then runs `npm ci`, `npm run test:coverage`, and `bash scripts/ci-local.sh`. Treat a green `dev-check.sh` as the local done-condition before opening a PR.
+
+### Step-by-step (optional)
+
+```bash
 cp .env.example .env
 npm ci
 npm audit --omit=dev --audit-level=high
-npm test
+npm run test:coverage
 npm run build
+bash scripts/ci-local.sh
 ```
 
-### Tests (offline)
+### Tests only
 
 Unit tests mock HTTP and do not download php-cs-fixer or php-cs-fixer-rules. CI Action jobs (`action-passes-on-clean-fixtures`, `action-fails-on-violations`, `action-fixes-dirty-fixture`) pass `config-path: tests/fixtures/.php-cs-fixer.dist.php`, so they never hit php-cs-fixer-rules.
 
@@ -210,7 +219,7 @@ npm test
 npm run test:coverage
 ```
 
-### Run the fixer locally
+### Fixer only
 
 `scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar (checksum from `checksums.txt`). It defaults to the local fixture config so php-cs-fixer-rules is not required:
 

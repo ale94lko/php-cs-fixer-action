@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* docs: Document one-command local verification via `bash scripts/dev-check.sh`. [#118](https://github.com/ale94lko/php-cs-fixer-action/issues/118)
 * test: Unit-cover `commit-dist-tree` helpers and `normalizeDist` without network. [#116](https://github.com/ale94lko/php-cs-fixer-action/issues/116)
 * chore: Remove image build/CI jobs that misled project-type classifiers; keep Node/PHP local verification. [#115](https://github.com/ale94lko/php-cs-fixer-action/issues/115) [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * docs: Add OpenSSF Gold docs (code review, security review, hardening, small tasks), SPDX headers, and 90%/80% coverage thresholds.
