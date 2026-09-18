@@ -129,4 +129,6 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on every PR com
 
 ## Security reports
 
-Please do not open public issues for vulnerabilities. Follow [SECURITY.md](SECURITY.md).
+Please do not open public issues for vulnerabilities. Follow
+[SECURITY.md](SECURITY.md) for private reporting and for the download →
+checksum → cache trust boundary.
