@@ -7,6 +7,7 @@ Changelog for next
 ------------------
 
 * docs: Require features/fixes to ship with tests in small focused Conventional Commits. [#93](https://github.com/ale94lko/php-cs-fixer-action/issues/93)
+* docs: Document dependency overrides and Actions CJS pins. [#104](https://github.com/ale94lko/php-cs-fixer-action/issues/104)
 * test: Add end-to-end integration coverage for the `run()` pipeline (check + fix). [#102](https://github.com/ale94lko/php-cs-fixer-action/issues/102)
 * docs: Remove the Scope subsection from README. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * chore: Drop `docker-compose.yml` and `.devcontainer` (keep `Dockerfile` for offline CI / Hadolint). [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
