@@ -11,6 +11,5 @@
 *.json text eol=lf
 *.php text eol=lf
 *.yml text eol=lf
-Dockerfile text eol=lf
 dist/** text eol=lf
 dist/** linguist-generated=true

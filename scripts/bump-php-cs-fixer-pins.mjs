@@ -51,7 +51,6 @@ patchFile(
 for (const rel of [
   'README.md',
   'CONTRIBUTING.md',
-  'Dockerfile',
   '.env.example',
   'scripts/ci-local.sh',
   'scripts/vendor-php-cs-fixer.sh',

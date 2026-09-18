@@ -156,7 +156,6 @@ Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-c
 - [Pass on clean fixtures](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447185) (`action-passes-on-clean-fixtures`)
 - [Fail the Action on violations](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447500) (`action-fails-on-violations`; the workflow job succeeds after asserting that the Action step failed)
 - [Apply fixes to a dirty fixture](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447489) (`action-fixes-dirty-fixture`)
-- `docker-offline` builds the image (vendors php-cs-fixer) and lints the fixtures with `--network=none`
 
 ## Architecture
 
@@ -164,9 +163,9 @@ Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-c
 
 Runtime pipeline (`src/run.ts`):
 
-1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by Docker and `scripts/ci-local.sh`.
+1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by `scripts/ci-local.sh`.
 2. **Validate** (`src/validate.ts`) against [`action.inputs.schema.json`](action.inputs.schema.json) with [Ajv](https://ajv.js.org/), then keep `paths` inside the workspace.
-3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified workspace or `PHP_CS_FIXER_PHAR` binary (Docker vendors it at build time), else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
+3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified workspace or `PHP_CS_FIXER_PHAR` binary, else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
 4. **Resolve config** (`src/resolve-config.ts`):
    - If `config-path` is set, use that file from the consumer repository.
    - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
@@ -180,8 +179,7 @@ Runtime pipeline (`src/run.ts`):
 | `src/index.ts` | Loads `run()` |
 | `src/run.ts` | Orchestrates validate → download → resolve config → run fixer → report |
 | `dist/index.js` | Bundled file GitHub Actions actually executes |
-| `.env.example` | Env vars for `scripts/ci-local.sh` and the optional offline image |
-| `Dockerfile` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
+| `.env.example` | Env vars for `scripts/ci-local.sh` |
 | `.github/workflows/scorecard.yml` | OpenSSF Scorecard on `main` / weekly (accepted low scores in CONTRIBUTING / [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)) |
 
 ### Repo health badge
@@ -191,7 +189,7 @@ Runtime pipeline (`src/run.ts`):
 
 ## Local development
 
-Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh` and the optional offline image).
+Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh`).
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
@@ -212,19 +210,12 @@ npm test
 npm run test:coverage
 ```
 
-### Run the fixer locally (offline after `docker build`)
+### Run the fixer locally
 
-`scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar.
+`scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar (checksum from `checksums.txt`). It defaults to the local fixture config so php-cs-fixer-rules is not required:
 
 ```bash
 bash scripts/ci-local.sh
-```
-
-The Docker image vendors the pinned phar at **build** time (checksum from `checksums.txt`) and defaults to the local fixture config, so linting the fixtures does not download php-cs-fixer or php-cs-fixer-rules at start:
-
-```bash
-docker build -t php-cs-fixer-action .
-docker run --rm --network=none php-cs-fixer-action
 ```
 
 ## Contributing

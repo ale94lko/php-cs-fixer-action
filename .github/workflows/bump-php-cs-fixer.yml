@@ -57,7 +57,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           branch="bump/php-cs-fixer-${TAG}"
           git checkout -B "${branch}"
-          git add checksums.txt action.yml src/inputs.ts README.md CONTRIBUTING.md Dockerfile .env.example scripts/ci-local.sh scripts/vendor-php-cs-fixer.sh dist
+          git add checksums.txt action.yml src/inputs.ts README.md CONTRIBUTING.md .env.example scripts/ci-local.sh scripts/vendor-php-cs-fixer.sh dist
           git commit -m "chore: bump default php-cs-fixer to ${TAG}"
           git push -u origin "HEAD:${branch}" --force
           if ! gh pr list --head "${branch}" --json number --jq 'length' | grep -qx '0'; then

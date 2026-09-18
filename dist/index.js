@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 65b69b4128c3ef9a8772aba47dfe18cdbce75c3f52958c59ce59f6d2170c4428
+// php-cs-fixer-action-src-hash 38043387aac51ee33e9f041897a5911a8404dbb6d9303d71d69fc587b2f6889b
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -100910,7 +100910,7 @@ async function downloadToFile(url, dest, options = {}) {
 // SPDX-License-Identifier: MIT
 
 const FIXER_BINARY = 'php-cs-fixer';
-/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+/** Optional path to a pre-verified phar (e.g. local cache) so runtime can stay offline. */
 const VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR';
 function fixerReleaseUrl(version) {
     return `https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${version}/php-cs-fixer.phar`;

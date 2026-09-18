@@ -46,4 +46,4 @@ See [SECURITY.md](../SECURITY.md) and [assurance-case.md](assurance-case.md) for
 
 ## Non-goals
 
-This is not a long-running service, container orchestration project, or PHP library. The Docker image exists for offline fixture CI / Hadolint, not as the primary distribution channel.
+This is not a long-running service or a general PHP application framework. Distribution is the GitHub Action (`dist/index.js`), not a packaged runtime image.

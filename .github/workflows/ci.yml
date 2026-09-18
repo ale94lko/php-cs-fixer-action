@@ -65,20 +65,6 @@ jobs:
       - name: Lint GitHub Actions workflows
         run: actionlint -color
 
-  # Scorecard SAST scores 10 when a non-CodeQL SAST action is configured
-  # (hadolint/hadolint-action). That closes code-scanning alert #42 while
-  # CodeQL's historical 24/25 PR sample ages out (#64).
-  hadolint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
-        with:
-          dockerfile: Dockerfile
-
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -187,7 +173,7 @@ jobs:
   action-passes-on-clean-fixtures:
     runs-on: ubuntu-latest
     # @actions/cache restore/save for the php-cs-fixer phar needs actions: write.
-    # Do not raise this to the workflow root; lint/audit/typecheck/test/docker-offline
+    # Do not raise this to the workflow root; lint/audit/typecheck/test
     # do not save that cache.
     permissions:
       contents: read
@@ -284,15 +270,3 @@ jobs:
             cat tests/fixtures/Dirty.php
             exit 1
           fi
-
-  docker-offline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Build image with vendored php-cs-fixer
-        run: docker build -t php-cs-fixer-action .
-
-      - name: Lint fixtures without network
-        run: docker run --rm --network=none php-cs-fixer-action
