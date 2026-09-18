@@ -34,3 +34,29 @@ We prefer all communications to be in English or Spanish.
 ## Policy
 
 We follow the principle of [Coordinated Vulnerability Disclosure](https://www.iso.org/standard/72311.html).
+
+## Download integrity threat model
+
+This Action downloads `php-cs-fixer.phar` from [PHP-CS-Fixer GitHub Releases](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases)
+(`src/download-fixer.ts`). The trust boundary is:
+
+1. **Release download** — the phar bytes come from GitHub Releases for the
+   requested `php-cs-fixer-version`.
+2. **Checksum verification** — SHA-256 is checked against the digest pinned in
+   this repository's [`checksums.txt`](checksums.txt). Verification is
+   **fail-closed**: missing tags, download failures, and digest mismatches all
+   abort the Action (they do not fall back to an unverified binary).
+3. **Actions cache** — after a successful verify, the phar may be stored with
+   `@actions/cache` (keyed by version + hash). Cache restore still re-verifies
+   the digest before use. Consumer workflows that want reuse should grant cache
+   write as documented in README [Integrity and cache](README.md#integrity-and-cache)
+   (`permissions.actions: write` alongside `contents: read`). Without that
+   permission (or when the cache service is unavailable), the Action downloads
+   again and still verifies the checksum.
+
+Fail-closed behavior is covered by unit tests in
+[`src/checksums.test.ts`](src/checksums.test.ts) (unknown tags / malformed
+table) and by the loopback integration coverage in
+[`tests/integration/download-fixer.integration.test.ts`](tests/integration/download-fixer.integration.test.ts)
+(download → verify against `checksums.txt` → cache reuse). Checksum mismatch
+paths are also exercised in `src/download-fixer.test.ts` and `src/cache.test.ts`.
