@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 0d5cf5a93eefe1d478c7523a1032762a1df231d4bb80b293b0e477ea3ff973fd
+// php-cs-fixer-action-src-hash 7d365676e6114fbd32d4b5ed6a902a025751fb4a9b89644ef7eb0f326f5a87e8
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101227,12 +101227,42 @@ function readInputs() {
 // SPDX-License-Identifier: MIT
 
 function extractJsonObject(output) {
-    const start = output.indexOf('{');
-    const end = output.lastIndexOf('}');
-    if (start === -1 || end <= start) {
-        throw new Error('php-cs-fixer did not produce a JSON report.');
+    let fallback;
+    let found = false;
+    for (let start = output.indexOf('{'); start !== -1; start = output.indexOf('{', start + 1)) {
+        for (let end = output.lastIndexOf('}'); end > start; end = output.lastIndexOf('}', end - 1)) {
+            try {
+                const parsed = JSON.parse(output.slice(start, end + 1));
+                found = true;
+                fallback = parsed;
+                if (parsed && typeof parsed === 'object' && parsed !== null && 'files' in parsed) {
+                    return parsed;
+                }
+                break;
+            }
+            catch {
+                // Trailing braces or preamble — try an earlier '}'.
+            }
+        }
     }
-    return JSON.parse(output.slice(start, end + 1));
+    if (found) {
+        return fallback;
+    }
+    throw new Error('php-cs-fixer did not produce a JSON report.');
+}
+/** Pure JSON for the `code-style-result` Action output (empty report when stdout has no JSON). */
+const EMPTY_CODE_STYLE_RESULT = '{"files":[]}';
+function toCodeStyleResult(stdout) {
+    const trimmed = stdout.trim();
+    if (trimmed === '') {
+        return EMPTY_CODE_STYLE_RESULT;
+    }
+    try {
+        return JSON.stringify(extractJsonObject(trimmed));
+    }
+    catch {
+        return EMPTY_CODE_STYLE_RESULT;
+    }
 }
 /**
  * First line for GitHub annotations: prefer the post-image (`+`) side of the
@@ -101488,20 +101518,22 @@ function spawnPhp(command, args, options) {
             env: options.env,
             windowsHide: true,
         });
-        let output = '';
+        let stdout = '';
+        let stderr = '';
         child.stdout.on('data', (chunk) => {
             const text = chunk.toString();
-            output += text;
+            stdout += text;
             process.stdout.write(text);
         });
         child.stderr.on('data', (chunk) => {
             const text = chunk.toString();
-            output += text;
+            stderr += text;
+            // Keep deprecation / diagnostic noise in job logs only — not in code-style-result.
             process.stderr.write(text);
         });
         child.on('error', reject);
         child.on('close', (code) => {
-            resolve({ exitCode: code ?? 1, output });
+            resolve({ exitCode: code ?? 1, output: stdout, stderr });
         });
     });
 }
@@ -101734,7 +101766,7 @@ async function executeAction(deps = defaultDeps) {
     const fixerPaths = await resolveFixerPaths(inputs, deps);
     if (fixerPaths === 'skip') {
         core.setOutput('code-style-result', EMPTY_REPORT);
-        return { exitCode: 0, output: EMPTY_REPORT };
+        return { exitCode: 0, output: EMPTY_REPORT, stderr: '' };
     }
     core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`);
     await deps.downloadFixer(inputs.phpCsFixerVersion);
@@ -101747,7 +101779,8 @@ async function executeAction(deps = defaultDeps) {
         paths: fixerPaths,
         allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
     });
-    core.setOutput('code-style-result', result.output);
+    const codeStyleResult = toCodeStyleResult(result.output);
+    core.setOutput('code-style-result', codeStyleResult);
     const violations = tryParseViolations(result.output);
     await publishReport(violations, mode);
     if (result.exitCode === 0) {
@@ -101765,7 +101798,7 @@ async function executeAction(deps = defaultDeps) {
     await report({
         step: ActionStep.RunFixer,
         code: ActionErrorCode.FixerFailed,
-        message: result.output.trim() || 'php-cs-fixer failed.',
+        message: (result.stderr ?? '').trim() || result.output.trim() || 'php-cs-fixer failed.',
     });
     return result;
 }

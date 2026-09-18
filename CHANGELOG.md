@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* fix: Keep `code-style-result` as pure fixer JSON; stderr stays in job logs only. [#121](https://github.com/ale94lko/php-cs-fixer-action/issues/121)
 * fix: Fail with `PHP_NOT_FOUND` (and mention `shivammathur/setup-php`) when `php` is missing from PATH. [#128](https://github.com/ale94lko/php-cs-fixer-action/issues/128)
 * fix: Prefer the new (`+`) side of unified-diff hunks for annotation line numbers. [#127](https://github.com/ale94lko/php-cs-fixer-action/issues/127)
 * fix: Verify downloaded php-cs-fixer-rules configs against pinned SHA-256 digests in `rules-checksums.txt` (fail-closed). [#126](https://github.com/ale94lko/php-cs-fixer-action/issues/126)

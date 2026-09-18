@@ -201,11 +201,29 @@ describe('executeAction', () => {
       readInputs: () => inputs,
       downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
       resolveConfig: vi.fn().mockResolvedValue('config.php'),
-      runFixer: vi.fn().mockResolvedValue({ exitCode: 1, output: 'Could not load config' }),
+      runFixer: vi.fn().mockResolvedValue({
+        exitCode: 1,
+        output: '',
+        stderr: 'Could not load config',
+      }),
     })
     expect(core.setFailed).toHaveBeenCalledWith('Could not load config')
+    expect(core.setOutput).toHaveBeenCalledWith('code-style-result', '{"files":[]}')
     expect(core.error).not.toHaveBeenCalled()
     expect(core.info).toHaveBeenCalledWith(expect.stringContaining('"code":"FIXER_FAILED"'))
+  })
+
+  it('sets code-style-result to pure JSON even if stdout has preamble noise', async () => {
+    const core = await import('@actions/core')
+    const noisy = `Loaded config {legacy}\n${violationReport}\nDone`
+    await executeAction({
+      readInputs: () => inputs,
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('config.php'),
+      runFixer: vi.fn().mockResolvedValue({ exitCode: 8, output: noisy, stderr: '' }),
+    })
+    expect(core.setOutput).toHaveBeenCalledWith('code-style-result', violationReport)
+    expect(() => JSON.parse(violationReport)).not.toThrow()
   })
 
   it('does not download when inputs are invalid', async () => {
@@ -291,7 +309,11 @@ describe('run', () => {
       readInputs: () => inputs,
       downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
       resolveConfig: vi.fn().mockResolvedValue('config.php'),
-      runFixer: vi.fn().mockResolvedValue({ exitCode: 1, output: 'Could not load config' }),
+      runFixer: vi.fn().mockResolvedValue({
+        exitCode: 1,
+        output: '',
+        stderr: 'Could not load config',
+      }),
       reportFailure,
     })
     expect(reportFailure).toHaveBeenCalledWith(
