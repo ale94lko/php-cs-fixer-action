@@ -7,6 +7,7 @@ Changelog for next
 ------------------
 
 * docs: Require features/fixes to ship with tests in small focused Conventional Commits. [#93](https://github.com/ale94lko/php-cs-fixer-action/issues/93)
+* chore: Replace Python maintenance helpers with Node scripts. [#106](https://github.com/ale94lko/php-cs-fixer-action/issues/106)
 * docs: Remove the Scope subsection from README. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * chore: Drop `docker-compose.yml` and `.devcontainer` (keep `Dockerfile` for offline CI / Hadolint). [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * test: Add a loopback HTTP integration test for `downloadFixer` checksum verification and cache reuse. [#92](https://github.com/ale94lko/php-cs-fixer-action/issues/92)

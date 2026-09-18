@@ -51,4 +51,4 @@ jobs:
           DIST_DIR: /tmp/rebuilt-dist
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           PARENT_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: python3 scripts/commit-dist-tree.py
+        run: node scripts/commit-dist-tree.mjs
