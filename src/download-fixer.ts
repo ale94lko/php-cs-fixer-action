@@ -40,7 +40,7 @@ async function installVerifiedPhar(
 ): Promise<boolean> {
   try {
     const hash = await sha256File(source)
-    assertChecksum(hash, expected, version)
+    assertChecksum(hash, expected, `php-cs-fixer ${version}`)
     if (resolve(source) !== resolve(dest)) {
       await copyFile(source, dest)
     }
@@ -77,7 +77,7 @@ export async function downloadFixer(
     if (cached) {
       const cachedHash = await sha256File(cached)
       try {
-        assertChecksum(cachedHash, expected, version)
+        assertChecksum(cachedHash, expected, `php-cs-fixer ${version}`)
         await copyFile(cached, dest)
         await makeExecutable(dest)
         return dest
@@ -89,7 +89,7 @@ export async function downloadFixer(
     await downloadToFile(fixerReleaseUrl(version), dest, options)
     const actual = await sha256File(dest)
     try {
-      assertChecksum(actual, expected, version)
+      assertChecksum(actual, expected, `php-cs-fixer ${version}`)
     } catch (error) {
       await rm(dest, { force: true })
       throw error

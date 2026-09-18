@@ -1,12 +1,19 @@
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
-import { access } from 'node:fs/promises'
+import { access, rm } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { join } from 'node:path'
+import { assertChecksum, sha256File } from './cache'
 import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
 import type { ActionInputs } from './inputs'
 import { downloadToFile, type DownloadOptions } from './http'
+import {
+  expectedRulesChecksum,
+  loadChecksums,
+  resolveRulesChecksumsPath,
+  rulesChecksumKey,
+} from './rules-checksums'
 import { ensureActionRuntimeDir } from './runtime-dir'
 
 export const DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php'
@@ -14,6 +21,8 @@ export const DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php'
 export type ResolveConfigOptions = DownloadOptions & {
   /** Directory for downloaded shared rules (defaults to RUNNER_TEMP/php-cs-fixer-action). */
   runtimeDir?: string
+  rulesChecksumsPath?: string
+  rulesChecksums?: Map<string, string>
 }
 
 export function rulesFileName(useFullRules: string): string {
@@ -59,10 +68,33 @@ export async function resolveConfig(
 
   const destDir = options.runtimeDir ?? (await ensureActionRuntimeDir())
   const dest = join(destDir, DOWNLOADED_CONFIG)
+  const key = rulesChecksumKey(inputs.rulesVersion, inputs.useFullRules)
+
   try {
+    const table =
+      options.rulesChecksums ??
+      (await loadChecksums(options.rulesChecksumsPath ?? resolveRulesChecksumsPath()))
+    const expected = expectedRulesChecksum(key, table)
+
     await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options)
+    const actual = await sha256File(dest)
+    try {
+      assertChecksum(actual, expected, `php-cs-fixer-rules ${key}`)
+    } catch (error) {
+      await rm(dest, { force: true })
+      throw error
+    }
   } catch (error) {
-    throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error)
+    if (error instanceof ActionError) {
+      throw error
+    }
+    const message = error instanceof Error ? error.message : String(error)
+    const code = message.includes('Checksum mismatch')
+      ? ActionErrorCode.ChecksumMismatch
+      : message.includes('No SHA-256 checksum')
+        ? ActionErrorCode.ChecksumMismatch
+        : ActionErrorCode.DownloadFailed
+    throw toActionError(ActionStep.ResolveConfig, code, error)
   }
   return dest
 }

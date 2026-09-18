@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 676d389e2a6580882dde31139f1953a0ee59bea80fddd01173d11dfee23239f7
+// php-cs-fixer-action-src-hash 125789d092d254f1ed81bf308372c883d538f3dfa1cf2b53c063e49960495490
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -100901,9 +100901,9 @@ function sha256Buffer(data) {
 async function sha256File(path) {
     return sha256Buffer(await (0,promises_namespaceObject.readFile)(path));
 }
-function assertChecksum(actual, expected, version) {
+function assertChecksum(actual, expected, label) {
     if (actual !== expected) {
-        throw new Error(`Checksum mismatch for php-cs-fixer ${version}. Expected ${expected}, got ${actual}.`);
+        throw new Error(`Checksum mismatch for ${label}. Expected ${expected}, got ${actual}.`);
     }
 }
 
@@ -101124,7 +101124,7 @@ async function makeExecutable(path) {
 async function installVerifiedPhar(source, dest, expected, version) {
     try {
         const hash = await sha256File(source);
-        assertChecksum(hash, expected, version);
+        assertChecksum(hash, expected, `php-cs-fixer ${version}`);
         if ((0,external_node_path_namespaceObject.resolve)(source) !== (0,external_node_path_namespaceObject.resolve)(dest)) {
             await (0,promises_namespaceObject.copyFile)(source, dest);
         }
@@ -101155,7 +101155,7 @@ runtimeDir, options = {}) {
         if (cached) {
             const cachedHash = await sha256File(cached);
             try {
-                assertChecksum(cachedHash, expected, version);
+                assertChecksum(cachedHash, expected, `php-cs-fixer ${version}`);
                 await (0,promises_namespaceObject.copyFile)(cached, dest);
                 await makeExecutable(dest);
                 return dest;
@@ -101167,7 +101167,7 @@ runtimeDir, options = {}) {
         await downloadToFile(fixerReleaseUrl(version), dest, options);
         const actual = await sha256File(dest);
         try {
-            assertChecksum(actual, expected, version);
+            assertChecksum(actual, expected, `php-cs-fixer ${version}`);
         }
         catch (error) {
             await (0,promises_namespaceObject.rm)(dest, { force: true });
@@ -101343,6 +101343,36 @@ function failWithoutGenericAnnotation() {
     process.exitCode = 1;
 }
 
+;// CONCATENATED MODULE: ./src/rules-checksums.ts
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
+const DEFAULT_RULES_CHECKSUMS_FILE = 'rules-checksums.txt';
+
+function rulesChecksumKey(rulesVersion, useFullRules) {
+    const file = useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php';
+    return `${rulesVersion}/${file}`;
+}
+function resolveRulesChecksumsPath(cwd = process.cwd(), fromDir = __dirname) {
+    const candidates = [
+        (0,external_node_path_namespaceObject.join)(fromDir, '..', DEFAULT_RULES_CHECKSUMS_FILE),
+        (0,external_node_path_namespaceObject.join)(cwd, DEFAULT_RULES_CHECKSUMS_FILE),
+    ];
+    for (const candidate of candidates) {
+        if ((0,external_node_fs_.existsSync)(candidate)) {
+            return candidate;
+        }
+    }
+    throw new Error(`rules-checksums.txt was not found. Place it next to action.yml (looked in ${candidates.join(', ')}).`);
+}
+function expectedRulesChecksum(key, table) {
+    const hash = table.get(key);
+    if (!hash) {
+        throw new Error(`No SHA-256 checksum for php-cs-fixer-rules ${key}. Add it to rules-checksums.txt (see scripts/update-rules-checksums.sh).`);
+    }
+    return hash;
+}
+
 ;// CONCATENATED MODULE: ./src/resolve-config.ts
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
@@ -101376,11 +101406,32 @@ async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
     }
     const destDir = options.runtimeDir ?? (await ensureActionRuntimeDir());
     const dest = (0,external_node_path_namespaceObject.join)(destDir, DOWNLOADED_CONFIG);
+    const key = rulesChecksumKey(inputs.rulesVersion, inputs.useFullRules);
     try {
+        const table = options.rulesChecksums ??
+            (await loadChecksums(options.rulesChecksumsPath ?? resolveRulesChecksumsPath()));
+        const expected = expectedRulesChecksum(key, table);
         await downloadToFile(rulesDownloadUrl(inputs.rulesVersion, inputs.useFullRules), dest, options);
+        const actual = await sha256File(dest);
+        try {
+            assertChecksum(actual, expected, `php-cs-fixer-rules ${key}`);
+        }
+        catch (error) {
+            await (0,promises_namespaceObject.rm)(dest, { force: true });
+            throw error;
+        }
     }
     catch (error) {
-        throw toActionError(ActionStep.ResolveConfig, ActionErrorCode.DownloadFailed, error);
+        if (error instanceof ActionError) {
+            throw error;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        const code = message.includes('Checksum mismatch')
+            ? ActionErrorCode.ChecksumMismatch
+            : message.includes('No SHA-256 checksum')
+                ? ActionErrorCode.ChecksumMismatch
+                : ActionErrorCode.DownloadFailed;
+        throw toActionError(ActionStep.ResolveConfig, code, error);
     }
     return dest;
 }

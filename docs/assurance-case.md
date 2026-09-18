@@ -8,6 +8,7 @@ This document argues that the security expectations in [SECURITY.md](../SECURITY
 
 - The Action downloads `php-cs-fixer.phar` only over HTTPS from GitHub Releases.
 - Before execution, the phar SHA-256 must match a digest in this repository’s [`checksums.txt`](../checksums.txt) (fail-closed).
+- Shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) (when `config-path` is empty) must match a digest in [`rules-checksums.txt`](../rules-checksums.txt) (fail-closed).
 - Cache restores re-verify the digest before use.
 - Action inputs are validated against a committed JSON Schema (Ajv).
 - Default `mode: check` does not rewrite files; `mode: fix` only changes the checked-out workspace as documented.
@@ -23,6 +24,7 @@ This document argues that the security expectations in [SECURITY.md](../SECURITY
 | Threat | Mitigation |
 | --- | --- |
 | Tampered phar on the wire or on a compromised mirror | HTTPS to GitHub; SHA-256 allowlist in-repo; abort on mismatch |
+| Tampered shared rules config (tag/ref rewrite) | HTTPS allowlist hosts; SHA-256 pins in `rules-checksums.txt`; abort on mismatch or missing pin |
 | Stale or poisoned Actions cache | Re-verify digest after restore; fail closed |
 | Unexpected Action inputs | Ajv allowlist validation against `action.inputs.schema.json` |
 | Accidental code execution from `download-then-run` scripts | Bump scripts do not pipe remote content into an interpreter; phar runs only after verify |
@@ -38,7 +40,7 @@ Documented in [architecture.md](architecture.md) and the [download integrity](..
 - **Least privilege** guidance for consumer permissions.
 - **Defense in depth**: transport security (HTTPS) plus content integrity (SHA-256 pins).
 - **Economy of mechanism**: small surface (`src/`), no custom crypto protocol—Node TLS + SHA-256.
-- **Complete mediation**: every downloaded phar path goes through verify before exec.
+- **Complete mediation**: every downloaded phar path goes through verify before exec; every downloaded shared-rules config is verified before php-cs-fixer uses it.
 
 ## Common implementation weaknesses countered
 
