@@ -95,7 +95,6 @@ action.write_text(updated, encoding="utf-8")
 
 for rel in (
     "README.md",
-    "docker-compose.yml",
     "CONTRIBUTING.md",
     "Dockerfile",
     ".env.example",
