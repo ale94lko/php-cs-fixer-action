@@ -27,7 +27,7 @@ jobs:
           coverage: none
 
       - name: Check coding standards on changed PHP files
-        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        uses: ale94lko/php-cs-fixer-action@v1
         with:
           mode: check
           only-changed: true

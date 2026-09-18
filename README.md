@@ -48,10 +48,10 @@ Contributors installing the repo locally should run the one-command check in [Lo
 - Include the following in your action:
   ```yaml
   - name: php-cs-fixer
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
   ```
 
-Pin a patch tag (`@v1.0.3`) so CI stays on a known release. Pushing a `vX.Y.Z` tag publishes a GitHub Release from `CHANGELOG.md` and force-updates the floating major tag (`@v1`) so it tracks the latest compatible 1.x. Until that major tag exists, keep using the latest patch tag.
+Snippets and [`examples/`](examples/) use the floating major tag **`@v1`** (latest compatible 1.x). Prefer that for most workflows. Pin a patch tag (`@v1.0.3`) only when you need a frozen release. Publishing a `vX.Y.Z` GitHub Release force-updates `@v1` to the same commit. The `version` in `package.json` on `main` may be ahead of the latest published Action tag — pin Action tags, not that field.
 
 When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` only with a ref that already has digests in [`rules-checksums.txt`](rules-checksums.txt) (or add pins with `bash scripts/update-rules-checksums.sh <tag>`). Unpinned refs fail closed; prefer `config-path` for a local consumer config.
 
@@ -120,14 +120,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        uses: ale94lko/php-cs-fixer-action@v1
         # rules-version defaults to v1.0.1; omit or override as needed
 ```
 
 ### Use a config file from your own repository
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     config-path: .php-cs-fixer.dist.php
 ```
@@ -135,7 +135,7 @@ jobs:
 ### Override the shared rules ref (tag, branch, or SHA)
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     rules-version: v1.0.1  # must be pinned in rules-checksums.txt
 +     use-full-rules: true
@@ -144,7 +144,7 @@ jobs:
 ### Use the minimal shared ruleset
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     use-full-rules: false
 ```
@@ -152,7 +152,7 @@ jobs:
 ### Override php-cs-fixer version
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     php-cs-fixer-version: v3.95.21
 ```
@@ -160,7 +160,7 @@ jobs:
 ### Check only (default)
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       mode: check
 ```
@@ -168,7 +168,7 @@ jobs:
 ### Apply fixes to selected paths
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       mode: fix
       paths: src tests
@@ -180,7 +180,7 @@ Space-separated values cannot include spaces in a path name. Prefer a **newline-
 
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       # one path per line (spaces allowed)
       paths: |
@@ -190,7 +190,7 @@ Space-separated values cannot include spaces in a path name. Prefer a **newline-
 
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       paths: '["src/with space.php", "tests"]'
 ```
@@ -200,7 +200,7 @@ Risky rules can change behavior in surprising ways. The Action defaults to `allo
 
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     allow-risky: no
 ```
@@ -210,7 +210,7 @@ Risky rules can change behavior in surprising ways. The Action defaults to `allo
 Use `php-bin` when PHP is not on `PATH` as `php`. Set `working-directory` to run the fixer with that subdirectory as cwd (config and path arguments stay resolved from the repository root). Optionally pass php-cs-fixer cache knobs:
 
 ```yaml
-- uses: ale94lko/php-cs-fixer-action@v1.0.3
+- uses: ale94lko/php-cs-fixer-action@v1
   with:
     php-bin: php
     working-directory: packages/api
@@ -227,7 +227,7 @@ Use `only-changed: true` so the Action runs `git diff` against the PR base (or a
       fetch-depth: 0
 
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       only-changed: true
       # optional: further limit to directories

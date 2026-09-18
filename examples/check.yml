@@ -28,7 +28,7 @@ jobs:
           coverage: none
 
       - name: Check coding standards
-        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        uses: ale94lko/php-cs-fixer-action@v1
         with:
           mode: check
           # Optional: use a config file from this repository instead of
