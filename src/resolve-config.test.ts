@@ -15,6 +15,7 @@ const base: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  sarifFile: '',
 }
 
 describe('rules selection', () => {

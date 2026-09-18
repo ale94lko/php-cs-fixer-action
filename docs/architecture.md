@@ -16,7 +16,7 @@ dist/index.js  ◄── ncc bundle of src/
     │     └─ SHA-256 vs checksums.txt (fail-closed)
     │     └─ optional @actions/cache (re-verify on restore)
     ├─ runFixer (spawn php + phar; check or fix)
-    └─ report (annotations, job summary, optional webhook)
+    └─ report (annotations, job summary, optional SARIF, optional webhook)
 ```
 
 | Area | Location | Role |
@@ -26,7 +26,7 @@ dist/index.js  ◄── ncc bundle of src/
 | Integrity | `src/download-fixer.ts`, `src/checksums.ts`, `checksums.txt` | Pin and verify phar |
 | Cache | `src/cache.ts` | Actions cache after verify |
 | Inputs | `src/validate.ts`, `action.yml` | Schema-validated inputs |
-| Reporting | `src/report.ts` | Annotations / summary |
+| Reporting | `src/report.ts` | Annotations / summary / optional SARIF |
 | DI | `ActionDeps` in tests | Swap HTTP/fs/exec in unit and integration tests |
 
 ## Trust boundaries

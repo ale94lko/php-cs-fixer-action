@@ -20,6 +20,7 @@ export type SchemaInputs = {
   'use-full-rules': string
   mode: string
   paths: string
+  'sarif-file': string
 }
 
 export function inputsSchemaPath(root = join(__dirname, '..')): string {
@@ -38,6 +39,7 @@ export function toSchemaInputs(inputs: ActionInputs): SchemaInputs {
     'use-full-rules': inputs.useFullRules,
     mode: inputs.mode,
     paths: inputs.paths,
+    'sarif-file': inputs.sarifFile,
   }
 }
 
@@ -48,6 +50,7 @@ export const SCHEMA_DEFAULTS: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  sarifFile: '',
 }
 
 let compiled: ValidateFunction<SchemaInputs> | undefined
@@ -90,6 +93,8 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
       const token = value.trim().split(/\s+/).find((part) => part !== '') ?? value
       return `Invalid path '${token}'. Use a relative path inside the workspace.`
     }
+    case 'sarif-file':
+      return `Invalid sarif-file '${value}'. Use a relative path inside the workspace.`
     default:
       return error.message ? `Invalid Action inputs: ${error.message}` : 'Invalid Action inputs.'
   }

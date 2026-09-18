@@ -25,6 +25,7 @@ const valid: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  sarifFile: '',
 }
 
 describe('action.inputs.schema.json', () => {
@@ -41,6 +42,7 @@ describe('action.inputs.schema.json', () => {
       'use-full-rules',
       'mode',
       'paths',
+      'sarif-file',
     ])
     expect(Object.keys(schema.properties ?? {})).toEqual(schema.required)
     expect(() => compileInputsSchema(schema)).not.toThrow()
@@ -57,6 +59,7 @@ describe('action.inputs.schema.json', () => {
       'use-full-rules': actionYaml.match(/use-full-rules:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
       mode: actionYaml.match(/^\s*mode:[\s\S]*?default:\s*'?([^'\n]+)'?/m)?.[1],
       paths: '',
+      'sarif-file': '',
     }
     expect(defaults).toEqual(toSchemaInputs(SCHEMA_DEFAULTS))
     expect(() => assertInputsSchema(valid)).not.toThrow()
@@ -73,5 +76,6 @@ describe('action.inputs.schema.json', () => {
       /config-path/,
     )
     expect(() => assertInputsSchema({ ...valid, paths: '--allow-risky=yes' })).toThrow(/Invalid path/)
+    expect(() => assertInputsSchema({ ...valid, sarifFile: '../out.sarif' })).toThrow(/sarif-file/)
   })
 })

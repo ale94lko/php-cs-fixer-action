@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* feature: Optional `sarif-file` input writes SARIF 2.1.0 from style violations for `github/codeql-action/upload-sarif`. [#132](https://github.com/ale94lko/php-cs-fixer-action/issues/132)
 * docs: Add OpenSSF Gold docs (code review, security review, hardening, small tasks), SPDX headers, and 90%/80% coverage thresholds.
 * docs: Add OpenSSF Silver governance, architecture, roadmap, and assurance-case docs.
 * docs: Embed the OpenSSF Best Practices Passing badge and note Scorecard CII is Passing ([project 6296](https://www.bestpractices.dev/projects/6296)).

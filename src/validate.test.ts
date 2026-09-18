@@ -11,6 +11,7 @@ import {
   validateMode,
   validatePaths,
   validatePhpCsFixerVersion,
+  validateSarifFile,
   validateUseFullRules,
 } from './validate'
 import { DEFAULT_RULES_VERSION } from './inputs'
@@ -23,6 +24,7 @@ const valid: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  sarifFile: '',
 }
 
 describe('validatePhpCsFixerVersion', () => {
@@ -133,5 +135,18 @@ describe('validatePaths', () => {
     expect(() => validatePaths('C:\\Windows\\secrets.php')).toThrow(/relative path/)
     expect(() => validatePaths('tests/../../etc/passwd')).toThrow(/relative path/)
     expect(() => validatePaths('--allow-risky=yes')).toThrow(/relative path/)
+  })
+})
+
+describe('validateSarifFile', () => {
+  it('allows empty and relative workspace paths', () => {
+    expect(() => validateSarifFile('')).not.toThrow()
+    expect(() => validateSarifFile('php-cs-fixer.sarif')).not.toThrow()
+    expect(() => validateSarifFile('reports/php-cs-fixer.sarif')).not.toThrow()
+  })
+
+  it('rejects traversal and absolute paths', () => {
+    expect(() => validateSarifFile('../out.sarif')).toThrow(/sarif-file/)
+    expect(() => validateSarifFile('/tmp/out.sarif')).toThrow(/sarif-file/)
   })
 })

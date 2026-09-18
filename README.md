@@ -65,6 +65,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
+| sarif-file | Relative path for an optional [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) report of style violations. Empty disables SARIF. Upload with `github/codeql-action/upload-sarif` (`security-events: write`) | `false` | _(empty)_ | e.g. `php-cs-fixer.sarif` |
 
 ## Integrity and cache
 
@@ -82,7 +83,7 @@ If the cache service is unavailable (local runs, missing permission, fork PR), t
 
 ## Examples
 
-Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations) and [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
+Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/check-sarif.yml`](examples/check-sarif.yml) (same check plus Code Scanning via SARIF), and [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
 
 ### Simple use with default parameters (shared rules pinned to `v1.0.1`)
 ```yaml
@@ -149,6 +150,28 @@ jobs:
       paths: src tests
 ```
 
+### Emit SARIF for Code Scanning
+```yaml
+permissions:
+  contents: read
+  security-events: write   # required by upload-sarif
+
+# …
+
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    with:
+      mode: check
+      sarif-file: php-cs-fixer.sarif
+
+  - name: Upload SARIF
+    if: success() || failure()
+    uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: php-cs-fixer.sarif
+```
+
+See [`examples/check-sarif.yml`](examples/check-sarif.yml) for a full workflow.
 ## CI
 
 Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-cs-fixer-action/actions/workflows/ci.yml):
@@ -171,7 +194,7 @@ Runtime pipeline (`src/run.ts`):
    - If `config-path` is set, use that file from the consumer repository.
    - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
 5. **Run the fixer** (`src/run-fixer.ts`) — `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended after they are checked to stay inside the workspace.
-6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
+6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, optional SARIF via `sarif-file`, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
 
 | Path | Role |
 |------|------|

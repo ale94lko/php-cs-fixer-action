@@ -13,6 +13,7 @@ const inputs: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  sarifFile: '',
 }
 
 const violationReport = JSON.stringify({
@@ -124,6 +125,29 @@ describe('executeAction', () => {
     expect(core.error).not.toHaveBeenCalled()
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(process.exitCode).not.toBe(1)
+  })
+
+  it('writes an optional SARIF file when sarif-file is set', async () => {
+    const { mkdtemp, readFile, rm } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { buildSarif, parseViolations } = await import('./report')
+    const workspace = await mkdtemp(join(tmpdir(), 'run-sarif-'))
+    const cwd = process.cwd()
+    try {
+      process.chdir(workspace)
+      await executeAction({
+        readInputs: () => ({ ...inputs, sarifFile: 'php-cs-fixer.sarif' }),
+        downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+        resolveConfig: vi.fn().mockResolvedValue('config.php'),
+        runFixer: vi.fn().mockResolvedValue({ exitCode: 8, output: violationReport }),
+      })
+      const raw = await readFile(join(workspace, 'php-cs-fixer.sarif'), 'utf8')
+      expect(JSON.parse(raw)).toEqual(buildSarif(parseViolations(violationReport), 'check'))
+    } finally {
+      process.chdir(cwd)
+      await rm(workspace, { recursive: true, force: true })
+    }
   })
 
   it('forwards fix mode and parsed paths to the fixer', async () => {

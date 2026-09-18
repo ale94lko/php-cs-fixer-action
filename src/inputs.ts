@@ -18,6 +18,7 @@ export type ActionInputs = {
   useFullRules: string
   mode: string
   paths: string
+  sarifFile: string
 }
 
 function read(name: string, fallbackEnv: string, defaultValue: string): string {
@@ -37,5 +38,6 @@ export function readInputs(): ActionInputs {
     useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
     mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
     paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
+    sarifFile: read('sarif-file', 'PHP_CS_FIXER_SARIF_FILE', ''),
   }
 }

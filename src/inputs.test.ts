@@ -21,6 +21,7 @@ describe('readInputs', () => {
     delete process.env.USE_FULL_RULES
     delete process.env.PHP_CS_FIXER_MODE
     delete process.env.PHP_CS_FIXER_PATHS
+    delete process.env.PHP_CS_FIXER_SARIF_FILE
   })
 
   it('uses documented defaults', () => {
@@ -31,6 +32,7 @@ describe('readInputs', () => {
       useFullRules: 'true',
       mode: 'check',
       paths: '',
+      sarifFile: '',
     })
   })
 
@@ -47,10 +49,15 @@ describe('readInputs', () => {
     expect(readInputs().configPath).toBe('tests/fixtures/.php-cs-fixer.dist.php')
   })
 
-  it('reads mode and paths from env fallbacks', () => {
+  it('reads mode, paths and sarif-file from env fallbacks', () => {
     process.env.PHP_CS_FIXER_MODE = 'fix'
     process.env.PHP_CS_FIXER_PATHS = 'src tests'
-    expect(readInputs()).toMatchObject({ mode: 'fix', paths: 'src tests' })
+    process.env.PHP_CS_FIXER_SARIF_FILE = 'php-cs-fixer.sarif'
+    expect(readInputs()).toMatchObject({
+      mode: 'fix',
+      paths: 'src tests',
+      sarifFile: 'php-cs-fixer.sarif',
+    })
   })
 
   it('defaults php-cs-fixer-version and rules-version to release tags aligned with action.yml', () => {
