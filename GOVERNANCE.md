@@ -8,6 +8,7 @@ The project uses a **maintainer-led** model on GitHub:
 
 - Day-to-day work happens through issues and pull requests.
 - Changes land on `main` only after review (see [`.github/CODEOWNERS`](.github/CODEOWNERS)).
+- Merged same-repo PR head branches are deleted automatically (repository setting: **Automatically delete head branches**).
 - Releases are git tags (`vX.Y.Z`) that trigger [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 There is no separate foundation board. Technical and security decisions are made by the maintainers listed below, with community input via issues and PRs.
