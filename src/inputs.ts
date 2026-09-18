@@ -9,7 +9,12 @@ export const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21'
 /** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
 export const DEFAULT_RULES_VERSION = 'v1.0.1'
 
+/** Default --allow-risky value (keep in sync with action.yml; yes for backward compatibility). */
+export const DEFAULT_ALLOW_RISKY = 'yes'
+
 export type ActionMode = 'check' | 'fix'
+
+export type AllowRisky = 'yes' | 'no'
 
 export type ActionInputs = {
   phpCsFixerVersion: string
@@ -18,6 +23,7 @@ export type ActionInputs = {
   useFullRules: string
   mode: string
   paths: string
+  allowRisky: string
 }
 
 function read(name: string, fallbackEnv: string, defaultValue: string): string {
@@ -37,5 +43,6 @@ export function readInputs(): ActionInputs {
     useFullRules: read('use-full-rules', 'USE_FULL_RULES', 'true'),
     mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
     paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
+    allowRisky: read('allow-risky', 'PHP_CS_FIXER_ALLOW_RISKY', DEFAULT_ALLOW_RISKY),
   }
 }

@@ -21,6 +21,7 @@ describe('readInputs', () => {
     delete process.env.USE_FULL_RULES
     delete process.env.PHP_CS_FIXER_MODE
     delete process.env.PHP_CS_FIXER_PATHS
+    delete process.env.PHP_CS_FIXER_ALLOW_RISKY
   })
 
   it('uses documented defaults', () => {
@@ -31,6 +32,7 @@ describe('readInputs', () => {
       useFullRules: 'true',
       mode: 'check',
       paths: '',
+      allowRisky: 'yes',
     })
   })
 

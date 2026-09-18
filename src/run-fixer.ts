@@ -8,7 +8,7 @@ import { writeFile } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
 import { FIXER_BINARY } from './download-fixer'
 import { ActionError, ActionErrorCode, ActionStep, toActionError } from './error-tracking'
-import type { ActionMode } from './inputs'
+import type { ActionMode, AllowRisky } from './inputs'
 import { RESULT_FILE, ensureActionRuntimeDir } from './runtime-dir'
 
 export type FixerResult = {
@@ -29,13 +29,13 @@ export type RunFixerSettings = {
   runProcess?: RunProcess
   mode?: ActionMode
   paths?: string[]
+  allowRisky?: AllowRisky
 }
 
 export const BASE_FIXER_ARGS = [
   'fix',
   '--diff',
   '--show-progress=none',
-  '--allow-risky=yes',
   '--format=json',
 ] as const
 
@@ -43,8 +43,15 @@ export function buildFixerArgs(
   configFile: string,
   mode: ActionMode = 'check',
   paths: string[] = [],
+  allowRisky: AllowRisky = 'yes',
 ): string[] {
-  const args: string[] = [...BASE_FIXER_ARGS]
+  const args: string[] = [
+    BASE_FIXER_ARGS[0],
+    BASE_FIXER_ARGS[1],
+    BASE_FIXER_ARGS[2],
+    `--allow-risky=${allowRisky}`,
+    BASE_FIXER_ARGS[3],
+  ]
   if (mode === 'check') {
     args.push('--dry-run')
   }
@@ -90,6 +97,7 @@ export async function runFixer(
   const runProcess = settings.runProcess ?? spawnPhp
   const mode = settings.mode ?? 'check'
   const paths = settings.paths ?? []
+  const allowRisky = settings.allowRisky ?? 'yes'
   const configPath = isAbsolute(configFile) ? configFile : join(workspace, configFile)
   try {
     await access(configPath, constants.F_OK)
@@ -108,7 +116,7 @@ export async function runFixer(
   try {
     const result = await runProcess(
       'php',
-      [join(runtimeDir, FIXER_BINARY), ...buildFixerArgs(configPath, mode, paths)],
+      [join(runtimeDir, FIXER_BINARY), ...buildFixerArgs(configPath, mode, paths, allowRisky)],
       { cwd: workspace, env },
     )
     await writeFile(join(runtimeDir, RESULT_FILE), result.output)

@@ -91,15 +91,22 @@ describe('runFixer', () => {
 })
 
 describe('buildFixerArgs', () => {
-  it('includes --dry-run in check mode', () => {
+  it('includes --dry-run in check mode and defaults allow-risky to yes', () => {
     expect(buildFixerArgs('config.php', 'check')).toContain('--dry-run')
     expect(buildFixerArgs('config.php', 'check')).toContain('--config=config.php')
     expect(buildFixerArgs('config.php', 'check')).toContain('--format=json')
+    expect(buildFixerArgs('config.php', 'check')).toContain('--allow-risky=yes')
+  })
+
+  it('honors allow-risky=no', () => {
+    expect(buildFixerArgs('config.php', 'check', [], 'no')).toContain('--allow-risky=no')
+    expect(buildFixerArgs('config.php', 'check', [], 'no')).not.toContain('--allow-risky=yes')
   })
 
   it('omits --dry-run in fix mode and appends paths', () => {
     const args = buildFixerArgs('config.php', 'fix', ['src', 'tests/fixtures/Dirty.php'])
     expect(args).not.toContain('--dry-run')
+    expect(args).toContain('--allow-risky=yes')
     expect(args.slice(-3)).toEqual(['--config=config.php', 'src', 'tests/fixtures/Dirty.php'])
   })
 })

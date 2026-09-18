@@ -13,6 +13,7 @@ const inputs: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  allowRisky: 'yes',
 }
 
 const violationReport = JSON.stringify({
@@ -71,7 +72,7 @@ describe('executeAction', () => {
     expect(resolveConfig).toHaveBeenCalledWith(inputs)
     expect(runFixer).toHaveBeenCalledWith(
       'tests/fixtures/.php-cs-fixer.dist.php',
-      expect.objectContaining({ mode: 'check', paths: [] }),
+      expect.objectContaining({ mode: 'check', paths: [], allowRisky: 'yes' }),
     )
     expect(core.setOutput).toHaveBeenCalledWith('code-style-result', violationReport)
     expect(core.error).toHaveBeenCalledWith(
