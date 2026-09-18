@@ -171,6 +171,8 @@ Statement coverage is enforced at **≥ 90%** statements/lines and **≥ 80%** b
 4. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) if you are solving one.
 5. Enable [allow maintainer edits](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).
 
+After a same-repo pull request is merged, GitHub deletes the head branch automatically (`Automatically delete head branches` is enabled on this repository). Fork PR branches are not deleted on the contributor's fork.
+
 ## Security reports
 
 Please do not open public issues for vulnerabilities. Follow
