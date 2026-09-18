@@ -12,7 +12,9 @@
     "use-full-rules",
     "mode",
     "paths",
-    "allow-risky"
+    "allow-risky",
+    "only-changed",
+    "base-ref"
   ],
   "properties": {
     "php-cs-fixer-version": {
@@ -28,7 +30,7 @@
     "rules-version": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*/)[A-Za-z0-9._/-]+$",
+      "pattern": "^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
       "description": "Git ref of ale94lko/php-cs-fixer-rules (no .., empty segments, or path escape)."
     },
     "use-full-rules": {
@@ -48,6 +50,16 @@
       "type": "string",
       "enum": ["yes", "no"],
       "description": "Passed to php-cs-fixer as --allow-risky. Default yes preserves prior Action behavior."
+    },
+    "only-changed": {
+      "type": "string",
+      "enum": ["true", "false"],
+      "description": "When true, derive PHP paths from git diff vs base-ref."
+    },
+    "base-ref": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
+      "description": "Git ref for only-changed diffs (empty uses origin/$GITHUB_BASE_REF)."
     }
   }
 }

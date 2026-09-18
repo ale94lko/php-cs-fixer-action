@@ -51,9 +51,9 @@ function isInsideWorkspace(workspace: string, candidate: string): boolean {
   return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)
 }
 
-export function validatePaths(raw: string, workspace = process.cwd()): void {
-  assertInputsSchema({ ...SCHEMA_DEFAULTS, paths: raw })
-  for (const path of parsePaths(raw)) {
+/** Fail closed when any path is absolute, traverses parents, or looks like a CLI flag. */
+export function assertSafeWorkspacePaths(paths: string[], workspace = process.cwd()): void {
+  for (const path of paths) {
     if (
       path.startsWith('-') ||
       path.startsWith('/') ||
@@ -64,6 +64,11 @@ export function validatePaths(raw: string, workspace = process.cwd()): void {
       invalidInput(`Invalid path '${path}'. Use a relative path inside the workspace.`)
     }
   }
+}
+
+export function validatePaths(raw: string, workspace = process.cwd()): void {
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, paths: raw })
+  assertSafeWorkspacePaths(parsePaths(raw), workspace)
 }
 
 export function validateAllInputs(inputs: ActionInputs, workspace = process.cwd()): void {

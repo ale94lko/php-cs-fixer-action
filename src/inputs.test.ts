@@ -22,6 +22,8 @@ describe('readInputs', () => {
     delete process.env.PHP_CS_FIXER_MODE
     delete process.env.PHP_CS_FIXER_PATHS
     delete process.env.PHP_CS_FIXER_ALLOW_RISKY
+    delete process.env.PHP_CS_FIXER_ONLY_CHANGED
+    delete process.env.PHP_CS_FIXER_BASE_REF
   })
 
   it('uses documented defaults', () => {
@@ -33,6 +35,8 @@ describe('readInputs', () => {
       mode: 'check',
       paths: '',
       allowRisky: 'yes',
+      onlyChanged: 'false',
+      baseRef: '',
     })
   })
 

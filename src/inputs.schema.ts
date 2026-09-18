@@ -22,6 +22,8 @@ export type SchemaInputs = {
   mode: string
   paths: string
   'allow-risky': string
+  'only-changed': string
+  'base-ref': string
 }
 
 export function inputsSchemaPath(root = join(__dirname, '..')): string {
@@ -41,6 +43,8 @@ export function toSchemaInputs(inputs: ActionInputs): SchemaInputs {
     mode: inputs.mode,
     paths: inputs.paths,
     'allow-risky': inputs.allowRisky,
+    'only-changed': inputs.onlyChanged,
+    'base-ref': inputs.baseRef,
   }
 }
 
@@ -52,6 +56,8 @@ export const SCHEMA_DEFAULTS: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: DEFAULT_ALLOW_RISKY,
+  onlyChanged: 'false',
+  baseRef: '',
 }
 
 let compiled: ValidateFunction<SchemaInputs> | undefined
@@ -84,6 +90,10 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
       return `Invalid use-full-rules '${value}'. Expected true or false.`
     case 'allow-risky':
       return `Invalid allow-risky '${value}'. Expected yes or no.`
+    case 'only-changed':
+      return `Invalid only-changed '${value}'. Expected true or false.`
+    case 'base-ref':
+      return `Invalid base-ref '${value}'. Use a tag, branch, or SHA.`
     case 'rules-version':
       return value === ''
         ? 'rules-version must not be empty.'

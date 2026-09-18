@@ -24,6 +24,8 @@ const valid: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: 'yes',
+  onlyChanged: 'false',
+  baseRef: '',
 }
 
 describe('validatePhpCsFixerVersion', () => {

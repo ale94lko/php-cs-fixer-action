@@ -24,6 +24,8 @@ export type ActionInputs = {
   mode: string
   paths: string
   allowRisky: string
+  onlyChanged: string
+  baseRef: string
 }
 
 function read(name: string, fallbackEnv: string, defaultValue: string): string {
@@ -44,5 +46,7 @@ export function readInputs(): ActionInputs {
     mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
     paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
     allowRisky: read('allow-risky', 'PHP_CS_FIXER_ALLOW_RISKY', DEFAULT_ALLOW_RISKY),
+    onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
+    baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
   }
 }
