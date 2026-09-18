@@ -65,10 +65,11 @@ describe('trackingWebhookUrl', () => {
     expect(trackingWebhookUrl({ [ERROR_TRACKING_URL_ENV]: '  ' })).toBeUndefined()
   })
 
-  it('accepts http(s) URLs and ignores other schemes', () => {
+  it('accepts HTTPS URLs and ignores other schemes', () => {
     expect(trackingWebhookUrl({ [ERROR_TRACKING_URL_ENV]: 'https://example.test/hook' })).toBe(
       'https://example.test/hook',
     )
+    expect(trackingWebhookUrl({ [ERROR_TRACKING_URL_ENV]: 'http://example.test/hook' })).toBeUndefined()
     expect(trackingWebhookUrl({ [ERROR_TRACKING_URL_ENV]: 'file:///tmp/out' })).toBeUndefined()
     expect(trackingWebhookUrl({ [ERROR_TRACKING_URL_ENV]: 'not a url' })).toBeUndefined()
   })
@@ -107,6 +108,7 @@ describe('reportFailure', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(failurePayload(report)),
+        redirect: 'error',
       }),
     )
   })

@@ -13,6 +13,13 @@ const inputs: ActionInputs = {
   useFullRules: 'true',
   mode: 'check',
   paths: '',
+  allowRisky: 'yes',
+  phpBin: '',
+  workingDirectory: '',
+  usingCache: '',
+  cacheFile: '',
+  onlyChanged: 'false',
+  baseRef: '',
   sarifFile: '',
 }
 
@@ -72,7 +79,7 @@ describe('executeAction', () => {
     expect(resolveConfig).toHaveBeenCalledWith(inputs)
     expect(runFixer).toHaveBeenCalledWith(
       'tests/fixtures/.php-cs-fixer.dist.php',
-      expect.objectContaining({ mode: 'check', paths: [] }),
+      expect.objectContaining({ mode: 'check', paths: [], allowRisky: 'yes' }),
     )
     expect(core.setOutput).toHaveBeenCalledWith('code-style-result', violationReport)
     expect(core.error).toHaveBeenCalledWith(
@@ -108,6 +115,58 @@ describe('executeAction', () => {
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.error).not.toHaveBeenCalled()
     expect(process.exitCode).not.toBe(1)
+  })
+
+  it('skips the fixer when only-changed finds no PHP files', async () => {
+    const core = await import('@actions/core')
+    const downloadFixer = vi.fn()
+    const runFixer = vi.fn()
+    await executeAction({
+      readInputs: () => ({ ...inputs, onlyChanged: 'true', baseRef: 'origin/main' }),
+      downloadFixer,
+      resolveConfig: vi.fn(),
+      runFixer,
+      listChangedPhpPaths: vi.fn().mockResolvedValue([]),
+    })
+    expect(downloadFixer).not.toHaveBeenCalled()
+    expect(runFixer).not.toHaveBeenCalled()
+    expect(core.setOutput).toHaveBeenCalledWith('code-style-result', '{"files":[]}')
+    expect(core.info).toHaveBeenCalledWith(expect.stringContaining('no PHP files changed'))
+  })
+
+  it('passes only-changed PHP paths through workspace validation to runFixer', async () => {
+    const runFixer = vi.fn().mockResolvedValue({ exitCode: 0, output: '{"files":[]}' })
+    await executeAction({
+      readInputs: () => ({
+        ...inputs,
+        onlyChanged: 'true',
+        baseRef: 'origin/main',
+        paths: 'src',
+      }),
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('config.php'),
+      runFixer,
+      listChangedPhpPaths: vi.fn().mockResolvedValue(['src/A.php']),
+    })
+    expect(runFixer).toHaveBeenCalledWith(
+      'config.php',
+      expect.objectContaining({ paths: ['src/A.php'] }),
+    )
+  })
+
+  it('rejects unsafe paths from only-changed diffs', async () => {
+    const reportFailure = vi.fn().mockResolvedValue(undefined)
+    await run({
+      readInputs: () => ({ ...inputs, onlyChanged: 'true', baseRef: 'origin/main' }),
+      downloadFixer: vi.fn(),
+      resolveConfig: vi.fn(),
+      runFixer: vi.fn(),
+      listChangedPhpPaths: vi.fn().mockResolvedValue(['../secrets.php']),
+      reportFailure,
+    })
+    expect(reportFailure).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'INVALID_INPUT' }),
+    )
   })
 
   it('warns for rewritten files in fix mode', async () => {
@@ -170,11 +229,29 @@ describe('executeAction', () => {
       readInputs: () => inputs,
       downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
       resolveConfig: vi.fn().mockResolvedValue('config.php'),
-      runFixer: vi.fn().mockResolvedValue({ exitCode: 1, output: 'Could not load config' }),
+      runFixer: vi.fn().mockResolvedValue({
+        exitCode: 1,
+        output: '',
+        stderr: 'Could not load config',
+      }),
     })
     expect(core.setFailed).toHaveBeenCalledWith('Could not load config')
+    expect(core.setOutput).toHaveBeenCalledWith('code-style-result', '{"files":[]}')
     expect(core.error).not.toHaveBeenCalled()
     expect(core.info).toHaveBeenCalledWith(expect.stringContaining('"code":"FIXER_FAILED"'))
+  })
+
+  it('sets code-style-result to pure JSON even if stdout has preamble noise', async () => {
+    const core = await import('@actions/core')
+    const noisy = `Loaded config {legacy}\n${violationReport}\nDone`
+    await executeAction({
+      readInputs: () => inputs,
+      downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
+      resolveConfig: vi.fn().mockResolvedValue('config.php'),
+      runFixer: vi.fn().mockResolvedValue({ exitCode: 8, output: noisy, stderr: '' }),
+    })
+    expect(core.setOutput).toHaveBeenCalledWith('code-style-result', violationReport)
+    expect(() => JSON.parse(violationReport)).not.toThrow()
   })
 
   it('does not download when inputs are invalid', async () => {
@@ -260,7 +337,11 @@ describe('run', () => {
       readInputs: () => inputs,
       downloadFixer: vi.fn().mockResolvedValue('php-cs-fixer'),
       resolveConfig: vi.fn().mockResolvedValue('config.php'),
-      runFixer: vi.fn().mockResolvedValue({ exitCode: 1, output: 'Could not load config' }),
+      runFixer: vi.fn().mockResolvedValue({
+        exitCode: 1,
+        output: '',
+        stderr: 'Could not load config',
+      }),
       reportFailure,
     })
     expect(reportFailure).toHaveBeenCalledWith(

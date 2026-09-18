@@ -12,7 +12,7 @@ Maintainers reviewed the security requirements and trust boundaries documented i
 - [docs/assurance-case.md](assurance-case.md) (requirements, threat model, secure design, common weaknesses)
 - [docs/architecture.md](architecture.md) (components and boundaries)
 
-The review also considered current mitigations already enforced in CI: input schema validation (Ajv), SHA-256 fail-closed phar verify, CodeQL, `npm audit`, Dependabot, and Hadolint on the Dockerfile.
+The review also considered current mitigations already enforced in CI: input schema validation (Ajv), SHA-256 fail-closed phar verify, CodeQL, `npm audit`, and Dependabot.
 
 ## Security boundary
 

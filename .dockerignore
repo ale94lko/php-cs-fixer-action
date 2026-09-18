@@ -1,9 +1,0 @@
-.git
-.github
-.idea
-node_modules
-coverage
-*.md
-.env
-.env.*
-!.env.example

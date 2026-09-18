@@ -76,10 +76,8 @@ export async function sha256File(path: string): Promise<string> {
   return sha256Buffer(await readFile(path))
 }
 
-export function assertChecksum(actual: string, expected: string, version: string): void {
+export function assertChecksum(actual: string, expected: string, label: string): void {
   if (actual !== expected) {
-    throw new Error(
-      `Checksum mismatch for php-cs-fixer ${version}. Expected ${expected}, got ${actual}.`,
-    )
+    throw new Error(`Checksum mismatch for ${label}. Expected ${expected}, got ${actual}.`)
   }
 }

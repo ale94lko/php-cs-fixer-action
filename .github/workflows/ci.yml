@@ -65,20 +65,6 @@ jobs:
       - name: Lint GitHub Actions workflows
         run: actionlint -color
 
-  # Scorecard SAST scores 10 when a non-CodeQL SAST action is configured
-  # (hadolint/hadolint-action). That closes code-scanning alert #42 while
-  # CodeQL's historical 24/25 PR sample ages out (#64).
-  hadolint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
-        with:
-          dockerfile: Dockerfile
-
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -187,7 +173,7 @@ jobs:
   action-passes-on-clean-fixtures:
     runs-on: ubuntu-latest
     # @actions/cache restore/save for the php-cs-fixer phar needs actions: write.
-    # Do not raise this to the workflow root; lint/audit/typecheck/test/docker-offline
+    # Do not raise this to the workflow root; lint/audit/typecheck/test
     # do not save that cache.
     permissions:
       contents: read
@@ -207,6 +193,19 @@ jobs:
         with:
           config-path: tests/fixtures/.php-cs-fixer.dist.php
           mode: check
+
+      - name: Checkout stays free of Action runtime files
+        run: |
+          if [[ -e php-cs-fixer || -e result.txt || -e .php-cs-fixer.dist.php ]]; then
+            echo "Expected phar/report/downloaded config under RUNNER_TEMP, not the checkout"
+            ls -la php-cs-fixer result.txt .php-cs-fixer.dist.php 2>/dev/null || true
+            exit 1
+          fi
+          if [[ ! -f "${RUNNER_TEMP}/php-cs-fixer-action/php-cs-fixer" ]]; then
+            echo "Expected the phar under \${RUNNER_TEMP}/php-cs-fixer-action/"
+            ls -la "${RUNNER_TEMP}/php-cs-fixer-action" || true
+            exit 1
+          fi
 
   action-fails-on-violations:
     runs-on: ubuntu-latest
@@ -244,9 +243,13 @@ jobs:
             echo "Expected coding-standard violations to fail the action"
             exit 1
           fi
-          if ! grep -q 'Dirty.php' result.txt; then
+          if ! grep -q 'Dirty.php' "${RUNNER_TEMP}/php-cs-fixer-action/result.txt"; then
             echo "Expected a JSON report that names Dirty.php"
-            cat result.txt
+            cat "${RUNNER_TEMP}/php-cs-fixer-action/result.txt"
+            exit 1
+          fi
+          if [[ -e php-cs-fixer || -e result.txt ]]; then
+            echo "Expected phar/report under RUNNER_TEMP, not the checkout"
             exit 1
           fi
 
@@ -284,15 +287,7 @@ jobs:
             cat tests/fixtures/Dirty.php
             exit 1
           fi
-
-  docker-offline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Build image with vendored php-cs-fixer
-        run: docker build -t php-cs-fixer-action .
-
-      - name: Lint fixtures without network
-        run: docker run --rm --network=none php-cs-fixer-action
+          if [[ -e php-cs-fixer || -e result.txt || -e .php-cs-fixer.dist.php ]]; then
+            echo "Expected phar/report/downloaded config under RUNNER_TEMP, not the checkout"
+            exit 1
+          fi

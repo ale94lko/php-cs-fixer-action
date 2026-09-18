@@ -12,6 +12,13 @@
     "use-full-rules",
     "mode",
     "paths",
+    "allow-risky",
+    "php-bin",
+    "working-directory",
+    "using-cache",
+    "cache-file",
+    "only-changed",
+    "base-ref",
     "sarif-file"
   ],
   "properties": {
@@ -28,8 +35,8 @@
     "rules-version": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^[A-Za-z0-9._/-]+$",
-      "description": "Git ref of ale94lko/php-cs-fixer-rules."
+      "pattern": "^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
+      "description": "Git ref of ale94lko/php-cs-fixer-rules (no .., empty segments, or path escape)."
     },
     "use-full-rules": {
       "type": "string",
@@ -41,8 +48,42 @@
     },
     "paths": {
       "type": "string",
-      "pattern": "^$|^(?:(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)(?:\\s+(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)*$",
-      "description": "Empty (use config finder) or space-separated relative workspace paths."
+      "description": "Empty (config finder), space-separated paths, newline-separated paths (may contain spaces), or a JSON string array of relative workspace paths. Safety checks run in validate.ts."
+    },
+    "allow-risky": {
+      "type": "string",
+      "enum": ["yes", "no"],
+      "description": "Passed to php-cs-fixer as --allow-risky. Default yes preserves prior Action behavior."
+    },
+    "php-bin": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)[A-Za-z0-9._\\\\/:-]+$",
+      "description": "Empty (use php) or a bare command / absolute path without .. segments."
+    },
+    "working-directory": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!/)(?![A-Za-z]:[\\\\/]).+$",
+      "description": "Empty, or a relative workspace subdirectory for the fixer cwd."
+    },
+    "using-cache": {
+      "type": "string",
+      "enum": ["", "yes", "no"],
+      "description": "Empty omits --using-cache; yes/no passes the flag."
+    },
+    "cache-file": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!/)(?![A-Za-z]:[\\\\/]).+$",
+      "description": "Empty omits --cache-file; otherwise a relative workspace path."
+    },
+    "only-changed": {
+      "type": "string",
+      "enum": ["true", "false"],
+      "description": "When true, derive PHP paths from git diff vs base-ref."
+    },
+    "base-ref": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
+      "description": "Git ref for only-changed diffs (empty uses origin/$GITHUB_BASE_REF)."
     },
     "sarif-file": {
       "type": "string",

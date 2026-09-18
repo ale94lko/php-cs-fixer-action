@@ -7,6 +7,23 @@ Changelog for next
 ------------------
 
 * feature: Optional `sarif-file` input writes SARIF 2.1.0 from style violations for `github/codeql-action/upload-sarif`. [#132](https://github.com/ale94lko/php-cs-fixer-action/issues/132)
+* docs: Align README and `examples/` Action pins on `@v1` and clarify major vs patch pinning. [#133](https://github.com/ale94lko/php-cs-fixer-action/issues/133)
+* feature: Accept newline-separated `paths` and a JSON array form so path names may contain spaces. [#131](https://github.com/ale94lko/php-cs-fixer-action/issues/131)
+* feature: Expose `php-bin`, `working-directory`, `using-cache`, and `cache-file` inputs (strict schema; no free-form args). [#130](https://github.com/ale94lko/php-cs-fixer-action/issues/130)
+* test: Cover uncovered error and edge branches in `src/` (http, resolve-config, download-fixer, report, schema). [#129](https://github.com/ale94lko/php-cs-fixer-action/issues/129)
+* fix: Keep `code-style-result` as pure fixer JSON; stderr stays in job logs only. [#121](https://github.com/ale94lko/php-cs-fixer-action/issues/121)
+* fix: Fail with `PHP_NOT_FOUND` (and mention `shivammathur/setup-php`) when `php` is missing from PATH. [#128](https://github.com/ale94lko/php-cs-fixer-action/issues/128)
+* fix: Prefer the new (`+`) side of unified-diff hunks for annotation line numbers. [#127](https://github.com/ale94lko/php-cs-fixer-action/issues/127)
+* fix: Verify downloaded php-cs-fixer-rules configs against pinned SHA-256 digests in `rules-checksums.txt` (fail-closed). [#126](https://github.com/ale94lko/php-cs-fixer-action/issues/126)
+* security: Harden downloads with timeout, maxBytes, and allowlisted HTTPS redirects; webhooks are HTTPS-only with `redirect: error`. [#125](https://github.com/ale94lko/php-cs-fixer-action/issues/125)
+* feature: Add `only-changed` / `base-ref` to derive PHP paths from `git diff` (with workspace validation). [#124](https://github.com/ale94lko/php-cs-fixer-action/issues/124)
+* fix: Stop defaulting `PHP_CS_FIXER_IGNORE_ENV`; document `setUnsupportedPhpVersionAllowed` / `--allow-unsupported-php-version` before php-cs-fixer 4.0. [#123](https://github.com/ale94lko/php-cs-fixer-action/issues/123)
+* feature: Add `allow-risky` input (`yes`/`no`, default `yes` for backward compatibility) instead of hardcoding `--allow-risky=yes`. [#122](https://github.com/ale94lko/php-cs-fixer-action/issues/122)
+* fix: Keep the php-cs-fixer phar, downloaded shared config, and JSON report under `RUNNER_TEMP` (not the consumer checkout); stage only intended paths in `examples/fix.yml`. [#120](https://github.com/ale94lko/php-cs-fixer-action/issues/120)
+* fix: Reject `rules-version` values with `..`, empty segments, or URL path escape so shared-rules downloads stay under `ale94lko/php-cs-fixer-rules`. [#119](https://github.com/ale94lko/php-cs-fixer-action/issues/119)
+* docs: Document one-command local verification via `bash scripts/dev-check.sh`. [#118](https://github.com/ale94lko/php-cs-fixer-action/issues/118)
+* test: Unit-cover `commit-dist-tree` helpers and `normalizeDist` without network. [#116](https://github.com/ale94lko/php-cs-fixer-action/issues/116)
+* chore: Remove image build/CI jobs that misled project-type classifiers; keep Node/PHP local verification. [#115](https://github.com/ale94lko/php-cs-fixer-action/issues/115) [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * docs: Add OpenSSF Gold docs (code review, security review, hardening, small tasks), SPDX headers, and 90%/80% coverage thresholds.
 * docs: Add OpenSSF Silver governance, architecture, roadmap, and assurance-case docs.
 * docs: Embed the OpenSSF Best Practices Passing badge and note Scorecard CII is Passing ([project 6296](https://www.bestpractices.dev/projects/6296)).
@@ -15,20 +32,17 @@ Changelog for next
 * chore: Replace Python maintenance helpers with Node scripts. [#106](https://github.com/ale94lko/php-cs-fixer-action/issues/106)
 * docs: Document dependency overrides and Actions CJS pins. [#104](https://github.com/ale94lko/php-cs-fixer-action/issues/104)
 * test: Add end-to-end integration coverage for the `run()` pipeline (check + fix). [#102](https://github.com/ale94lko/php-cs-fixer-action/issues/102)
-* docs: Remove the Scope subsection from README. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
-* chore: Drop `docker-compose.yml` and `.devcontainer` (keep `Dockerfile` for offline CI / Hadolint). [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
+* docs: Remove the README Scope subsection. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
+* chore: Drop unused local-dev scaffolding files that were not part of the Action runtime. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * test: Add a loopback HTTP integration test for `downloadFixer` checksum verification and cache reuse. [#92](https://github.com/ale94lko/php-cs-fixer-action/issues/92)
 * ci: Require Conventional Commits on PRs via commitlint (SHA-pinned). [#91](https://github.com/ale94lko/php-cs-fixer-action/issues/91)
 * ci: Upload an informational `npm outdated` report in CI and add a weekly dependency-freshness workflow. [#90](https://github.com/ale94lko/php-cs-fixer-action/issues/90)
-* docs: Add a Scope subsection stating this repo is a GitHub Action, not IaC. [#88](https://github.com/ale94lko/php-cs-fixer-action/issues/88)
 * docs: Record Scorecard Code-Review policy and add CODEOWNERS so new PRs get a maintainer approval. [#68](https://github.com/ale94lko/php-cs-fixer-action/issues/68)
 * docs: Record that Scorecard CI-Tests is 10 (26/26); keep CI on every PR with no path filters. [#66](https://github.com/ale94lko/php-cs-fixer-action/issues/66)
-* ci: Lint the Dockerfile with Hadolint so Scorecard SAST is 10 and code-scanning alert #42 can close. [#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)
 * docs: Record that GitHub Actions write tokens are scoped to jobs; remaining Scorecard Token-Permissions findings are job-level warnings. [#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)
 * docs: Record which OpenSSF Scorecard checks are accepted low scores. [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)
 * feature: Validate Action inputs against committed `action.inputs.schema.json` with Ajv. [#37](https://github.com/ale94lko/php-cs-fixer-action/issues/37)
 * fix: Stop piping the GitHub Releases API into python in `scripts/bump-php-cs-fixer.sh` so Scorecard no longer reports downloadThenRun. [#69](https://github.com/ale94lko/php-cs-fixer-action/issues/69)
-* fix: Pin the Docker `FROM` image to `php:8.3-cli-bookworm@sha256:…` so Scorecard Pinned-Dependencies no longer flags an unhashed container base. [#70](https://github.com/ale94lko/php-cs-fixer-action/issues/70)
 * fix: Drop workflow-level `actions: write` from `ci.yml` and grant it only on the Action self-test jobs that cache the php-cs-fixer phar. [#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)
 * feature: Report Action failures through one helper (`step`, `code`, `message`) with optional `ERROR_TRACKING_URL` webhook. [#36](https://github.com/ale94lko/php-cs-fixer-action/issues/36)
 * fix: Drop workflow-level write from `health_score.yml` and grant `contents: write` only on the badge job. [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72)
@@ -36,7 +50,7 @@ Changelog for next
 * chore: Run OpenSSF Scorecard on `main` / schedule only so PR code scanning does not fail with "2 configurations not found".
 * fix: Split dist rebuild into an unprivileged `pull_request` build and a `workflow_run` Git Data API commit so Scorecard Dangerous-Workflow is not triggered. [#63](https://github.com/ale94lko/php-cs-fixer-action/issues/63)
 * chore: Replace deprecated `moduleResolution: node` (`node10`) with `module: preserve` and `moduleResolution: bundler` so TypeScript 6/7 typecheck stays valid.
-* feature: Vendor the pinned php-cs-fixer phar in the Docker image and lint fixtures offline (`docker run --network=none`). Local/CI fixture runs use `tests/fixtures/.php-cs-fixer.dist.php` so php-cs-fixer-rules is not required. [#35](https://github.com/ale94lko/php-cs-fixer-action/issues/35)
+* feature: Prefer local fixture config (`tests/fixtures/.php-cs-fixer.dist.php`) so CI/local runs do not require php-cs-fixer-rules. [#35](https://github.com/ale94lko/php-cs-fixer-action/issues/35)
 * chore: Run `npm audit --omit=dev --audit-level=high` on every push and pull request. [#34](https://github.com/ale94lko/php-cs-fixer-action/issues/34)
 * chore: Rebuild committed `dist/` on same-repo PRs that change `src/` or the lockfile, not only Dependabot.
 * chore: Pin GitHub Actions in `.github/workflows/` to commit SHAs with version comments so Dependabot can still bump them. [#30](https://github.com/ale94lko/php-cs-fixer-action/issues/30)
@@ -55,7 +69,7 @@ Changelog for next
 * feature: Support a local `config-path` so consumers can use their own php-cs-fixer config file.
 * feature: Download shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) via raw GitHub refs (`rules-version` tag/branch/SHA), defaulting to `main`.
 * feature: Validate Action inputs (version tag, boolean flags, git refs, config path) and pass them through environment variables instead of interpolating them into shell.
-* feature: Add ShellCheck, input-validation tests, fixture-based Action CI, Dependabot, Docker Compose, and a root CONTRIBUTING.md.
+* feature: Add ShellCheck, input-validation tests, fixture-based Action CI, Dependabot, and a root CONTRIBUTING.md.
 * fix: Point ShellCheck at `source-path=SCRIPTDIR` so sourced helpers resolve from each script directory in CI.
 * docs: Document both shared-rules and local-config usage modes.
 * docs: Point README usage examples at `@v1.0.3` and explain patch vs major pinning. [#25](https://github.com/ale94lko/php-cs-fixer-action/issues/25)

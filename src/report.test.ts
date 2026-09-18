@@ -1,15 +1,19 @@
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildSarif,
   buildSummaryMarkdown,
+  emitAnnotations,
   extractJsonObject,
   firstChangedLine,
   parseViolations,
+  publishReport,
+  toCodeStyleResult,
   toRepoPath,
   tryParseViolations,
+  writeJobSummary,
   writeSarifFile,
 } from './report'
 
@@ -41,18 +45,44 @@ describe('extractJsonObject', () => {
     expect(extractJsonObject(raw)).toEqual(sampleReport)
   })
 
+  it('skips preamble braces and trailing noise around the report', () => {
+    const report = JSON.stringify({ files: [] })
+    const raw = `Deprecated: use {legacy} flag\n${report}\nFixed all the {things}`
+    expect(extractJsonObject(raw)).toEqual({ files: [] })
+    expect(toCodeStyleResult(raw)).toBe('{"files":[]}')
+  })
+
+  it('toCodeStyleResult returns pure JSON without preamble', () => {
+    const report = JSON.stringify(sampleReport)
+    expect(toCodeStyleResult(`noise\n${report}\ntrail`)).toBe(report)
+    expect(() => JSON.parse(toCodeStyleResult(`noise\n${report}\ntrail`))).not.toThrow()
+  })
+
   it('fails when no JSON object is present', () => {
     expect(() => extractJsonObject('not json')).toThrow(/JSON report/)
+    expect(toCodeStyleResult('not json')).toBe('{"files":[]}')
   })
 })
 
 describe('firstChangedLine', () => {
-  it('reads the original hunk line', () => {
+  it('prefers the new (+) side of an edited-file hunk', () => {
+    expect(firstChangedLine('@@ -10,3 +15,5 @@\n context\n-old\n+new\n')).toBe(15)
+  })
+
+  it('uses the + side when old and new starts match', () => {
     expect(firstChangedLine(sampleDiff)).toBe(2)
   })
 
-  it('uses line 1 when the hunk starts at 0', () => {
+  it('uses the + side for new-file hunks (@@ -0,0 +1,…)', () => {
     expect(firstChangedLine('@@ -0,0 +1,3 @@\n+<?php\n')).toBe(1)
+  })
+
+  it('falls back to the old side for pure-deletion hunks', () => {
+    expect(firstChangedLine('@@ -8,2 +0,0 @@\n-gone\n')).toBe(8)
+  })
+
+  it('falls back to line 1 when both hunk sides are zero', () => {
+    expect(firstChangedLine('@@ -0,0 +0,0 @@\n')).toBe(1)
   })
 
   it('returns undefined without a hunk header', () => {
@@ -119,6 +149,65 @@ describe('buildSummaryMarkdown', () => {
     )
     expect(markdown).toContain('src\\\\foo\\|bar.php')
     expect(markdown).toContain('a\\|b')
+  })
+
+  it('uses an em dash when a violation has no fixer names', () => {
+    const markdown = buildSummaryMarkdown([{ file: 'a.php', fixers: [] }], 'fix')
+    expect(markdown).toContain('rewritten')
+    expect(markdown).toContain('| — |')
+  })
+})
+
+describe('emitAnnotations', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('emits a generic message when fixers are empty and omits startLine without a line', async () => {
+    const core = await import('@actions/core')
+    const error = vi.spyOn(core, 'error').mockImplementation(() => undefined)
+    emitAnnotations([{ file: 'src/A.php', fixers: [] }], 'check')
+    expect(error).toHaveBeenCalledWith(
+      'Found coding standard violations',
+      expect.objectContaining({ file: 'src/A.php', title: 'PHP CS Fixer' }),
+    )
+    expect(error.mock.calls[0]?.[1]).not.toHaveProperty('startLine')
+  })
+
+  it('warns in fix mode and includes startLine when present', async () => {
+    const core = await import('@actions/core')
+    const warning = vi.spyOn(core, 'warning').mockImplementation(() => undefined)
+    emitAnnotations([{ file: 'src/B.php', fixers: ['psr'], line: 4 }], 'fix')
+    expect(warning).toHaveBeenCalledWith(
+      'Found violation(s) of type: psr',
+      expect.objectContaining({ file: 'src/B.php', startLine: 4 }),
+    )
+  })
+})
+
+describe('writeJobSummary', () => {
+  afterEach(() => {
+    delete process.env.GITHUB_STEP_SUMMARY
+    vi.restoreAllMocks()
+  })
+
+  it('no-ops when GITHUB_STEP_SUMMARY is unset', async () => {
+    delete process.env.GITHUB_STEP_SUMMARY
+    const core = await import('@actions/core')
+    const addRaw = vi.spyOn(core.summary, 'addRaw')
+    await writeJobSummary('## hi')
+    expect(addRaw).not.toHaveBeenCalled()
+  })
+
+  it('publishReport writes the summary and annotations together', async () => {
+    process.env.GITHUB_STEP_SUMMARY = '/tmp/step-summary-edge.md'
+    const core = await import('@actions/core')
+    vi.spyOn(core.summary, 'addRaw').mockReturnValue(core.summary)
+    vi.spyOn(core.summary, 'write').mockResolvedValue(core.summary)
+    const error = vi.spyOn(core, 'error').mockImplementation(() => undefined)
+    await publishReport([{ file: 'x.php', fixers: ['a'], line: 1 }], 'check')
+    expect(core.summary.addRaw).toHaveBeenCalled()
+    expect(error).toHaveBeenCalledOnce()
   })
 })
 

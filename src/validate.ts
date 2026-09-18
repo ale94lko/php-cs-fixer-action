@@ -48,12 +48,41 @@ export function validateMode(mode: string): asserts mode is ActionMode {
   assertInputsSchema({ ...SCHEMA_DEFAULTS, mode })
 }
 
+/**
+ * Parse the `paths` input.
+ * - Empty → no path args (config finder)
+ * - JSON array string → string elements (supports spaces in path names)
+ * - Newline-separated → one path per line (supports spaces)
+ * - Otherwise → whitespace-separated (backward compatible; no spaces in names)
+ */
 export function parsePaths(raw: string): string[] {
   const trimmed = raw.trim()
   if (trimmed === '') {
     return []
   }
-  return trimmed.split(/\s+/)
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(trimmed) as unknown
+    } catch {
+      invalidInput(
+        'Invalid paths JSON. Expected a JSON array of relative workspace path strings.',
+      )
+    }
+    if (!Array.isArray(parsed) || !parsed.every((entry) => typeof entry === 'string')) {
+      invalidInput(
+        'Invalid paths JSON. Expected a JSON array of relative workspace path strings.',
+      )
+    }
+    return (parsed as string[]).map((entry) => entry.trim()).filter((entry) => entry !== '')
+  }
+  if (/[\r\n]/.test(trimmed)) {
+    return trimmed
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== '')
+  }
+  return trimmed.split(/\s+/).filter((part) => part !== '')
 }
 
 function hasParentSegment(path: string): boolean {
@@ -67,9 +96,9 @@ function isInsideWorkspace(workspace: string, candidate: string): boolean {
   return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)
 }
 
-export function validatePaths(raw: string, workspace = process.cwd()): void {
-  assertInputsSchema({ ...SCHEMA_DEFAULTS, paths: raw })
-  for (const path of parsePaths(raw)) {
+/** Fail closed when any path is absolute, traverses parents, or looks like a CLI flag. */
+export function assertSafeWorkspacePaths(paths: string[], workspace = process.cwd()): void {
+  for (const path of paths) {
     if (
       path.startsWith('-') ||
       path.startsWith('/') ||
@@ -82,8 +111,19 @@ export function validatePaths(raw: string, workspace = process.cwd()): void {
   }
 }
 
+export function validatePaths(raw: string, workspace = process.cwd()): void {
+  assertInputsSchema({ ...SCHEMA_DEFAULTS, paths: raw })
+  assertSafeWorkspacePaths(parsePaths(raw), workspace)
+}
+
 export function validateAllInputs(inputs: ActionInputs, workspace = process.cwd()): void {
   assertInputsSchema(inputs)
   validatePaths(inputs.paths, workspace)
+  if (inputs.workingDirectory.trim() !== '') {
+    assertSafeWorkspacePaths([inputs.workingDirectory], workspace)
+  }
+  if (inputs.cacheFile.trim() !== '') {
+    assertSafeWorkspacePaths([inputs.cacheFile], workspace)
+  }
   validateSarifFile(inputs.sarifFile, workspace)
 }

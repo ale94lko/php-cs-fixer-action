@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import * as core from '@actions/core'
+import { listChangedPhpPaths, type GitExec } from './changed-paths'
 import { downloadFixer } from './download-fixer'
 import {
   ActionErrorCode,
@@ -10,17 +11,27 @@ import {
   toActionError,
   type FailureReport,
 } from './error-tracking'
-import { readInputs, type ActionInputs } from './inputs'
-import { failWithoutGenericAnnotation, publishReport, tryParseViolations, writeSarifFile } from './report'
+import { readInputs, resolveWorkingDirectory, type ActionInputs } from './inputs'
+import {
+  failWithoutGenericAnnotation,
+  publishReport,
+  toCodeStyleResult,
+  tryParseViolations,
+  writeSarifFile,
+} from './report'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
-import { parsePaths, validateAllInputs } from './validate'
+import { assertSafeWorkspacePaths, parsePaths, validateAllInputs } from './validate'
+
+const EMPTY_REPORT = '{"files":[]}'
 
 export type ActionDeps = {
   readInputs: () => ActionInputs
   downloadFixer: typeof downloadFixer
   resolveConfig: typeof resolveConfig
   runFixer: typeof runFixer
+  listChangedPhpPaths?: typeof listChangedPhpPaths
+  gitExec?: GitExec
   reportFailure?: typeof reportFailure
 }
 
@@ -29,7 +40,34 @@ const defaultDeps: ActionDeps = {
   downloadFixer,
   resolveConfig,
   runFixer,
+  listChangedPhpPaths,
   reportFailure,
+}
+
+async function resolveFixerPaths(
+  inputs: ActionInputs,
+  deps: ActionDeps,
+  workspace = process.cwd(),
+): Promise<string[] | 'skip'> {
+  const pathFilters = parsePaths(inputs.paths)
+  if (inputs.onlyChanged !== 'true') {
+    return pathFilters
+  }
+
+  const listChanged = deps.listChangedPhpPaths ?? listChangedPhpPaths
+  const changed = await listChanged({
+    workspace,
+    baseRef: inputs.baseRef,
+    pathFilters,
+    gitExec: deps.gitExec,
+  })
+  assertSafeWorkspacePaths(changed, workspace)
+  if (changed.length === 0) {
+    core.info('only-changed: no PHP files changed; skipping php-cs-fixer')
+    return 'skip'
+  }
+  core.info(`only-changed: checking ${changed.length} PHP file(s)`)
+  return changed
 }
 
 export async function executeAction(deps: ActionDeps = defaultDeps): Promise<FixerResult | void> {
@@ -37,6 +75,12 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   const inputs = deps.readInputs()
   validateAllInputs(inputs)
   const mode = inputs.mode === 'fix' ? 'fix' : 'check'
+
+  const fixerPaths = await resolveFixerPaths(inputs, deps)
+  if (fixerPaths === 'skip') {
+    core.setOutput('code-style-result', EMPTY_REPORT)
+    return { exitCode: 0, output: EMPTY_REPORT, stderr: '' }
+  }
 
   core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`)
   await deps.downloadFixer(inputs.phpCsFixerVersion)
@@ -48,11 +92,20 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   )
   const configFile = await deps.resolveConfig(inputs)
 
+  const workspace = process.cwd()
+  const cwd = resolveWorkingDirectory(workspace, inputs.workingDirectory)
   const result = await deps.runFixer(configFile, {
+    workspace,
+    cwd,
     mode,
-    paths: parsePaths(inputs.paths),
+    paths: fixerPaths,
+    allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
+    phpBin: inputs.phpBin,
+    usingCache: inputs.usingCache,
+    cacheFile: inputs.cacheFile,
   })
-  core.setOutput('code-style-result', result.output)
+  const codeStyleResult = toCodeStyleResult(result.output)
+  core.setOutput('code-style-result', codeStyleResult)
 
   const violations = tryParseViolations(result.output)
   await publishReport(violations, mode)
@@ -77,7 +130,7 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   await report({
     step: ActionStep.RunFixer,
     code: ActionErrorCode.FixerFailed,
-    message: result.output.trim() || 'php-cs-fixer failed.',
+    message: (result.stderr ?? '').trim() || result.output.trim() || 'php-cs-fixer failed.',
   })
   return result
 }

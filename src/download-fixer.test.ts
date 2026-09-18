@@ -7,10 +7,22 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PharCache } from './cache'
+import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import { downloadFixer, fixerReleaseUrl, VENDORED_PHAR_ENV } from './download-fixer'
 
 function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
+}
+
+/** Minimal Response-like object for downloadToFile / readResponseBodyLimited. */
+function mockDownloadResponse(body: string, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: () => null },
+    body: null,
+    arrayBuffer: async () => new TextEncoder().encode(body).buffer,
+  }
 }
 
 const noopCache: PharCache = {
@@ -31,12 +43,9 @@ describe('fixerReleaseUrl', () => {
 })
 
 describe('downloadFixer', () => {
-  it('writes the phar into the workspace after a matching checksum', async () => {
+  it('writes the phar into the runtime dir after a matching checksum', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => new TextEncoder().encode('phar').buffer,
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('phar'))
     const save = vi.fn()
 
     const dest = await downloadFixer('v3.95.21', workspace, {
@@ -52,10 +61,7 @@ describe('downloadFixer', () => {
   it('fails closed on checksum mismatch and removes the download', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const dest = join(workspace, 'php-cs-fixer')
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => new TextEncoder().encode('tampered').buffer,
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('tampered'))
 
     await expect(
       downloadFixer('v3.95.21', workspace, {
@@ -102,10 +108,7 @@ describe('downloadFixer', () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const cached = join(workspace, 'cached-phar')
     await writeFile(cached, 'stale')
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => new TextEncoder().encode('phar').buffer,
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('phar'))
 
     await downloadFixer('v3.95.21', workspace, {
       fetchImpl,
@@ -124,7 +127,7 @@ describe('downloadFixer', () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     await expect(
       downloadFixer('v3.95.21', workspace, {
-        fetchImpl: vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+        fetchImpl: vi.fn().mockResolvedValue(mockDownloadResponse('', 500)),
         checksums: new Map([['v3.95.21', sha256('phar')]]),
         cache: noopCache,
         retries: 1,
@@ -133,7 +136,7 @@ describe('downloadFixer', () => {
     ).rejects.toThrow(/Download failed \(500\)/)
   })
 
-  it('reuses a workspace phar with a matching checksum without downloading', async () => {
+  it('reuses a runtime-dir phar with a matching checksum without downloading', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const dest = join(workspace, 'php-cs-fixer')
     await writeFile(dest, 'phar')
@@ -173,10 +176,7 @@ describe('downloadFixer', () => {
     const vendored = join(workspace, 'vendored.phar')
     await writeFile(vendored, 'stale')
     process.env[VENDORED_PHAR_ENV] = vendored
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => new TextEncoder().encode('phar').buffer,
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('phar'))
 
     await downloadFixer('v3.95.21', workspace, {
       fetchImpl,
@@ -192,15 +192,33 @@ describe('downloadFixer', () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const checksumsPath = join(workspace, 'checksums.txt')
     await writeFile(checksumsPath, `${sha256('phar')}  v3.95.21\n`)
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => new TextEncoder().encode('phar').buffer,
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('phar'))
     await downloadFixer('v3.95.21', workspace, {
       fetchImpl,
       checksumsPath,
       cache: noopCache,
     })
     await expect(readFile(join(workspace, 'php-cs-fixer'), 'utf8')).resolves.toBe('phar')
+  })
+
+  it('rethrows ActionError from cache restore without wrapping', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const boom = new ActionError(
+      ActionStep.DownloadFixer,
+      ActionErrorCode.DownloadFailed,
+      'cache restore failed',
+    )
+    await expect(
+      downloadFixer('v3.95.21', workspace, {
+        checksums: new Map([['v3.95.21', sha256('phar')]]),
+        cache: {
+          restore: async () => {
+            throw boom
+          },
+          save: vi.fn(),
+        },
+        fetchImpl: vi.fn(),
+      }),
+    ).rejects.toBe(boom)
   })
 })

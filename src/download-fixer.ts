@@ -7,10 +7,11 @@ import { assertChecksum, createGithubPharCache, sha256File, type PharCache } fro
 import { expectedChecksum, loadChecksums, resolveChecksumsPath } from './checksums'
 import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import { downloadToFile, type DownloadOptions } from './http'
+import { ensureActionRuntimeDir } from './runtime-dir'
 
 export const FIXER_BINARY = 'php-cs-fixer'
 
-/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+/** Optional path to a pre-verified phar (e.g. local cache) so runtime can stay offline. */
 export const VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR'
 
 export type DownloadFixerOptions = DownloadOptions & {
@@ -39,7 +40,7 @@ async function installVerifiedPhar(
 ): Promise<boolean> {
   try {
     const hash = await sha256File(source)
-    assertChecksum(hash, expected, version)
+    assertChecksum(hash, expected, `php-cs-fixer ${version}`)
     if (resolve(source) !== resolve(dest)) {
       await copyFile(source, dest)
     }
@@ -52,11 +53,13 @@ async function installVerifiedPhar(
 
 export async function downloadFixer(
   version: string,
-  workspace = process.cwd(),
+  /** Directory for the phar (defaults to RUNNER_TEMP/php-cs-fixer-action). */
+  runtimeDir?: string,
   options: DownloadFixerOptions = {},
 ): Promise<string> {
   try {
-    const dest = join(workspace, FIXER_BINARY)
+    const destDir = runtimeDir ?? (await ensureActionRuntimeDir())
+    const dest = join(destDir, FIXER_BINARY)
     const table = options.checksums ?? (await loadChecksums(options.checksumsPath ?? resolveChecksumsPath()))
     const expected = expectedChecksum(version, table)
     const cache = options.cache ?? createGithubPharCache()
@@ -74,7 +77,7 @@ export async function downloadFixer(
     if (cached) {
       const cachedHash = await sha256File(cached)
       try {
-        assertChecksum(cachedHash, expected, version)
+        assertChecksum(cachedHash, expected, `php-cs-fixer ${version}`)
         await copyFile(cached, dest)
         await makeExecutable(dest)
         return dest
@@ -86,7 +89,7 @@ export async function downloadFixer(
     await downloadToFile(fixerReleaseUrl(version), dest, options)
     const actual = await sha256File(dest)
     try {
-      assertChecksum(actual, expected, version)
+      assertChecksum(actual, expected, `php-cs-fixer ${version}`)
     } catch (error) {
       await rm(dest, { force: true })
       throw error

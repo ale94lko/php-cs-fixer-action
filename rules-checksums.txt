@@ -1,0 +1,5 @@
+# SHA-256 checksums for php-cs-fixer-rules config files (raw.githubusercontent.com).
+# Format: <sha256>  <tag>/<filename>
+# Update with: bash scripts/update-rules-checksums.sh [tag]
+9eff205f8861402d66a0a95349d0be911d03753ce830e5ac160e122b72c339a7  v1.0.1/.php-cs-fixer.dist.php
+959f890063c96e109ed8fbe0a05efd547f907b21dcfc4e8c1a0da2f5fcbe405c  v1.0.1/.php-cs-fixer.dist.min.php

@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 php-cs-fixer
+.php-cs-fixer.cache
 result.txt
 tests/fixtures/Dirty.php
 node_modules/

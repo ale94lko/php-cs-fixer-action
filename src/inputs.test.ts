@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_PHP_CS_FIXER_VERSION, DEFAULT_RULES_VERSION, readInputs } from './inputs'
+import { DEFAULT_PHP_CS_FIXER_VERSION, DEFAULT_RULES_VERSION, readInputs, resolveWorkingDirectory } from './inputs'
 
 vi.mock('@actions/core', () => ({
   getInput: vi.fn(() => ''),
@@ -21,6 +21,13 @@ describe('readInputs', () => {
     delete process.env.USE_FULL_RULES
     delete process.env.PHP_CS_FIXER_MODE
     delete process.env.PHP_CS_FIXER_PATHS
+    delete process.env.PHP_CS_FIXER_ALLOW_RISKY
+    delete process.env.PHP_CS_FIXER_PHP_BIN
+    delete process.env.PHP_CS_FIXER_WORKING_DIRECTORY
+    delete process.env.PHP_CS_FIXER_USING_CACHE
+    delete process.env.PHP_CS_FIXER_CACHE_FILE
+    delete process.env.PHP_CS_FIXER_ONLY_CHANGED
+    delete process.env.PHP_CS_FIXER_BASE_REF
     delete process.env.PHP_CS_FIXER_SARIF_FILE
   })
 
@@ -32,6 +39,13 @@ describe('readInputs', () => {
       useFullRules: 'true',
       mode: 'check',
       paths: '',
+      allowRisky: 'yes',
+      phpBin: '',
+      workingDirectory: '',
+      usingCache: '',
+      cacheFile: '',
+      onlyChanged: 'false',
+      baseRef: '',
       sarifFile: '',
     })
   })
@@ -60,6 +74,11 @@ describe('readInputs', () => {
     })
   })
 
+  it('resolves working-directory under the workspace', () => {
+    expect(resolveWorkingDirectory('/repo', '')).toBe('/repo')
+    expect(resolveWorkingDirectory('/repo', 'packages/api')).toMatch(/packages[/\\]api$/)
+  })
+
   it('defaults php-cs-fixer-version and rules-version to release tags aligned with action.yml', () => {
     expect(DEFAULT_PHP_CS_FIXER_VERSION).toMatch(/^v[0-9]+\.[0-9]+\.[0-9]+$/)
     expect(DEFAULT_RULES_VERSION).toMatch(/^v[0-9]+\.[0-9]+\.[0-9]+$/)
@@ -72,10 +91,9 @@ describe('readInputs', () => {
     )
     expect(fixerMatch?.[1]).toBe(DEFAULT_PHP_CS_FIXER_VERSION)
     expect(rulesMatch?.[1]).toBe(DEFAULT_RULES_VERSION)
-    const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf8')
-    expect(dockerfile).toMatch(
-      new RegExp(`^ARG PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
+    const envExample = readFileSync(join(process.cwd(), '.env.example'), 'utf8')
+    expect(envExample).toMatch(
+      new RegExp(`^PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
     )
-    expect(dockerfile).toMatch(/^FROM php:8\.3-cli-bookworm@sha256:[a-f0-9]{64}$/m)
   })
 })

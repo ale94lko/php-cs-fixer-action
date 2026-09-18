@@ -10,31 +10,33 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const API = 'https://api.github.com'
 
-function fail(message) {
-  console.error(message)
-  process.exit(1)
+export class CommitDistError extends Error {}
+
+export function fail(message) {
+  throw new CommitDistError(message)
 }
 
-function env(name) {
-  const value = (process.env[name] ?? '').trim()
+export function env(name, source = process.env) {
+  const value = (source[name] ?? '').trim()
   if (!value) {
     fail(`${name} is required`)
   }
   return value
 }
 
-function encodePathSegment(value) {
+export function encodePathSegment(value) {
   return value
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/')
 }
 
-async function api(token, method, path, body) {
-  const response = await fetch(`${API}${path}`, {
+export async function api(token, method, path, body, fetchImpl = fetch) {
+  const response = await fetchImpl(`${API}${path}`, {
     method,
     headers: {
       Accept: 'application/vnd.github+json',
@@ -52,7 +54,7 @@ async function api(token, method, path, body) {
   return payload === '' ? {} : JSON.parse(payload)
 }
 
-function distFiles(root) {
+export function distFiles(root) {
   const files = []
   const walk = (dir) => {
     for (const name of readdirSync(dir).sort()) {
@@ -72,13 +74,15 @@ function distFiles(root) {
   return files
 }
 
-async function main() {
-  const distDir = resolve(env('DIST_DIR'))
+export function assertDistDir(distDir) {
   try {
     if (!statSync(distDir).isDirectory()) {
       fail(`DIST_DIR is not a directory: ${distDir}`)
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof CommitDistError) {
+      throw error
+    }
     fail(`DIST_DIR is not a directory: ${distDir}`)
   }
 
@@ -95,45 +99,99 @@ async function main() {
         'Keep @actions/cache on ^4.1.0 and @actions/core on ^1.11.1 (CJS).',
     )
   }
+  return bundle
+}
 
-  const token = env('GH_TOKEN')
-  const repo = encodePathSegment(env('GITHUB_REPOSITORY'))
-  const branch = encodePathSegment(env('BRANCH'))
-  const parentSha = env('PARENT_SHA')
+/**
+ * @param {{
+ *   envSource?: NodeJS.ProcessEnv
+ *   fetchImpl?: typeof fetch
+ *   log?: (message: string) => void
+ * }} [options]
+ */
+export async function runCommitDistTree(options = {}) {
+  const envSource = options.envSource ?? process.env
+  const fetchImpl = options.fetchImpl ?? fetch
+  const log = options.log ?? console.log
+
+  const distDir = resolve(env('DIST_DIR', envSource))
+  assertDistDir(distDir)
+
+  const token = env('GH_TOKEN', envSource)
+  const repo = encodePathSegment(env('GITHUB_REPOSITORY', envSource))
+  const branch = encodePathSegment(env('BRANCH', envSource))
+  const parentSha = env('PARENT_SHA', envSource)
   const refPath = `/repos/${repo}/git/refs/heads/${branch}`
 
-  const parent = await api(token, 'GET', `/repos/${repo}/git/commits/${parentSha}`)
+  const parent = await api(token, 'GET', `/repos/${repo}/git/commits/${parentSha}`, undefined, fetchImpl)
   const entries = []
   for (const [rel, path] of distFiles(distDir)) {
-    const blob = await api(token, 'POST', `/repos/${repo}/git/blobs`, {
-      content: readFileSync(path).toString('base64'),
-      encoding: 'base64',
-    })
+    const blob = await api(
+      token,
+      'POST',
+      `/repos/${repo}/git/blobs`,
+      {
+        content: readFileSync(path).toString('base64'),
+        encoding: 'base64',
+      },
+      fetchImpl,
+    )
     entries.push({ path: `dist/${rel}`, mode: '100644', type: 'blob', sha: blob.sha })
   }
 
-  const tree = await api(token, 'POST', `/repos/${repo}/git/trees`, {
-    base_tree: parent.tree.sha,
-    tree: entries,
-  })
+  const tree = await api(
+    token,
+    'POST',
+    `/repos/${repo}/git/trees`,
+    {
+      base_tree: parent.tree.sha,
+      tree: entries,
+    },
+    fetchImpl,
+  )
   if (tree.sha === parent.tree.sha) {
-    console.log('dist/ already up to date')
-    return
+    log('dist/ already up to date')
+    return { updated: false }
   }
 
-  const commit = await api(token, 'POST', `/repos/${repo}/git/commits`, {
-    message: 'chore: rebuild dist so src-hash matches',
-    tree: tree.sha,
-    parents: [parentSha],
-    author: {
-      name: 'github-actions[bot]',
-      email: '41898282+github-actions[bot]@users.noreply.github.com',
+  const commit = await api(
+    token,
+    'POST',
+    `/repos/${repo}/git/commits`,
+    {
+      message: 'chore: rebuild dist so src-hash matches',
+      tree: tree.sha,
+      parents: [parentSha],
+      author: {
+        name: 'github-actions[bot]',
+        email: '41898282+github-actions[bot]@users.noreply.github.com',
+      },
     },
-  })
-  await api(token, 'PATCH', refPath, { sha: commit.sha, force: false })
-  console.log(`Updated ${env('BRANCH')} with ${commit.sha}`)
+    fetchImpl,
+  )
+  await api(token, 'PATCH', refPath, { sha: commit.sha, force: false }, fetchImpl)
+  const branchName = env('BRANCH', envSource)
+  log(`Updated ${branchName} with ${commit.sha}`)
+  return { updated: true, sha: commit.sha }
 }
 
-main().catch((error) => {
-  fail(error instanceof Error ? error.message : String(error))
-})
+export async function main(options = {}) {
+  try {
+    return await runCommitDistTree(options)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(message)
+    process.exitCode = 1
+    return undefined
+  }
+}
+
+const invokedAsCli =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === resolve(process.argv[1])
+
+if (invokedAsCli) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+  })
+}

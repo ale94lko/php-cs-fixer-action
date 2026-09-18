@@ -25,20 +25,58 @@ type FixerJsonReport = {
 }
 
 export function extractJsonObject(output: string): unknown {
-  const start = output.indexOf('{')
-  const end = output.lastIndexOf('}')
-  if (start === -1 || end <= start) {
-    throw new Error('php-cs-fixer did not produce a JSON report.')
+  let fallback: unknown
+  let found = false
+  for (let start = output.indexOf('{'); start !== -1; start = output.indexOf('{', start + 1)) {
+    for (let end = output.lastIndexOf('}'); end > start; end = output.lastIndexOf('}', end - 1)) {
+      try {
+        const parsed: unknown = JSON.parse(output.slice(start, end + 1))
+        found = true
+        fallback = parsed
+        if (parsed && typeof parsed === 'object' && parsed !== null && 'files' in parsed) {
+          return parsed
+        }
+        break
+      } catch {
+        // Trailing braces or preamble — try an earlier '}'.
+      }
+    }
   }
-  return JSON.parse(output.slice(start, end + 1)) as unknown
+
+  if (found) {
+    return fallback
+  }
+  throw new Error('php-cs-fixer did not produce a JSON report.')
 }
 
+/** Pure JSON for the `code-style-result` Action output (empty report when stdout has no JSON). */
+export const EMPTY_CODE_STYLE_RESULT = '{"files":[]}'
+
+export function toCodeStyleResult(stdout: string): string {
+  const trimmed = stdout.trim()
+  if (trimmed === '') {
+    return EMPTY_CODE_STYLE_RESULT
+  }
+  try {
+    return JSON.stringify(extractJsonObject(trimmed))
+  } catch {
+    return EMPTY_CODE_STYLE_RESULT
+  }
+}
+
+/**
+ * First line for GitHub annotations: prefer the post-image (`+`) side of the
+ * unified-diff hunk so annotations land on the fixed/new file content.
+ */
 export function firstChangedLine(diff: string): number | undefined {
-  const match = /@@ -(\d+)/.exec(diff)
-  if (!match) {
+  const hunk = /@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(diff)
+  if (!hunk) {
     return undefined
   }
-  const line = Number(match[1])
+  const newSide = Number(hunk[2])
+  const oldSide = Number(hunk[1])
+  // Prefer + side when present; fall back to - side for pure-deletion hunks (+0).
+  const line = newSide >= 1 ? newSide : oldSide >= 1 ? oldSide : 1
   if (!Number.isFinite(line) || line < 1) {
     return 1
   }

@@ -41,19 +41,19 @@ Add the Action to a workflow (check mode). See [Setup](#setup) for inputs and [I
 - uses: ale94lko/php-cs-fixer-action@v1
 ```
 
-Contributors installing the repo locally should use [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Starter tasks: [docs/small-tasks.md](docs/small-tasks.md). Achievements: [docs/achievements.md](docs/achievements.md).
+Contributors installing the repo locally should run the one-command check in [Local development](#local-development) (details in [CONTRIBUTING.md](CONTRIBUTING.md#development-setup-quick-start-for-contributors)). Project governance: [GOVERNANCE.md](GOVERNANCE.md). Starter tasks: [docs/small-tasks.md](docs/small-tasks.md). Achievements: [docs/achievements.md](docs/achievements.md).
 
 ## Setup
 
 - Include the following in your action:
   ```yaml
   - name: php-cs-fixer
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
   ```
 
-Pin a patch tag (`@v1.0.3`) so CI stays on a known release. Pushing a `vX.Y.Z` tag publishes a GitHub Release from `CHANGELOG.md` and force-updates the floating major tag (`@v1`) so it tracks the latest compatible 1.x. Until that major tag exists, keep using the latest patch tag.
+Snippets and [`examples/`](examples/) use the floating major tag **`@v1`** (latest compatible 1.x). Prefer that for most workflows. Pin a patch tag (`@v1.0.3`) only when you need a frozen release. Publishing a `vX.Y.Z` GitHub Release force-updates `@v1` to the same commit. The `version` in `package.json` on `main` may be ahead of the latest published Action tag — pin Action tags, not that field.
 
-When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` with another tag, branch (for example `main`), or commit SHA when you want a different ref.
+When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` only with a ref that already has digests in [`rules-checksums.txt`](rules-checksums.txt) (or add pins with `bash scripts/update-rules-checksums.sh <tag>`). Unpinned refs fail closed; prefer `config-path` for a local consumer config.
 
 ## Parameters
 
@@ -64,12 +64,35 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `v1.0.1` | `v1.0.1`, `main`, SHA… |
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
-| paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
+| paths | Files/dirs relative to the workspace. Space-separated, newline-separated (may include spaces), or a JSON string array. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests`, multiline, or `["src/a b.php"]` |
+| allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
+| php-bin | PHP executable to spawn (`php` on PATH when empty) | `false` | _(empty → `php`)_ | e.g. `php`, `/usr/bin/php` |
+| working-directory | Subdirectory of the workspace used as the fixer process cwd | `false` | _(empty → repo root)_ | e.g. `packages/api` |
+| using-cache | Pass `--using-cache=yes\|no`. Empty leaves the php-cs-fixer default | `false` | _(empty)_ | `yes` OR `no` |
+| cache-file | Relative workspace path for `--cache-file`. Empty omits the flag | `false` | _(empty)_ | e.g. `.php-cs-fixer.cache` |
+| only-changed | Limit the run to PHP files changed vs `base-ref` (`git diff`). When set, optional `paths` further restrict the set | `false` | `false` | `true` OR `false` |
+| base-ref | Git ref for `only-changed` diffs (e.g. `origin/main`). Defaults to `origin/$GITHUB_BASE_REF` on `pull_request` | `false` | _(empty)_ | tag, branch, SHA… |
 | sarif-file | Relative path for an optional [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) report of style violations. Empty disables SARIF. Upload with `github/codeql-action/upload-sarif` (`security-events: write`) | `false` | _(empty)_ | e.g. `php-cs-fixer.sarif` |
+
+### Unsupported PHP versions
+
+php-cs-fixer only supports a declared range of PHP versions. This Action **does not** set the deprecated `PHP_CS_FIXER_IGNORE_ENV` variable (removed in php-cs-fixer 4.0). Prefer one of:
+
+1. **Config** (recommended for `config-path` consumers and shared rule packages):
+
+```php
+return (new PhpCsFixer\Config())
+    ->setUnsupportedPhpVersionAllowed(true)
+    // ...
+```
+
+2. **CLI** (if you wrap the phar yourself): `--allow-unsupported-php-version=yes`
+
+Setting `PHP_CS_FIXER_IGNORE_ENV` in the job environment still works during the 3.x transition, but it emits a deprecation warning and will break on 4.0.
 
 ## Integrity and cache
 
-The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
+The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Shared rules from php-cs-fixer-rules are likewise verified against [`rules-checksums.txt`](rules-checksums.txt) (fail-closed on missing pin or mismatch). Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
 
 It then caches the phar with `@actions/cache`, keyed by version + hash. Grant cache write so later CI runs can reuse it:
 
@@ -81,9 +104,11 @@ permissions:
 
 If the cache service is unavailable (local runs, missing permission, fork PR), the Action downloads again and still verifies the checksum.
 
+Phar and shared-rules downloads use HTTPS only, a request timeout, a maximum body size, and redirects limited to github.com / *.githubusercontent.com.
+
 ## Examples
 
-Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/check-sarif.yml`](examples/check-sarif.yml) (same check plus Code Scanning via SARIF), and [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
+Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/check-sarif.yml`](examples/check-sarif.yml) (same check plus Code Scanning via SARIF), [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them), and [`examples/only-changed.yml`](examples/only-changed.yml) (PR-scoped changed PHP files). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
 
 ### Simple use with default parameters (shared rules pinned to `v1.0.1`)
 ```yaml
@@ -96,14 +121,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: PHP Code Style
-        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        uses: ale94lko/php-cs-fixer-action@v1
         # rules-version defaults to v1.0.1; omit or override as needed
 ```
 
 ### Use a config file from your own repository
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     config-path: .php-cs-fixer.dist.php
 ```
@@ -111,16 +136,16 @@ jobs:
 ### Override the shared rules ref (tag, branch, or SHA)
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
-+     rules-version: main
++     rules-version: v1.0.1  # must be pinned in rules-checksums.txt
 +     use-full-rules: true
 ```
 
 ### Use the minimal shared ruleset
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     use-full-rules: false
 ```
@@ -128,7 +153,7 @@ jobs:
 ### Override php-cs-fixer version
 ```diff
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
 +   with:
 +     php-cs-fixer-version: v3.95.21
 ```
@@ -136,7 +161,7 @@ jobs:
 ### Check only (default)
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       mode: check
 ```
@@ -144,10 +169,31 @@ jobs:
 ### Apply fixes to selected paths
 ```yaml
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       mode: fix
       paths: src tests
+```
+
+### Paths with spaces or multiline lists
+
+Space-separated values cannot include spaces in a path name. Prefer a **newline-separated** list, or a **JSON string array**:
+
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1
+    with:
+      # one path per line (spaces allowed)
+      paths: |
+        src/with space.php
+        tests
+```
+
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1
+    with:
+      paths: '["src/with space.php", "tests"]'
 ```
 
 ### Emit SARIF for Code Scanning
@@ -159,7 +205,7 @@ permissions:
 # …
 
   - name: PHP Code Style
-    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    uses: ale94lko/php-cs-fixer-action@v1
     with:
       mode: check
       sarif-file: php-cs-fixer.sarif
@@ -172,6 +218,48 @@ permissions:
 ```
 
 See [`examples/check-sarif.yml`](examples/check-sarif.yml) for a full workflow.
+
+### Disable risky fixers
+Risky rules can change behavior in surprising ways. The Action defaults to `allow-risky: yes` so existing workflows keep the previous hardcoded `--allow-risky=yes` behavior. Opt out explicitly when you want only non-risky fixers:
+
+```diff
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1
++   with:
++     allow-risky: no
+```
+
+### PHP binary, cwd, and fixer cache
+
+Use `php-bin` when PHP is not on `PATH` as `php`. Set `working-directory` to run the fixer with that subdirectory as cwd (config and path arguments stay resolved from the repository root). Optionally pass php-cs-fixer cache knobs:
+
+```yaml
+- uses: ale94lko/php-cs-fixer-action@v1
+  with:
+    php-bin: php
+    working-directory: packages/api
+    using-cache: yes
+    cache-file: .php-cs-fixer.cache
+```
+
+### Check only files changed on the PR
+Use `only-changed: true` so the Action runs `git diff` against the PR base (or an explicit `base-ref`) and passes only changed `*.php` files to php-cs-fixer. Checkout must include enough history for the base ref (for example `fetch-depth: 0`). When no PHP files changed, the Action succeeds without running the fixer.
+
+```yaml
+  - uses: actions/checkout@v5
+    with:
+      fetch-depth: 0
+
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1
+    with:
+      only-changed: true
+      # optional: further limit to directories
+      paths: src tests
+      # optional override; defaults to origin/${{ github.base_ref }}
+      # base-ref: origin/main
+```
+
 ## CI
 
 Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-cs-fixer-action/actions/workflows/ci.yml):
@@ -179,7 +267,6 @@ Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-c
 - [Pass on clean fixtures](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447185) (`action-passes-on-clean-fixtures`)
 - [Fail the Action on violations](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447500) (`action-fails-on-violations`; the workflow job succeeds after asserting that the Action step failed)
 - [Apply fixes to a dirty fixture](https://github.com/ale94lko/php-cs-fixer-action/actions/runs/34969930522/job/104383447489) (`action-fixes-dirty-fixture`)
-- `docker-offline` builds the image (vendors php-cs-fixer) and lints the fixtures with `--network=none`
 
 ## Architecture
 
@@ -187,13 +274,13 @@ Self-tests run in [`.github/workflows/ci.yml`](https://github.com/ale94lko/php-c
 
 Runtime pipeline (`src/run.ts`):
 
-1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by Docker and `scripts/ci-local.sh`.
+1. **Read inputs** (`src/inputs.ts`) from `action.yml`, with env fallbacks used by `scripts/ci-local.sh`.
 2. **Validate** (`src/validate.ts`) against [`action.inputs.schema.json`](action.inputs.schema.json) with [Ajv](https://ajv.js.org/), then keep `paths` inside the workspace.
-3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified workspace or `PHP_CS_FIXER_PHAR` binary (Docker vendors it at build time), else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
+3. **Resolve php-cs-fixer** (`src/download-fixer.ts`) — reuse a verified binary under `RUNNER_TEMP/php-cs-fixer-action` (or `PHP_CS_FIXER_PHAR`), else restore from the Actions cache, else download `php-cs-fixer.phar` from GitHub Releases.
 4. **Resolve config** (`src/resolve-config.ts`):
    - If `config-path` is set, use that file from the consumer repository.
-   - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`).
-5. **Run the fixer** (`src/run-fixer.ts`) — `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended after they are checked to stay inside the workspace.
+   - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`) into `RUNNER_TEMP`, not the checkout.
+5. **Run the fixer** (`src/run-fixer.ts`) — `php <runtime>/php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). The JSON report is written under `RUNNER_TEMP`. Optional `paths` are appended after they are checked to stay inside the workspace.
 6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, optional SARIF via `sarif-file`, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
 
 | Path | Role |
@@ -203,30 +290,38 @@ Runtime pipeline (`src/run.ts`):
 | `src/index.ts` | Loads `run()` |
 | `src/run.ts` | Orchestrates validate → download → resolve config → run fixer → report |
 | `dist/index.js` | Bundled file GitHub Actions actually executes |
-| `.env.example` | Env vars for `scripts/ci-local.sh` and the optional offline image |
-| `Dockerfile` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
+| `.env.example` | Env vars for `scripts/ci-local.sh` |
 | `.github/workflows/scorecard.yml` | OpenSSF Scorecard on `main` / weekly (accepted low scores in CONTRIBUTING / [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)) |
 
 ### Repo health badge
 
 [`.github/workflows/health_score.yml`](.github/workflows/health_score.yml) publishes the README badge on a schedule. It uses workflow-level `permissions: {}` and grants `contents: write` only on the badge job, then passes `token: ${{ secrets.GITHUB_TOKEN }}` to [`ale94lko/repo-health-score`](https://github.com/ale94lko/repo-health-score) so that job can push the generated badge.
-`action.yml` declares the inputs. [`action.inputs.schema.json`](action.inputs.schema.json) is the machine-readable contract; `src/` validates against it with Ajv, resolves php-cs-fixer (vendored phar, Actions cache, or a SHA-256-verified download from `checksums.txt`), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. Failures (invalid inputs, download/config errors, fixer non-zero exit) go through one helper that logs JSON `{step,code,message}` and `core.setFailed`. Set `ERROR_TRACKING_URL` to POST that payload to an http(s) webhook; it is optional and unset by default. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
+`action.yml` declares the inputs. [`action.inputs.schema.json`](action.inputs.schema.json) is the machine-readable contract; `src/` validates against it with Ajv, resolves php-cs-fixer (vendored phar, Actions cache, or a SHA-256-verified download from `checksums.txt`), resolves a config (`config-path` or [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules)), then runs `php php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). Optional `paths` are appended as php-cs-fixer arguments after they are checked to stay inside the workspace. Violations become file-level annotations and a `$GITHUB_STEP_SUMMARY` table; the Action fails with `process.exitCode = 1` instead of a generic `::error::`. Failures (invalid inputs, download/config errors, fixer non-zero exit) go through one helper that logs JSON `{step,code,message}` and `core.setFailed`. Set `ERROR_TRACKING_URL` to POST that payload to an HTTPS webhook (no redirects); it is optional and unset by default. The bundled entrypoint is `dist/index.js` (built with `npm run build`).
 
 ## Local development
 
-Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh` and the optional offline image).
+Requires **Node.js 24+** and **PHP 8.3+** on your PATH. From a clean clone, one command installs dependencies, runs the coverage gate, and executes the Action against the fixture config:
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
+bash scripts/dev-check.sh
+```
+
+That script copies `.env.example` → `.env` when needed, then runs `npm ci`, `npm run test:coverage`, and `bash scripts/ci-local.sh`. Treat a green `dev-check.sh` as the local done-condition before opening a PR.
+
+### Step-by-step (optional)
+
+```bash
 cp .env.example .env
 npm ci
 npm audit --omit=dev --audit-level=high
-npm test
+npm run test:coverage
 npm run build
+bash scripts/ci-local.sh
 ```
 
-### Tests (offline)
+### Tests only
 
 Unit tests mock HTTP and do not download php-cs-fixer or php-cs-fixer-rules. CI Action jobs (`action-passes-on-clean-fixtures`, `action-fails-on-violations`, `action-fixes-dirty-fixture`) pass `config-path: tests/fixtures/.php-cs-fixer.dist.php`, so they never hit php-cs-fixer-rules.
 
@@ -235,19 +330,12 @@ npm test
 npm run test:coverage
 ```
 
-### Run the fixer locally (offline after `docker build`)
+### Fixer only
 
-`scripts/ci-local.sh` reuses a verified `php-cs-fixer` in the workspace or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar.
+`scripts/ci-local.sh` reuses a verified `php-cs-fixer` under `RUNNER_TEMP`/`os.tmpdir()` or `PHP_CS_FIXER_PHAR`. The first local run without those still needs network to download the phar (checksum from `checksums.txt`). It defaults to the local fixture config so php-cs-fixer-rules is not required:
 
 ```bash
 bash scripts/ci-local.sh
-```
-
-The Docker image vendors the pinned phar at **build** time (checksum from `checksums.txt`) and defaults to the local fixture config, so linting the fixtures does not download php-cs-fixer or php-cs-fixer-rules at start:
-
-```bash
-docker build -t php-cs-fixer-action .
-docker run --rm --network=none php-cs-fixer-action
 ```
 
 ## Contributing
