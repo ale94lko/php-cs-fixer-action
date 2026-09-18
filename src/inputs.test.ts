@@ -28,6 +28,7 @@ describe('readInputs', () => {
     delete process.env.PHP_CS_FIXER_CACHE_FILE
     delete process.env.PHP_CS_FIXER_ONLY_CHANGED
     delete process.env.PHP_CS_FIXER_BASE_REF
+    delete process.env.PHP_CS_FIXER_SARIF_FILE
   })
 
   it('uses documented defaults', () => {
@@ -45,6 +46,7 @@ describe('readInputs', () => {
       cacheFile: '',
       onlyChanged: 'false',
       baseRef: '',
+      sarifFile: '',
     })
   })
 
@@ -61,10 +63,15 @@ describe('readInputs', () => {
     expect(readInputs().configPath).toBe('tests/fixtures/.php-cs-fixer.dist.php')
   })
 
-  it('reads mode and paths from env fallbacks', () => {
+  it('reads mode, paths and sarif-file from env fallbacks', () => {
     process.env.PHP_CS_FIXER_MODE = 'fix'
     process.env.PHP_CS_FIXER_PATHS = 'src tests'
-    expect(readInputs()).toMatchObject({ mode: 'fix', paths: 'src tests' })
+    process.env.PHP_CS_FIXER_SARIF_FILE = 'php-cs-fixer.sarif'
+    expect(readInputs()).toMatchObject({
+      mode: 'fix',
+      paths: 'src tests',
+      sarifFile: 'php-cs-fixer.sarif',
+    })
   })
 
   it('resolves working-directory under the workspace', () => {

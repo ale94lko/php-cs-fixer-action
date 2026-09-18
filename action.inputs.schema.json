@@ -18,7 +18,8 @@
     "using-cache",
     "cache-file",
     "only-changed",
-    "base-ref"
+    "base-ref",
+    "sarif-file"
   ],
   "properties": {
     "php-cs-fixer-version": {
@@ -83,6 +84,11 @@
       "type": "string",
       "pattern": "^$|^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
       "description": "Git ref for only-changed diffs (empty uses origin/$GITHUB_BASE_REF)."
+    },
+    "sarif-file": {
+      "type": "string",
+      "pattern": "^$|^(?!.*\\.\\.)(?!/)(?![A-Za-z]:[\\\\/]).+$",
+      "description": "Empty, or a relative path inside the workspace for the SARIF report (no .. or absolute paths)."
     }
   }
 }

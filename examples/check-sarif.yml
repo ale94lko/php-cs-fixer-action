@@ -1,0 +1,48 @@
+# Copy this file to `.github/workflows/php-cs-fixer-sarif.yml` in a consuming repository.
+#
+# Opt in to SARIF via `sarif-file`, then upload with github/codeql-action/upload-sarif
+# so style violations appear in the GitHub Code Scanning dashboard.
+#
+# Requires GitHub Advanced Security / code scanning enabled for the repository
+# (or public repos where code scanning is available).
+
+name: PHP Code Style (SARIF)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  # Required for github/codeql-action/upload-sarif
+  security-events: write
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Check coding standards
+        uses: ale94lko/php-cs-fixer-action@v1
+        with:
+          mode: check
+          sarif-file: php-cs-fixer.sarif
+          # Optional: use a config file from this repository instead of
+          # downloading shared rules from ale94lko/php-cs-fixer-rules.
+          # config-path: .php-cs-fixer.dist.php
+
+      # Run even when the check step failed so violations still reach Code Scanning.
+      - name: Upload SARIF
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: php-cs-fixer.sarif

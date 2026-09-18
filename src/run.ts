@@ -12,7 +12,13 @@ import {
   type FailureReport,
 } from './error-tracking'
 import { readInputs, resolveWorkingDirectory, type ActionInputs } from './inputs'
-import { failWithoutGenericAnnotation, publishReport, toCodeStyleResult, tryParseViolations } from './report'
+import {
+  failWithoutGenericAnnotation,
+  publishReport,
+  toCodeStyleResult,
+  tryParseViolations,
+  writeSarifFile,
+} from './report'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
 import { assertSafeWorkspacePaths, parsePaths, validateAllInputs } from './validate'
@@ -103,6 +109,9 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
 
   const violations = tryParseViolations(result.output)
   await publishReport(violations, mode)
+  if (inputs.sarifFile !== '') {
+    await writeSarifFile(inputs.sarifFile, violations, mode)
+  }
 
   if (result.exitCode === 0) {
     return result

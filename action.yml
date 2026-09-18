@@ -57,6 +57,10 @@ inputs:
     description: 'Git ref to diff against when only-changed is true (e.g. origin/main). Defaults to origin/$GITHUB_BASE_REF on pull_request.'
     required: false
     default: ''
+  sarif-file:
+    description: 'Optional relative path for a SARIF 2.1.0 report of style violations. Empty disables SARIF output. Upload with github/codeql-action/upload-sarif (security-events: write).'
+    required: false
+    default: ''
 outputs:
   code-style-result:
     description: 'Pure JSON report from php-cs-fixer stdout (files, applied fixers, diffs). Stderr diagnostics stay in the job log only.'

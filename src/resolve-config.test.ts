@@ -39,6 +39,7 @@ const base: ActionInputs = {
   cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
+  sarifFile: '',
 }
 
 describe('rules selection', () => {

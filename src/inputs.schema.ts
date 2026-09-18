@@ -28,6 +28,7 @@ export type SchemaInputs = {
   'cache-file': string
   'only-changed': string
   'base-ref': string
+  'sarif-file': string
 }
 
 export function inputsSchemaPath(root = join(__dirname, '..')): string {
@@ -53,6 +54,7 @@ export function toSchemaInputs(inputs: ActionInputs): SchemaInputs {
     'cache-file': inputs.cacheFile,
     'only-changed': inputs.onlyChanged,
     'base-ref': inputs.baseRef,
+    'sarif-file': inputs.sarifFile,
   }
 }
 
@@ -70,6 +72,7 @@ export const SCHEMA_DEFAULTS: ActionInputs = {
   cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
+  sarifFile: '',
 }
 
 let compiled: ValidateFunction<SchemaInputs> | undefined
@@ -131,6 +134,8 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
           .find((part) => part !== '') ?? value
       return `Invalid path '${token}'. Use a relative path inside the workspace.`
     }
+    case 'sarif-file':
+      return `Invalid sarif-file '${value}'. Use a relative path inside the workspace.`
     default:
       return error.message ? `Invalid Action inputs: ${error.message}` : 'Invalid Action inputs.'
   }

@@ -36,6 +36,7 @@ export type ActionInputs = {
   cacheFile: string
   onlyChanged: string
   baseRef: string
+  sarifFile: string
 }
 
 function read(name: string, fallbackEnv: string, defaultValue: string): string {
@@ -62,6 +63,7 @@ export function readInputs(): ActionInputs {
     cacheFile: read('cache-file', 'PHP_CS_FIXER_CACHE_FILE', ''),
     onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
     baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
+    sarifFile: read('sarif-file', 'PHP_CS_FIXER_SARIF_FILE', ''),
   }
 }
 

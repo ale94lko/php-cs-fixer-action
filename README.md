@@ -72,6 +72,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | cache-file | Relative workspace path for `--cache-file`. Empty omits the flag | `false` | _(empty)_ | e.g. `.php-cs-fixer.cache` |
 | only-changed | Limit the run to PHP files changed vs `base-ref` (`git diff`). When set, optional `paths` further restrict the set | `false` | `false` | `true` OR `false` |
 | base-ref | Git ref for `only-changed` diffs (e.g. `origin/main`). Defaults to `origin/$GITHUB_BASE_REF` on `pull_request` | `false` | _(empty)_ | tag, branch, SHA… |
+| sarif-file | Relative path for an optional [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) report of style violations. Empty disables SARIF. Upload with `github/codeql-action/upload-sarif` (`security-events: write`) | `false` | _(empty)_ | e.g. `php-cs-fixer.sarif` |
 
 ### Unsupported PHP versions
 
@@ -107,7 +108,7 @@ Phar and shared-rules downloads use HTTPS only, a request timeout, a maximum bod
 
 ## Examples
 
-Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them), and [`examples/only-changed.yml`](examples/only-changed.yml) (PR-scoped changed PHP files). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
+Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/check-sarif.yml`](examples/check-sarif.yml) (same check plus Code Scanning via SARIF), [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them), and [`examples/only-changed.yml`](examples/only-changed.yml) (PR-scoped changed PHP files). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
 
 ### Simple use with default parameters (shared rules pinned to `v1.0.1`)
 ```yaml
@@ -195,6 +196,29 @@ Space-separated values cannot include spaces in a path name. Prefer a **newline-
       paths: '["src/with space.php", "tests"]'
 ```
 
+### Emit SARIF for Code Scanning
+```yaml
+permissions:
+  contents: read
+  security-events: write   # required by upload-sarif
+
+# …
+
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1
+    with:
+      mode: check
+      sarif-file: php-cs-fixer.sarif
+
+  - name: Upload SARIF
+    if: success() || failure()
+    uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: php-cs-fixer.sarif
+```
+
+See [`examples/check-sarif.yml`](examples/check-sarif.yml) for a full workflow.
+
 ### Disable risky fixers
 Risky rules can change behavior in surprising ways. The Action defaults to `allow-risky: yes` so existing workflows keep the previous hardcoded `--allow-risky=yes` behavior. Opt out explicitly when you want only non-risky fixers:
 
@@ -257,7 +281,7 @@ Runtime pipeline (`src/run.ts`):
    - If `config-path` is set, use that file from the consumer repository.
    - Otherwise download from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at `rules-version` (full or min file via `use-full-rules`) into `RUNNER_TEMP`, not the checkout.
 5. **Run the fixer** (`src/run-fixer.ts`) — `php <runtime>/php-cs-fixer fix --format=json` (`--dry-run` in `check` mode; writes files in `fix` mode). The JSON report is written under `RUNNER_TEMP`. Optional `paths` are appended after they are checked to stay inside the workspace.
-6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
+6. **Report** (`src/report.ts`) — file-level annotations, a `$GITHUB_STEP_SUMMARY` table, optional SARIF via `sarif-file`, and the `code-style-result` output. Style violations fail with `process.exitCode = 1` instead of a generic `::error::`.
 
 | Path | Role |
 |------|------|

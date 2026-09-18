@@ -3,6 +3,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildSarif,
   buildSummaryMarkdown,
   emitAnnotations,
   extractJsonObject,
@@ -13,6 +14,7 @@ import {
   toRepoPath,
   tryParseViolations,
   writeJobSummary,
+  writeSarifFile,
 } from './report'
 
 const sampleDiff = [
@@ -206,5 +208,78 @@ describe('writeJobSummary', () => {
     await publishReport([{ file: 'x.php', fixers: ['a'], line: 1 }], 'check')
     expect(core.summary.addRaw).toHaveBeenCalled()
     expect(error).toHaveBeenCalledOnce()
+  })
+})
+
+describe('buildSarif', () => {
+  it('emits SARIF 2.1.0 with one result per fixer', () => {
+    const violations = parseViolations(JSON.stringify(sampleReport))
+    const sarif = buildSarif(violations, 'check')
+
+    expect(sarif.version).toBe('2.1.0')
+    expect(sarif.$schema).toContain('sarif-2.1.0')
+    expect(sarif.runs).toHaveLength(1)
+
+    const run = sarif.runs[0]
+    expect(run.tool.driver.name).toBe('PHP CS Fixer')
+    expect(run.tool.driver.rules.map((rule) => rule.id)).toEqual([
+      'visibility_required',
+      'braces_position',
+    ])
+    expect(run.results).toHaveLength(2)
+    expect(run.results[0]).toMatchObject({
+      ruleId: 'visibility_required',
+      level: 'error',
+      message: { text: 'Found violation of type: visibility_required' },
+      locations: [
+        {
+          physicalLocation: {
+            artifactLocation: { uri: 'tests/fixtures/Dirty.php' },
+            region: { startLine: 2 },
+          },
+        },
+      ],
+    })
+    expect(run.results[1].ruleId).toBe('braces_position')
+  })
+
+  it('uses warning level in fix mode and a fallback rule without fixers', () => {
+    const sarif = buildSarif([{ file: 'src/Foo.php', fixers: [] }], 'fix')
+    expect(sarif.runs[0].results).toEqual([
+      {
+        ruleId: 'php-cs-fixer',
+        level: 'warning',
+        message: { text: 'Found coding standard violations' },
+        locations: [{ physicalLocation: { artifactLocation: { uri: 'src/Foo.php' } } }],
+      },
+    ])
+    expect(sarif.runs[0].tool.driver.rules).toEqual([
+      {
+        id: 'php-cs-fixer',
+        shortDescription: { text: 'PHP CS Fixer coding standard violation' },
+      },
+    ])
+  })
+
+  it('writes an empty results array for a clean run', () => {
+    const sarif = buildSarif([], 'check')
+    expect(sarif.runs[0].results).toEqual([])
+    expect(sarif.runs[0].tool.driver.rules).toEqual([])
+  })
+
+  it('writeSarifFile persists pretty-printed JSON under the workspace', async () => {
+    const { mkdtemp, readFile, rm } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const workspace = await mkdtemp(join(tmpdir(), 'sarif-'))
+    try {
+      const violations = parseViolations(JSON.stringify(sampleReport))
+      await writeSarifFile('reports/php-cs-fixer.sarif', violations, 'check', workspace)
+      const raw = await readFile(join(workspace, 'reports/php-cs-fixer.sarif'), 'utf8')
+      expect(JSON.parse(raw)).toEqual(buildSarif(violations, 'check'))
+      expect(raw.endsWith('\n')).toBe(true)
+    } finally {
+      await rm(workspace, { recursive: true, force: true })
+    }
   })
 })

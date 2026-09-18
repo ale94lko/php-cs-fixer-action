@@ -191,6 +191,7 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
       cacheFile: '',
       onlyChanged: 'false',
       baseRef: '',
+      sarifFile: '',
     }
 
     const deps: Parameters<typeof run>[0] = {

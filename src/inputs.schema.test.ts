@@ -1,4 +1,4 @@
-// Copyright (c) php-cs-fixer-action contributors
+﻿// Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
 import { readFileSync } from 'node:fs'
@@ -34,6 +34,7 @@ const valid: ActionInputs = {
   cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
+  sarifFile: '',
 }
 
 describe('action.inputs.schema.json', () => {
@@ -57,6 +58,7 @@ describe('action.inputs.schema.json', () => {
       'cache-file',
       'only-changed',
       'base-ref',
+      'sarif-file',
     ])
     expect(Object.keys(schema.properties ?? {})).toEqual(schema.required)
     expect(() => compileInputsSchema(schema)).not.toThrow()
@@ -80,6 +82,7 @@ describe('action.inputs.schema.json', () => {
       'cache-file': '',
       'only-changed': actionYaml.match(/only-changed:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
       'base-ref': '',
+      'sarif-file': '',
     }
     expect(defaults).toEqual(toSchemaInputs(SCHEMA_DEFAULTS))
     expect(() => assertInputsSchema(valid)).not.toThrow()
@@ -115,6 +118,7 @@ describe('action.inputs.schema.json', () => {
         paths: '["src/with space.php"]',
       }),
     ).not.toThrow()
+    expect(() => assertInputsSchema({ ...valid, sarifFile: '../out.sarif' })).toThrow(/sarif-file/)
   })
 
   it('rejects rules-version path traversal and empty path segments', () => {

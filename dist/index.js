@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 52e39ca4f3a5540e61550ef2367a3db0edf64f37f7107abac789765cc0971b41
+// php-cs-fixer-action-src-hash 2992458ef26221e6e9a2723d8b77777766198315369f9310c1747562c974c6b6
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101225,6 +101225,7 @@ function readInputs() {
         cacheFile: read('cache-file', 'PHP_CS_FIXER_CACHE_FILE', ''),
         onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
         baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
+        sarifFile: read('sarif-file', 'PHP_CS_FIXER_SARIF_FILE', ''),
     };
 }
 /** Resolve spawn cwd from the repository workspace and optional working-directory input. */
@@ -101390,6 +101391,66 @@ function emitAnnotations(violations, mode) {
 async function publishReport(violations, mode) {
     await writeJobSummary(buildSummaryMarkdown(violations, mode));
     emitAnnotations(violations, mode);
+}
+const SARIF_SCHEMA_URI = 'https://json.schemastore.org/sarif-2.1.0.json';
+/** Build a SARIF 2.1.0 log from php-cs-fixer violations (one result per fixer). */
+function buildSarif(violations, mode) {
+    const level = mode === 'fix' ? 'warning' : 'error';
+    const rules = new Map();
+    const results = [];
+    for (const violation of violations) {
+        const ruleIds = violation.fixers.length > 0 ? violation.fixers : ['php-cs-fixer'];
+        for (const ruleId of ruleIds) {
+            if (!rules.has(ruleId)) {
+                rules.set(ruleId, {
+                    id: ruleId,
+                    shortDescription: {
+                        text: ruleId === 'php-cs-fixer'
+                            ? 'PHP CS Fixer coding standard violation'
+                            : `PHP CS Fixer rule: ${ruleId}`,
+                    },
+                });
+            }
+            const message = ruleId === 'php-cs-fixer' && violation.fixers.length === 0
+                ? 'Found coding standard violations'
+                : `Found violation of type: ${ruleId}`;
+            const physicalLocation = {
+                artifactLocation: { uri: violation.file.replace(/\\/g, '/') },
+            };
+            if (violation.line !== undefined) {
+                physicalLocation.region = { startLine: violation.line };
+            }
+            results.push({
+                ruleId,
+                level,
+                message: { text: message },
+                locations: [{ physicalLocation }],
+            });
+        }
+    }
+    return {
+        $schema: SARIF_SCHEMA_URI,
+        version: '2.1.0',
+        runs: [
+            {
+                tool: {
+                    driver: {
+                        name: 'PHP CS Fixer',
+                        informationUri: 'https://github.com/PHP-CS-Fixer/PHP-CS-Fixer',
+                        rules: [...rules.values()],
+                    },
+                },
+                results,
+            },
+        ],
+    };
+}
+async function writeSarifFile(relativePath, violations, mode, workspace = process.cwd()) {
+    const dest = (0,external_node_path_namespaceObject.join)(workspace, relativePath);
+    await (0,promises_namespaceObject.mkdir)((0,external_node_path_namespaceObject.dirname)(dest), { recursive: true });
+    const payload = `${JSON.stringify(buildSarif(violations, mode), null, 2)}\n`;
+    await (0,promises_namespaceObject.writeFile)(dest, payload, 'utf8');
+    core.info(`Wrote SARIF report to ${relativePath}`);
 }
 function failWithoutGenericAnnotation() {
     process.exitCode = 1;
@@ -101642,6 +101703,7 @@ function toSchemaInputs(inputs) {
         'cache-file': inputs.cacheFile,
         'only-changed': inputs.onlyChanged,
         'base-ref': inputs.baseRef,
+        'sarif-file': inputs.sarifFile,
     };
 }
 const inputs_schema_SCHEMA_DEFAULTS = {
@@ -101658,6 +101720,7 @@ const inputs_schema_SCHEMA_DEFAULTS = {
     cacheFile: '',
     onlyChanged: 'false',
     baseRef: '',
+    sarifFile: '',
 };
 let compiled;
 function compileInputsSchema(schema = loadInputsSchema()) {
@@ -101713,6 +101776,8 @@ function schemaErrorMessage(document, error) {
                 .find((part) => part !== '') ?? value;
             return `Invalid path '${token}'. Use a relative path inside the workspace.`;
         }
+        case 'sarif-file':
+            return `Invalid sarif-file '${value}'. Use a relative path inside the workspace.`;
         default:
             return error.message ? `Invalid Action inputs: ${error.message}` : 'Invalid Action inputs.';
     }
@@ -101750,6 +101815,19 @@ function validateGitRef(ref) {
 }
 function validateConfigPath(path) {
     assertInputsSchema({ ...SCHEMA_DEFAULTS, configPath: path });
+}
+function validateSarifFile(path, workspace = process.cwd()) {
+    inputs_schema_assertInputsSchema({ ...inputs_schema_SCHEMA_DEFAULTS, sarifFile: path });
+    if (path === '') {
+        return;
+    }
+    if (path.startsWith('-') ||
+        path.startsWith('/') ||
+        WINDOWS_ABSOLUTE.test(path) ||
+        hasParentSegment(path) ||
+        !isInsideWorkspace(workspace, path)) {
+        validate_invalidInput(`Invalid sarif-file '${path}'. Use a relative path inside the workspace.`);
+    }
 }
 function validateMode(mode) {
     assertInputsSchema({ ...SCHEMA_DEFAULTS, mode });
@@ -101821,6 +101899,7 @@ function validateAllInputs(inputs, workspace = process.cwd()) {
     if (inputs.cacheFile.trim() !== '') {
         assertSafeWorkspacePaths([inputs.cacheFile], workspace);
     }
+    validateSarifFile(inputs.sarifFile, workspace);
 }
 
 ;// CONCATENATED MODULE: ./src/run.ts
@@ -101888,6 +101967,9 @@ async function executeAction(deps = defaultDeps) {
     core.setOutput('code-style-result', codeStyleResult);
     const violations = tryParseViolations(result.output);
     await publishReport(violations, mode);
+    if (inputs.sarifFile !== '') {
+        await writeSarifFile(inputs.sarifFile, violations, mode);
+    }
     if (result.exitCode === 0) {
         return result;
     }
