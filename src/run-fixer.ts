@@ -109,10 +109,9 @@ export async function runFixer(
     )
   }
 
-  const env = {
-    ...process.env,
-    PHP_CS_FIXER_IGNORE_ENV: process.env.PHP_CS_FIXER_IGNORE_ENV ?? '1',
-  }
+  const env = { ...process.env }
+  // Do not inject deprecated PHP_CS_FIXER_IGNORE_ENV. Prefer Config::setUnsupportedPhpVersionAllowed(true)
+  // or --allow-unsupported-php-version=yes (see README). Consumers may still set the env themselves.
   try {
     const result = await runProcess(
       'php',

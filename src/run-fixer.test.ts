@@ -37,6 +37,27 @@ describe('runFixer', () => {
     await expect(readFile(join(workspace, 'result.txt'), 'utf8')).resolves.toBe('violations')
   })
 
+  it('does not inject deprecated PHP_CS_FIXER_IGNORE_ENV when unset', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+    const previous = process.env.PHP_CS_FIXER_IGNORE_ENV
+    delete process.env.PHP_CS_FIXER_IGNORE_ENV
+
+    try {
+      const runProcess = vi.fn().mockResolvedValue({ exitCode: 0, output: 'ok' })
+      await runFixer('config.php', { workspace, runtimeDir: workspace, runProcess })
+      const env = runProcess.mock.calls[0]?.[2]?.env as NodeJS.ProcessEnv
+      expect(env.PHP_CS_FIXER_IGNORE_ENV).toBeUndefined()
+    } finally {
+      if (previous === undefined) {
+        delete process.env.PHP_CS_FIXER_IGNORE_ENV
+      } else {
+        process.env.PHP_CS_FIXER_IGNORE_ENV = previous
+      }
+    }
+  })
+
   it('spawnPhp captures stdout from a child process', async () => {
     const result = await spawnPhp(process.execPath, ['-e', 'process.stdout.write("hi")'], {
       cwd: process.cwd(),
