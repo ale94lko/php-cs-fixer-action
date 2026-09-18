@@ -1,17 +1,23 @@
 # Contributing to php-cs-fixer-action
 
-Thanks for helping improve this GitHub Action. Please also read the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+Thanks for helping improve this GitHub Action. Please also read the [Code of Conduct](.github/CODE_OF_CONDUCT.md) and [GOVERNANCE.md](GOVERNANCE.md).
 
-## Development setup
+## Development setup (quick start for contributors)
 
-Requires Node.js 24+.
+Requires Node.js 24+. From a clone you can install dependencies and run the quality gate in a few commands:
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
 cd php-cs-fixer-action
 cp .env.example .env
 npm ci
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run build
 ```
+
+That installs the support environment (including Vitest) needed to change the Action and run its tests. Consumers who only *use* the Action should follow the [README Setup](README.md#setup) section instead.
 
 From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a GitHub-release phar (vendored into the Docker image, otherwise downloaded and checksum-verified).
 
@@ -53,6 +59,18 @@ bash scripts/update-checksums.sh v3.95.21
 ```
 
 A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`). It uses top-level `permissions: {}` and grants `contents: write` plus `pull-requests: write` only on the `bump` job. Scorecard **Token-Permissions** still warns on that job-level write ([#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)); GitHub has no narrower scope for pushing a branch and opening a PR.
+
+Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior (see [Commits and tests](#commits-and-tests)).
+
+## Project docs
+
+- [GOVERNANCE.md](GOVERNANCE.md) — decision model, roles, access continuity, DCO
+- [docs/roadmap.md](docs/roadmap.md) — next-year plans
+- [docs/architecture.md](docs/architecture.md) — high-level design
+- [docs/assurance-case.md](docs/assurance-case.md) — security assurance case
+- [docs/achievements.md](docs/achievements.md) — public badges and recognition
+- [SECURITY.md](SECURITY.md) — vulnerability reporting and response
+- [docs/dependency-notes.md](docs/dependency-notes.md) — npm / Actions pins
 
 ## OpenSSF Scorecard
 
@@ -113,11 +131,33 @@ CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes 
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 
+## Coding standards
+
+Primary languages are TypeScript/JavaScript and shell:
+
+- **TypeScript / JavaScript** — ESLint flat config [`eslint.config.mjs`](eslint.config.mjs) (`npm run lint`). CI fails on lint errors.
+- **Shell** — `shfmt -i 2` and ShellCheck (via actionlint when available).
+- **Workflows** — `actionlint` on `.github/workflows/`.
+
+Contributions must generally comply with these tools. Do not disable rules to hide new issues without maintainer review.
+
+## Developer Certificate of Origin (DCO)
+
+By contributing, you certify that you have the right to submit the work under the project license. Include a Signed-off-by line in each commit (see the [DCO](https://developercertificate.org/)):
+
+```text
+Signed-off-by: Your Name <you@example.com>
+```
+
+Example: `git commit -s -m "feat: …"`.
+
 ## Commits and tests
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) on every PR commit. Allowed types: `feat`, `fix`, `chore`, `test`, `docs`, `ci`, `refactor` (for example `feat: add paths input`, `fix: fail closed on checksum mismatch`). CI runs `commitlint` on `pull_request` only so historical `main` SHAs are not rewritten or re-linted.
 
-**Pair source with specs.** Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR: pair `src/*.ts` changes with `src/*.test.ts` (or `tests/*.sh` / `tests/integration/*.test.ts`). One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Do not rewrite old history to invent that pairing.
+**Formal test policy (required).** As major new functionality is added, tests for that functionality **MUST** be added to the automated suite (Vitest under `src/**/*.test.ts` or `tests/integration/`, or shell tests under `tests/`). Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR. One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Prefer regression tests when fixing bugs (target: at least half of bugs fixed in a six-month window). Do not rewrite old history to invent that pairing.
+
+Statement coverage is enforced at **≥ 80%** via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
 
 ## Workflow
 
