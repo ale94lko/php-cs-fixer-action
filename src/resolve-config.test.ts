@@ -16,6 +16,8 @@ const base: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: 'yes',
+  onlyChanged: 'false',
+  baseRef: '',
 }
 
 describe('rules selection', () => {

@@ -26,6 +26,8 @@ const valid: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: 'yes',
+  onlyChanged: 'false',
+  baseRef: '',
 }
 
 describe('action.inputs.schema.json', () => {
@@ -43,6 +45,8 @@ describe('action.inputs.schema.json', () => {
       'mode',
       'paths',
       'allow-risky',
+      'only-changed',
+      'base-ref',
     ])
     expect(Object.keys(schema.properties ?? {})).toEqual(schema.required)
     expect(() => compileInputsSchema(schema)).not.toThrow()
@@ -60,6 +64,8 @@ describe('action.inputs.schema.json', () => {
       mode: actionYaml.match(/^\s*mode:[\s\S]*?default:\s*'?([^'\n]+)'?/m)?.[1],
       paths: '',
       'allow-risky': actionYaml.match(/allow-risky:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
+      'only-changed': actionYaml.match(/only-changed:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
+      'base-ref': '',
     }
     expect(defaults).toEqual(toSchemaInputs(SCHEMA_DEFAULTS))
     expect(() => assertInputsSchema(valid)).not.toThrow()
@@ -72,7 +78,13 @@ describe('action.inputs.schema.json', () => {
     expect(() => assertInputsSchema({ ...valid, mode: 'lint' })).toThrow(/Expected check or fix/)
     expect(() => assertInputsSchema({ ...valid, useFullRules: 'yes' })).toThrow(/true or false/)
     expect(() => assertInputsSchema({ ...valid, allowRisky: 'true' })).toThrow(/yes or no/)
+    expect(() => assertInputsSchema({ ...valid, onlyChanged: 'yes' })).toThrow(/true or false/)
+    expect(() => assertInputsSchema({ ...valid, baseRef: '../main' })).toThrow(/base-ref/)
     expect(() => assertInputsSchema({ ...valid, rulesVersion: '' })).toThrow(/must not be empty/)
+    expect(() =>
+      assertInputsSchema({ ...valid, onlyChanged: 'true', baseRef: 'origin/main' }),
+    ).not.toThrow()
+    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'release/1.0' })).not.toThrow()
     expect(() => assertInputsSchema({ ...valid, configPath: '../secrets.php' })).toThrow(
       /config-path/,
     )

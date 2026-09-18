@@ -185,6 +185,8 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
       mode: 'check',
       paths: dirtyRel,
       allowRisky: 'yes',
+      onlyChanged: 'false',
+      baseRef: '',
     }
 
     const deps: Parameters<typeof run>[0] = {

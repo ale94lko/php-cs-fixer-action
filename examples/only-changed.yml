@@ -1,0 +1,35 @@
+# Copy this file to `.github/workflows/php-cs-fixer.yml` in a consuming repository.
+#
+# `only-changed: true` limits php-cs-fixer to PHP files changed vs the PR base
+# (or an explicit `base-ref`). Requires enough git history for the base ref.
+
+name: PHP Code Style (changed files)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Check coding standards on changed PHP files
+        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        with:
+          mode: check
+          only-changed: true
+          # Optional: further restrict to directories
+          # paths: src tests

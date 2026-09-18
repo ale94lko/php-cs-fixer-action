@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash fa428ecc43eab6e03b321942af1459ac038009c900be0bdb91ea7ebb316f8dfe
+// php-cs-fixer-action-src-hash d3aa50b5847b37d5ed32beabab4a4d71bd3110a3a8658e02a38f83de173450a1
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -100656,6 +100656,178 @@ var __webpack_exports__ = {};
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(37484);
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = require("node:child_process");
+;// CONCATENATED MODULE: ./src/error-tracking.ts
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
+/** Optional webhook for Action failures. No-op when unset; never required in CI. */
+const ERROR_TRACKING_URL_ENV = 'ERROR_TRACKING_URL';
+const ActionStep = {
+    ValidateInputs: 'validate-inputs',
+    DownloadFixer: 'download-fixer',
+    ResolveConfig: 'resolve-config',
+    RunFixer: 'run-fixer',
+    Run: 'run',
+};
+const ActionErrorCode = {
+    InvalidInput: 'INVALID_INPUT',
+    DownloadFailed: 'DOWNLOAD_FAILED',
+    ChecksumMismatch: 'CHECKSUM_MISMATCH',
+    ConfigNotFound: 'CONFIG_NOT_FOUND',
+    FixerFailed: 'FIXER_FAILED',
+    StyleViolations: 'STYLE_VIOLATIONS',
+    Unexpected: 'UNEXPECTED',
+};
+const WEBHOOK_TIMEOUT_MS = 3000;
+class ActionError extends Error {
+    step;
+    code;
+    constructor(step, code, message) {
+        super(message);
+        this.name = 'ActionError';
+        this.step = step;
+        this.code = code;
+    }
+}
+function toActionError(step, code, error) {
+    if (error instanceof ActionError) {
+        return error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return new ActionError(step, code, message);
+}
+function failurePayload(report) {
+    return {
+        step: report.step,
+        code: report.code,
+        message: report.message,
+    };
+}
+function trackingWebhookUrl(env = process.env) {
+    const raw = env[ERROR_TRACKING_URL_ENV]?.trim();
+    if (!raw) {
+        return undefined;
+    }
+    try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return undefined;
+        }
+        return raw;
+    }
+    catch {
+        return undefined;
+    }
+}
+async function postTracking(payload, fetchImpl = fetch) {
+    const url = trackingWebhookUrl();
+    if (!url) {
+        return;
+    }
+    try {
+        await fetchImpl(url, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+            redirect: 'follow',
+            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+        });
+    }
+    catch {
+        core.warning('Optional error tracking webhook failed; continuing.');
+    }
+}
+/**
+ * Single failure path: structured `{step,code,message}` log, GitHub `::error::`
+ * via setFailed (unless `fail: false`), and an optional webhook POST.
+ */
+async function reportFailure(report, options = {}) {
+    const payload = failurePayload(report);
+    core.info(JSON.stringify(payload));
+    if (options.fail !== false) {
+        core.setFailed(payload.message);
+    }
+    await postTracking(payload, options.fetchImpl ?? fetch);
+}
+
+;// CONCATENATED MODULE: ./src/changed-paths.ts
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
+/** Run `git` and return stdout; fail closed on non-zero exit. */
+function defaultGitExec(args, cwd) {
+    return new Promise((resolve, reject) => {
+        const child = (0,external_node_child_process_namespaceObject.spawn)('git', args, { cwd, windowsHide: true });
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', (chunk) => {
+            stdout += chunk.toString();
+        });
+        child.stderr.on('data', (chunk) => {
+            stderr += chunk.toString();
+        });
+        child.on('error', reject);
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve(stdout);
+                return;
+            }
+            reject(new Error(stderr.trim() || `git ${args.join(' ')} exited with code ${code ?? 1}`));
+        });
+    });
+}
+function normalizeRepoPath(path) {
+    return path.replace(/\\/g, '/').replace(/^\.\//, '');
+}
+/** Keep Added/Copied/Modified/Renamed paths that look like PHP sources. */
+function filterPhpPaths(files) {
+    return files
+        .map((file) => normalizeRepoPath(file.trim()))
+        .filter((file) => file !== '' && /\.php$/i.test(file));
+}
+/**
+ * Resolve the git base for `base...HEAD`.
+ * Prefer the explicit `base-ref` input; otherwise `origin/$GITHUB_BASE_REF` on pull_request.
+ */
+function resolveDiffBaseRef(baseRefInput) {
+    const trimmed = baseRefInput.trim();
+    if (trimmed !== '') {
+        return trimmed;
+    }
+    const githubBase = process.env.GITHUB_BASE_REF?.trim();
+    if (githubBase && githubBase.length > 0) {
+        return `origin/${githubBase}`;
+    }
+    throw new ActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, 'only-changed requires base-ref (or GITHUB_BASE_REF on pull_request).');
+}
+/** When `paths` is set, keep changed files that match a filter path or live under it. */
+function restrictToPathFilters(changed, filters) {
+    if (filters.length === 0) {
+        return changed;
+    }
+    const norms = filters.map(normalizeRepoPath);
+    return changed.filter((file) => {
+        const n = normalizeRepoPath(file);
+        return norms.some((filter) => n === filter || n.startsWith(`${filter}/`));
+    });
+}
+/** List PHP files changed vs `base...HEAD`, optionally restricted by `paths` filters. */
+async function listChangedPhpPaths(options = {}) {
+    const workspace = options.workspace ?? process.cwd();
+    const gitExec = options.gitExec ?? defaultGitExec;
+    const base = resolveDiffBaseRef(options.baseRef ?? '');
+    try {
+        const stdout = await gitExec(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`], workspace);
+        const changed = filterPhpPaths(stdout.split(/\r?\n/));
+        return restrictToPathFilters(changed, options.pathFilters ?? []);
+    }
+    catch (error) {
+        throw toActionError(ActionStep.ValidateInputs, ActionErrorCode.InvalidInput, error);
+    }
+}
+
 ;// CONCATENATED MODULE: external "node:fs/promises"
 const promises_namespaceObject = require("node:fs/promises");
 ;// CONCATENATED MODULE: external "node:path"
@@ -100775,100 +100947,6 @@ function expectedChecksum(version, table) {
         throw new Error(`No SHA-256 checksum for php-cs-fixer ${version}. Add it to checksums.txt (see scripts/update-checksums.sh).`);
     }
     return hash;
-}
-
-;// CONCATENATED MODULE: ./src/error-tracking.ts
-// Copyright (c) php-cs-fixer-action contributors
-// SPDX-License-Identifier: MIT
-
-/** Optional webhook for Action failures. No-op when unset; never required in CI. */
-const ERROR_TRACKING_URL_ENV = 'ERROR_TRACKING_URL';
-const ActionStep = {
-    ValidateInputs: 'validate-inputs',
-    DownloadFixer: 'download-fixer',
-    ResolveConfig: 'resolve-config',
-    RunFixer: 'run-fixer',
-    Run: 'run',
-};
-const ActionErrorCode = {
-    InvalidInput: 'INVALID_INPUT',
-    DownloadFailed: 'DOWNLOAD_FAILED',
-    ChecksumMismatch: 'CHECKSUM_MISMATCH',
-    ConfigNotFound: 'CONFIG_NOT_FOUND',
-    FixerFailed: 'FIXER_FAILED',
-    StyleViolations: 'STYLE_VIOLATIONS',
-    Unexpected: 'UNEXPECTED',
-};
-const WEBHOOK_TIMEOUT_MS = 3000;
-class ActionError extends Error {
-    step;
-    code;
-    constructor(step, code, message) {
-        super(message);
-        this.name = 'ActionError';
-        this.step = step;
-        this.code = code;
-    }
-}
-function toActionError(step, code, error) {
-    if (error instanceof ActionError) {
-        return error;
-    }
-    const message = error instanceof Error ? error.message : String(error);
-    return new ActionError(step, code, message);
-}
-function failurePayload(report) {
-    return {
-        step: report.step,
-        code: report.code,
-        message: report.message,
-    };
-}
-function trackingWebhookUrl(env = process.env) {
-    const raw = env[ERROR_TRACKING_URL_ENV]?.trim();
-    if (!raw) {
-        return undefined;
-    }
-    try {
-        const parsed = new URL(raw);
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return undefined;
-        }
-        return raw;
-    }
-    catch {
-        return undefined;
-    }
-}
-async function postTracking(payload, fetchImpl = fetch) {
-    const url = trackingWebhookUrl();
-    if (!url) {
-        return;
-    }
-    try {
-        await fetchImpl(url, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(payload),
-            redirect: 'follow',
-            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
-        });
-    }
-    catch {
-        core.warning('Optional error tracking webhook failed; continuing.');
-    }
-}
-/**
- * Single failure path: structured `{step,code,message}` log, GitHub `::error::`
- * via setFailed (unless `fail: false`), and an optional webhook POST.
- */
-async function reportFailure(report, options = {}) {
-    const payload = failurePayload(report);
-    core.info(JSON.stringify(payload));
-    if (options.fail !== false) {
-        core.setFailed(payload.message);
-    }
-    await postTracking(payload, options.fetchImpl ?? fetch);
 }
 
 ;// CONCATENATED MODULE: ./src/http.ts
@@ -101042,6 +101120,8 @@ function readInputs() {
         mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
         paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
         allowRisky: read('allow-risky', 'PHP_CS_FIXER_ALLOW_RISKY', DEFAULT_ALLOW_RISKY),
+        onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
+        baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
     };
 }
 
@@ -101209,8 +101289,6 @@ async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
     return dest;
 }
 
-;// CONCATENATED MODULE: external "node:child_process"
-const external_node_child_process_namespaceObject = require("node:child_process");
 ;// CONCATENATED MODULE: ./src/run-fixer.ts
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
@@ -101309,6 +101387,8 @@ function toSchemaInputs(inputs) {
         mode: inputs.mode,
         paths: inputs.paths,
         'allow-risky': inputs.allowRisky,
+        'only-changed': inputs.onlyChanged,
+        'base-ref': inputs.baseRef,
     };
 }
 const inputs_schema_SCHEMA_DEFAULTS = {
@@ -101319,6 +101399,8 @@ const inputs_schema_SCHEMA_DEFAULTS = {
     mode: 'check',
     paths: '',
     allowRisky: DEFAULT_ALLOW_RISKY,
+    onlyChanged: 'false',
+    baseRef: '',
 };
 let compiled;
 function compileInputsSchema(schema = loadInputsSchema()) {
@@ -101346,6 +101428,10 @@ function schemaErrorMessage(document, error) {
             return `Invalid use-full-rules '${value}'. Expected true or false.`;
         case 'allow-risky':
             return `Invalid allow-risky '${value}'. Expected yes or no.`;
+        case 'only-changed':
+            return `Invalid only-changed '${value}'. Expected true or false.`;
+        case 'base-ref':
+            return `Invalid base-ref '${value}'. Use a tag, branch, or SHA.`;
         case 'rules-version':
             return value === ''
                 ? 'rules-version must not be empty.'
@@ -101415,9 +101501,9 @@ function isInsideWorkspace(workspace, candidate) {
     const rel = (0,external_node_path_namespaceObject.relative)(root, resolved);
     return rel !== '..' && !rel.startsWith(`..${external_node_path_namespaceObject.sep}`) && !(0,external_node_path_namespaceObject.isAbsolute)(rel);
 }
-function validatePaths(raw, workspace = process.cwd()) {
-    inputs_schema_assertInputsSchema({ ...inputs_schema_SCHEMA_DEFAULTS, paths: raw });
-    for (const path of parsePaths(raw)) {
+/** Fail closed when any path is absolute, traverses parents, or looks like a CLI flag. */
+function assertSafeWorkspacePaths(paths, workspace = process.cwd()) {
+    for (const path of paths) {
         if (path.startsWith('-') ||
             path.startsWith('/') ||
             WINDOWS_ABSOLUTE.test(path) ||
@@ -101426,6 +101512,10 @@ function validatePaths(raw, workspace = process.cwd()) {
             validate_invalidInput(`Invalid path '${path}'. Use a relative path inside the workspace.`);
         }
     }
+}
+function validatePaths(raw, workspace = process.cwd()) {
+    inputs_schema_assertInputsSchema({ ...inputs_schema_SCHEMA_DEFAULTS, paths: raw });
+    assertSafeWorkspacePaths(parsePaths(raw), workspace);
 }
 function validateAllInputs(inputs, workspace = process.cwd()) {
     inputs_schema_assertInputsSchema(inputs);
@@ -101436,18 +101526,45 @@ function validateAllInputs(inputs, workspace = process.cwd()) {
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
+const EMPTY_REPORT = '{"files":[]}';
 const defaultDeps = {
     readInputs: readInputs,
     downloadFixer: downloadFixer,
     resolveConfig: resolveConfig,
     runFixer: runFixer,
+    listChangedPhpPaths: listChangedPhpPaths,
     reportFailure: reportFailure,
 };
+async function resolveFixerPaths(inputs, deps, workspace = process.cwd()) {
+    const pathFilters = parsePaths(inputs.paths);
+    if (inputs.onlyChanged !== 'true') {
+        return pathFilters;
+    }
+    const listChanged = deps.listChangedPhpPaths ?? listChangedPhpPaths;
+    const changed = await listChanged({
+        workspace,
+        baseRef: inputs.baseRef,
+        pathFilters,
+        gitExec: deps.gitExec,
+    });
+    assertSafeWorkspacePaths(changed, workspace);
+    if (changed.length === 0) {
+        core.info('only-changed: no PHP files changed; skipping php-cs-fixer');
+        return 'skip';
+    }
+    core.info(`only-changed: checking ${changed.length} PHP file(s)`);
+    return changed;
+}
 async function executeAction(deps = defaultDeps) {
     const report = deps.reportFailure ?? reportFailure;
     const inputs = deps.readInputs();
     validateAllInputs(inputs);
     const mode = inputs.mode === 'fix' ? 'fix' : 'check';
+    const fixerPaths = await resolveFixerPaths(inputs, deps);
+    if (fixerPaths === 'skip') {
+        core.setOutput('code-style-result', EMPTY_REPORT);
+        return { exitCode: 0, output: EMPTY_REPORT };
+    }
     core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`);
     await deps.downloadFixer(inputs.phpCsFixerVersion);
     core.info(inputs.configPath === ''
@@ -101456,7 +101573,7 @@ async function executeAction(deps = defaultDeps) {
     const configFile = await deps.resolveConfig(inputs);
     const result = await deps.runFixer(configFile, {
         mode,
-        paths: parsePaths(inputs.paths),
+        paths: fixerPaths,
         allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
     });
     core.setOutput('code-style-result', result.output);

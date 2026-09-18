@@ -66,6 +66,8 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
 | allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
+| only-changed | Limit the run to PHP files changed vs `base-ref` (`git diff`). When set, optional `paths` further restrict the set | `false` | `false` | `true` OR `false` |
+| base-ref | Git ref for `only-changed` diffs (e.g. `origin/main`). Defaults to `origin/$GITHUB_BASE_REF` on `pull_request` | `false` | _(empty)_ | tag, branch, SHA… |
 
 ### Unsupported PHP versions
 
@@ -99,7 +101,7 @@ If the cache service is unavailable (local runs, missing permission, fork PR), t
 
 ## Examples
 
-Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations) and [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
+Copy-pasteable consumer workflows live in [`examples/check.yml`](examples/check.yml) (fail CI on violations), [`examples/fix.yml`](examples/fix.yml) (apply fixes and commit them), and [`examples/only-changed.yml`](examples/only-changed.yml) (PR-scoped changed PHP files). Those files include `actions/checkout` and `shivammathur/setup-php`; the snippets below show only the Action step.
 
 ### Simple use with default parameters (shared rules pinned to `v1.0.1`)
 ```yaml
@@ -174,6 +176,24 @@ Risky rules can change behavior in surprising ways. The Action defaults to `allo
     uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     allow-risky: no
+```
+
+### Check only files changed on the PR
+Use `only-changed: true` so the Action runs `git diff` against the PR base (or an explicit `base-ref`) and passes only changed `*.php` files to php-cs-fixer. Checkout must include enough history for the base ref (for example `fetch-depth: 0`). When no PHP files changed, the Action succeeds without running the fixer.
+
+```yaml
+  - uses: actions/checkout@v5
+    with:
+      fetch-depth: 0
+
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    with:
+      only-changed: true
+      # optional: further limit to directories
+      paths: src tests
+      # optional override; defaults to origin/${{ github.base_ref }}
+      # base-ref: origin/main
 ```
 
 ## CI
