@@ -1,7 +1,7 @@
+#!/usr/bin/env node
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
-#!/usr/bin/env node
 /**
  * Rewrite pinned php-cs-fixer version strings after checksums.txt is updated.
  * Env: OLD_TAG, NEW_TAG (vX.Y.Z).
