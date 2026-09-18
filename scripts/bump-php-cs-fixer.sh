@@ -25,11 +25,11 @@ latest_release_tag() {
   if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     args+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
   fi
-  # Write the JSON to a file first. Piping curl into python is Scorecard
-  # Pinned-Dependencies downloadThenRun (the latest tag cannot be hash-pinned).
+  # Write the JSON to a file first. Piping curl into an interpreter is
+  # Scorecard Pinned-Dependencies downloadThenRun (latest tag cannot be hash-pinned).
   payload="$(mktemp)"
   curl "${args[@]}" -o "${payload}" "${url}"
-  tag="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["tag_name"])' "${payload}")"
+  tag="$(node scripts/read-json-field.mjs "${payload}" tag_name)"
   rm -f "${payload}"
   printf '%s\n' "${tag}"
 }
@@ -60,50 +60,7 @@ fi
 echo "Bumping default php-cs-fixer ${CURRENT} -> ${TARGET}"
 bash scripts/update-checksums.sh "${TARGET}"
 
-NEW_TAG="${TARGET}" OLD_TAG="${CURRENT}" python3 - <<'PY'
-import os
-import pathlib
-import re
-
-old = os.environ["OLD_TAG"]
-new = os.environ["NEW_TAG"]
-root = pathlib.Path(".")
-
-inputs = root / "src" / "inputs.ts"
-text = inputs.read_text(encoding="utf-8")
-updated, n = re.subn(
-    r"(DEFAULT_PHP_CS_FIXER_VERSION = ')[^']+(')",
-    rf"\g<1>{new}\2",
-    text,
-    count=1,
-)
-if n != 1:
-    raise SystemExit(f"failed to patch src/inputs.ts ({n} replacements)")
-inputs.write_text(updated, encoding="utf-8")
-
-action = root / "action.yml"
-text = action.read_text(encoding="utf-8")
-updated, n = re.subn(
-    r"(php-cs-fixer-version:\n(?:.*\n)*?    default: )'[^']+'",
-    rf"\1'{new}'",
-    text,
-    count=1,
-)
-if n != 1:
-    raise SystemExit(f"failed to patch action.yml ({n} replacements)")
-action.write_text(updated, encoding="utf-8")
-
-for rel in (
-    "README.md",
-    "CONTRIBUTING.md",
-    "Dockerfile",
-    ".env.example",
-    "scripts/ci-local.sh",
-    "scripts/vendor-php-cs-fixer.sh",
-):
-    path = root / rel
-    path.write_text(path.read_text(encoding="utf-8").replace(old, new), encoding="utf-8")
-PY
+NEW_TAG="${TARGET}" OLD_TAG="${CURRENT}" node scripts/bump-php-cs-fixer-pins.mjs
 
 set_output changed true
 set_output tag "${TARGET}"
