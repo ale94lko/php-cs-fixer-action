@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 1b5020b89566920421947178eb44ffac22958c6065a7f564adac423e1b0ea47d
+// php-cs-fixer-action-src-hash cb8fa3a23f3b203da5bb56bc022770fd292e55e8ecf9d511f56cacb1dea48344
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101145,8 +101145,17 @@ const DOWNLOADED_CONFIG = '.php-cs-fixer.dist.php';
 function rulesFileName(useFullRules) {
     return useFullRules === 'true' ? '.php-cs-fixer.dist.php' : '.php-cs-fixer.dist.min.php';
 }
+const RULES_RAW_ORIGIN = 'https://raw.githubusercontent.com';
+const RULES_REPO_PREFIX = '/ale94lko/php-cs-fixer-rules/';
+/** Build the download URL; reject refs that URL-normalize outside this rules repo. */
 function rulesDownloadUrl(rulesVersion, useFullRules) {
-    return `https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/${rulesVersion}/${rulesFileName(useFullRules)}`;
+    const file = rulesFileName(useFullRules);
+    const expectedPath = `${RULES_REPO_PREFIX}${rulesVersion}/${file}`;
+    const url = new URL(`${RULES_RAW_ORIGIN}${expectedPath}`);
+    if (url.origin !== RULES_RAW_ORIGIN || url.pathname !== expectedPath) {
+        throw new ActionError(ActionStep.ResolveConfig, ActionErrorCode.InvalidInput, `Invalid rules-version '${rulesVersion}'. Use a tag, branch, or SHA.`);
+    }
+    return url.toString();
 }
 async function resolveConfig(inputs, workspace = process.cwd(), options = {}) {
     if (inputs.configPath !== '') {

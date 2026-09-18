@@ -27,8 +27,8 @@
     "rules-version": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^[A-Za-z0-9._/-]+$",
-      "description": "Git ref of ale94lko/php-cs-fixer-rules."
+      "pattern": "^(?!.*\\.\\.)(?!.*(?:^|/)\\.(?:/|$))(?!/)(?!.*//)(?!.*/)[A-Za-z0-9._/-]+$",
+      "description": "Git ref of ale94lko/php-cs-fixer-rules (no .., empty segments, or path escape)."
     },
     "use-full-rules": {
       "type": "string",
