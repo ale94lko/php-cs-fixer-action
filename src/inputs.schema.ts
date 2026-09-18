@@ -22,6 +22,10 @@ export type SchemaInputs = {
   mode: string
   paths: string
   'allow-risky': string
+  'php-bin': string
+  'working-directory': string
+  'using-cache': string
+  'cache-file': string
   'only-changed': string
   'base-ref': string
 }
@@ -43,6 +47,10 @@ export function toSchemaInputs(inputs: ActionInputs): SchemaInputs {
     mode: inputs.mode,
     paths: inputs.paths,
     'allow-risky': inputs.allowRisky,
+    'php-bin': inputs.phpBin,
+    'working-directory': inputs.workingDirectory,
+    'using-cache': inputs.usingCache,
+    'cache-file': inputs.cacheFile,
     'only-changed': inputs.onlyChanged,
     'base-ref': inputs.baseRef,
   }
@@ -56,6 +64,10 @@ export const SCHEMA_DEFAULTS: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: DEFAULT_ALLOW_RISKY,
+  phpBin: '',
+  workingDirectory: '',
+  usingCache: '',
+  cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
 }
@@ -90,6 +102,14 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
       return `Invalid use-full-rules '${value}'. Expected true or false.`
     case 'allow-risky':
       return `Invalid allow-risky '${value}'. Expected yes or no.`
+    case 'php-bin':
+      return `Invalid php-bin '${value}'. Use php or an absolute path without .. segments.`
+    case 'working-directory':
+      return `Invalid working-directory '${value}'. Use a relative path inside the workspace.`
+    case 'using-cache':
+      return `Invalid using-cache '${value}'. Expected yes, no, or empty.`
+    case 'cache-file':
+      return `Invalid cache-file '${value}'. Use a relative path inside the workspace.`
     case 'only-changed':
       return `Invalid only-changed '${value}'. Expected true or false.`
     case 'base-ref':

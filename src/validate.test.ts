@@ -24,6 +24,10 @@ const valid: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: 'yes',
+  phpBin: '',
+  workingDirectory: '',
+  usingCache: '',
+  cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
 }

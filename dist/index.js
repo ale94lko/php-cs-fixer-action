@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 7d365676e6114fbd32d4b5ed6a902a025751fb4a9b89644ef7eb0f326f5a87e8
+// php-cs-fixer-action-src-hash 4a57eb9370489e5a70747bc9bbbfe45ba2ad12766bddfba1d167a321313fce6b
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101200,6 +101200,8 @@ const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21';
 const DEFAULT_RULES_VERSION = 'v1.0.1';
 /** Default --allow-risky value (keep in sync with action.yml; yes for backward compatibility). */
 const DEFAULT_ALLOW_RISKY = 'yes';
+/** Default PHP executable when `php-bin` is empty. */
+const DEFAULT_PHP_BIN = 'php';
 function read(name, fallbackEnv, defaultValue) {
     const fromAction = core.getInput(name);
     if (fromAction !== '') {
@@ -101217,9 +101219,21 @@ function readInputs() {
         mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
         paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
         allowRisky: read('allow-risky', 'PHP_CS_FIXER_ALLOW_RISKY', DEFAULT_ALLOW_RISKY),
+        phpBin: read('php-bin', 'PHP_CS_FIXER_PHP_BIN', ''),
+        workingDirectory: read('working-directory', 'PHP_CS_FIXER_WORKING_DIRECTORY', ''),
+        usingCache: read('using-cache', 'PHP_CS_FIXER_USING_CACHE', ''),
+        cacheFile: read('cache-file', 'PHP_CS_FIXER_CACHE_FILE', ''),
         onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
         baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
     };
+}
+/** Resolve spawn cwd from the repository workspace and optional working-directory input. */
+function resolveWorkingDirectory(workspace, workingDirectory) {
+    const trimmed = workingDirectory.trim();
+    if (trimmed === '') {
+        return workspace;
+    }
+    return (0,external_node_path_namespaceObject.join)(workspace, trimmed);
 }
 
 ;// CONCATENATED MODULE: ./src/report.ts
@@ -101485,6 +101499,13 @@ const BASE_FIXER_ARGS = [
     '--format=json',
 ];
 const PHP_NOT_FOUND_MESSAGE = 'php was not found on PATH. Install PHP 8.3+ (for example shivammathur/setup-php) before running this Action.';
+function phpNotFoundMessage(phpBin) {
+    const bin = phpBin.trim() === '' ? DEFAULT_PHP_BIN : phpBin.trim();
+    if (bin === DEFAULT_PHP_BIN) {
+        return PHP_NOT_FOUND_MESSAGE;
+    }
+    return `'${bin}' was not found. Install PHP 8.3+ (for example shivammathur/setup-php) or set php-bin to a valid PHP executable.`;
+}
 /** True when spawn/runProcess failed because the php binary is missing. */
 function isPhpMissingError(error) {
     if (!error || typeof error !== 'object') {
@@ -101495,9 +101516,12 @@ function isPhpMissingError(error) {
         return true;
     }
     const message = typeof err.message === 'string' ? err.message : '';
-    return /spawn php.*ENOENT/i.test(message);
+    return /spawn .+ENOENT/i.test(message);
 }
-function buildFixerArgs(configFile, mode = 'check', paths = [], allowRisky = 'yes') {
+function buildFixerArgs(configFile, options = {}) {
+    const mode = options.mode ?? 'check';
+    const paths = options.paths ?? [];
+    const allowRisky = options.allowRisky ?? 'yes';
     const args = [
         BASE_FIXER_ARGS[0],
         BASE_FIXER_ARGS[1],
@@ -101507,6 +101531,14 @@ function buildFixerArgs(configFile, mode = 'check', paths = [], allowRisky = 'ye
     ];
     if (mode === 'check') {
         args.push('--dry-run');
+    }
+    const usingCache = options.usingCache?.trim() ?? '';
+    if (usingCache === 'yes' || usingCache === 'no') {
+        args.push(`--using-cache=${usingCache}`);
+    }
+    const cacheFile = options.cacheFile?.trim() ?? '';
+    if (cacheFile !== '') {
+        args.push(`--cache-file=${cacheFile}`);
     }
     args.push(`--config=${configFile}`, ...paths);
     return args;
@@ -101539,12 +101571,17 @@ function spawnPhp(command, args, options) {
 }
 async function runFixer(configFile, settings = {}) {
     const workspace = settings.workspace ?? process.cwd();
+    const cwd = settings.cwd ?? workspace;
     const runtimeDir = settings.runtimeDir ?? (await ensureActionRuntimeDir());
     const runProcess = settings.runProcess ?? spawnPhp;
     const mode = settings.mode ?? 'check';
     const paths = settings.paths ?? [];
     const allowRisky = settings.allowRisky ?? 'yes';
+    const phpBin = settings.phpBin?.trim() || DEFAULT_PHP_BIN;
     const configPath = (0,external_node_path_namespaceObject.isAbsolute)(configFile) ? configFile : (0,external_node_path_namespaceObject.join)(workspace, configFile);
+    const pathArgs = paths.map((path) => ((0,external_node_path_namespaceObject.isAbsolute)(path) ? path : (0,external_node_path_namespaceObject.join)(workspace, path)));
+    const cacheFile = settings.cacheFile?.trim() ?? '';
+    const cacheFileArg = cacheFile === '' ? '' : (0,external_node_path_namespaceObject.isAbsolute)(cacheFile) ? cacheFile : (0,external_node_path_namespaceObject.join)(workspace, cacheFile);
     try {
         await (0,promises_namespaceObject.access)(configPath, external_node_fs_.constants.F_OK);
     }
@@ -101555,13 +101592,22 @@ async function runFixer(configFile, settings = {}) {
     // Do not inject deprecated PHP_CS_FIXER_IGNORE_ENV. Prefer Config::setUnsupportedPhpVersionAllowed(true)
     // or --allow-unsupported-php-version=yes (see README). Consumers may still set the env themselves.
     try {
-        const result = await runProcess('php', [(0,external_node_path_namespaceObject.join)(runtimeDir, FIXER_BINARY), ...buildFixerArgs(configPath, mode, paths, allowRisky)], { cwd: workspace, env });
+        const result = await runProcess(phpBin, [
+            (0,external_node_path_namespaceObject.join)(runtimeDir, FIXER_BINARY),
+            ...buildFixerArgs(configPath, {
+                mode,
+                paths: pathArgs,
+                allowRisky,
+                usingCache: settings.usingCache,
+                cacheFile: cacheFileArg,
+            }),
+        ], { cwd, env });
         await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(runtimeDir, RESULT_FILE), result.output);
         return result;
     }
     catch (error) {
         if (isPhpMissingError(error)) {
-            throw new ActionError(ActionStep.RunFixer, ActionErrorCode.PhpNotFound, PHP_NOT_FOUND_MESSAGE);
+            throw new ActionError(ActionStep.RunFixer, ActionErrorCode.PhpNotFound, phpNotFoundMessage(phpBin));
         }
         throw toActionError(ActionStep.RunFixer, ActionErrorCode.FixerFailed, error);
     }
@@ -101590,6 +101636,10 @@ function toSchemaInputs(inputs) {
         mode: inputs.mode,
         paths: inputs.paths,
         'allow-risky': inputs.allowRisky,
+        'php-bin': inputs.phpBin,
+        'working-directory': inputs.workingDirectory,
+        'using-cache': inputs.usingCache,
+        'cache-file': inputs.cacheFile,
         'only-changed': inputs.onlyChanged,
         'base-ref': inputs.baseRef,
     };
@@ -101602,6 +101652,10 @@ const inputs_schema_SCHEMA_DEFAULTS = {
     mode: 'check',
     paths: '',
     allowRisky: DEFAULT_ALLOW_RISKY,
+    phpBin: '',
+    workingDirectory: '',
+    usingCache: '',
+    cacheFile: '',
     onlyChanged: 'false',
     baseRef: '',
 };
@@ -101631,6 +101685,14 @@ function schemaErrorMessage(document, error) {
             return `Invalid use-full-rules '${value}'. Expected true or false.`;
         case 'allow-risky':
             return `Invalid allow-risky '${value}'. Expected yes or no.`;
+        case 'php-bin':
+            return `Invalid php-bin '${value}'. Use php or an absolute path without .. segments.`;
+        case 'working-directory':
+            return `Invalid working-directory '${value}'. Use a relative path inside the workspace.`;
+        case 'using-cache':
+            return `Invalid using-cache '${value}'. Expected yes, no, or empty.`;
+        case 'cache-file':
+            return `Invalid cache-file '${value}'. Use a relative path inside the workspace.`;
         case 'only-changed':
             return `Invalid only-changed '${value}'. Expected true or false.`;
         case 'base-ref':
@@ -101723,6 +101785,12 @@ function validatePaths(raw, workspace = process.cwd()) {
 function validateAllInputs(inputs, workspace = process.cwd()) {
     inputs_schema_assertInputsSchema(inputs);
     validatePaths(inputs.paths, workspace);
+    if (inputs.workingDirectory.trim() !== '') {
+        assertSafeWorkspacePaths([inputs.workingDirectory], workspace);
+    }
+    if (inputs.cacheFile.trim() !== '') {
+        assertSafeWorkspacePaths([inputs.cacheFile], workspace);
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/run.ts
@@ -101774,10 +101842,17 @@ async function executeAction(deps = defaultDeps) {
         ? `Downloading rules from php-cs-fixer-rules@${inputs.rulesVersion}`
         : `Using local config: ${inputs.configPath}`);
     const configFile = await deps.resolveConfig(inputs);
+    const workspace = process.cwd();
+    const cwd = resolveWorkingDirectory(workspace, inputs.workingDirectory);
     const result = await deps.runFixer(configFile, {
+        workspace,
+        cwd,
         mode,
         paths: fixerPaths,
         allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
+        phpBin: inputs.phpBin,
+        usingCache: inputs.usingCache,
+        cacheFile: inputs.cacheFile,
     });
     const codeStyleResult = toCodeStyleResult(result.output);
     core.setOutput('code-style-result', codeStyleResult);

@@ -11,7 +11,7 @@ import {
   toActionError,
   type FailureReport,
 } from './error-tracking'
-import { readInputs, type ActionInputs } from './inputs'
+import { readInputs, resolveWorkingDirectory, type ActionInputs } from './inputs'
 import { failWithoutGenericAnnotation, publishReport, toCodeStyleResult, tryParseViolations } from './report'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
@@ -86,10 +86,17 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   )
   const configFile = await deps.resolveConfig(inputs)
 
+  const workspace = process.cwd()
+  const cwd = resolveWorkingDirectory(workspace, inputs.workingDirectory)
   const result = await deps.runFixer(configFile, {
+    workspace,
+    cwd,
     mode,
     paths: fixerPaths,
     allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
+    phpBin: inputs.phpBin,
+    usingCache: inputs.usingCache,
+    cacheFile: inputs.cacheFile,
   })
   const codeStyleResult = toCodeStyleResult(result.output)
   core.setOutput('code-style-result', codeStyleResult)

@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_PHP_CS_FIXER_VERSION, DEFAULT_RULES_VERSION, readInputs } from './inputs'
+import { DEFAULT_PHP_CS_FIXER_VERSION, DEFAULT_RULES_VERSION, readInputs, resolveWorkingDirectory } from './inputs'
 
 vi.mock('@actions/core', () => ({
   getInput: vi.fn(() => ''),
@@ -22,6 +22,10 @@ describe('readInputs', () => {
     delete process.env.PHP_CS_FIXER_MODE
     delete process.env.PHP_CS_FIXER_PATHS
     delete process.env.PHP_CS_FIXER_ALLOW_RISKY
+    delete process.env.PHP_CS_FIXER_PHP_BIN
+    delete process.env.PHP_CS_FIXER_WORKING_DIRECTORY
+    delete process.env.PHP_CS_FIXER_USING_CACHE
+    delete process.env.PHP_CS_FIXER_CACHE_FILE
     delete process.env.PHP_CS_FIXER_ONLY_CHANGED
     delete process.env.PHP_CS_FIXER_BASE_REF
   })
@@ -35,6 +39,10 @@ describe('readInputs', () => {
       mode: 'check',
       paths: '',
       allowRisky: 'yes',
+      phpBin: '',
+      workingDirectory: '',
+      usingCache: '',
+      cacheFile: '',
       onlyChanged: 'false',
       baseRef: '',
     })
@@ -57,6 +65,11 @@ describe('readInputs', () => {
     process.env.PHP_CS_FIXER_MODE = 'fix'
     process.env.PHP_CS_FIXER_PATHS = 'src tests'
     expect(readInputs()).toMatchObject({ mode: 'fix', paths: 'src tests' })
+  })
+
+  it('resolves working-directory under the workspace', () => {
+    expect(resolveWorkingDirectory('/repo', '')).toBe('/repo')
+    expect(resolveWorkingDirectory('/repo', 'packages/api')).toMatch(/packages[/\\]api$/)
   })
 
   it('defaults php-cs-fixer-version and rules-version to release tags aligned with action.yml', () => {

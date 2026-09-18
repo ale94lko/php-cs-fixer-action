@@ -185,6 +185,10 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
       mode: 'check',
       paths: dirtyRel,
       allowRisky: 'yes',
+      phpBin: '',
+      workingDirectory: '',
+      usingCache: '',
+      cacheFile: '',
       onlyChanged: 'false',
       baseRef: '',
     }

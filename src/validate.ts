@@ -74,4 +74,10 @@ export function validatePaths(raw: string, workspace = process.cwd()): void {
 export function validateAllInputs(inputs: ActionInputs, workspace = process.cwd()): void {
   assertInputsSchema(inputs)
   validatePaths(inputs.paths, workspace)
+  if (inputs.workingDirectory.trim() !== '') {
+    assertSafeWorkspacePaths([inputs.workingDirectory], workspace)
+  }
+  if (inputs.cacheFile.trim() !== '') {
+    assertSafeWorkspacePaths([inputs.cacheFile], workspace)
+  }
 }

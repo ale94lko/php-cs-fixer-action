@@ -28,6 +28,10 @@ const valid: ActionInputs = {
   mode: 'check',
   paths: '',
   allowRisky: 'yes',
+  phpBin: '',
+  workingDirectory: '',
+  usingCache: '',
+  cacheFile: '',
   onlyChanged: 'false',
   baseRef: '',
 }
@@ -47,6 +51,10 @@ describe('action.inputs.schema.json', () => {
       'mode',
       'paths',
       'allow-risky',
+      'php-bin',
+      'working-directory',
+      'using-cache',
+      'cache-file',
       'only-changed',
       'base-ref',
     ])
@@ -66,6 +74,10 @@ describe('action.inputs.schema.json', () => {
       mode: actionYaml.match(/^\s*mode:[\s\S]*?default:\s*'?([^'\n]+)'?/m)?.[1],
       paths: '',
       'allow-risky': actionYaml.match(/allow-risky:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
+      'php-bin': '',
+      'working-directory': '',
+      'using-cache': '',
+      'cache-file': '',
       'only-changed': actionYaml.match(/only-changed:[\s\S]*?default:\s*'?([^'\n]+)'?/)?.[1],
       'base-ref': '',
     }
@@ -80,6 +92,12 @@ describe('action.inputs.schema.json', () => {
     expect(() => assertInputsSchema({ ...valid, mode: 'lint' })).toThrow(/Expected check or fix/)
     expect(() => assertInputsSchema({ ...valid, useFullRules: 'yes' })).toThrow(/true or false/)
     expect(() => assertInputsSchema({ ...valid, allowRisky: 'true' })).toThrow(/yes or no/)
+    expect(() => assertInputsSchema({ ...valid, phpBin: '../php' })).toThrow(/php-bin/)
+    expect(() => assertInputsSchema({ ...valid, workingDirectory: '../out' })).toThrow(
+      /working-directory/,
+    )
+    expect(() => assertInputsSchema({ ...valid, usingCache: 'true' })).toThrow(/using-cache/)
+    expect(() => assertInputsSchema({ ...valid, cacheFile: '/tmp/cache' })).toThrow(/cache-file/)
     expect(() => assertInputsSchema({ ...valid, onlyChanged: 'yes' })).toThrow(/true or false/)
     expect(() => assertInputsSchema({ ...valid, baseRef: '../main' })).toThrow(/base-ref/)
     expect(() => assertInputsSchema({ ...valid, rulesVersion: '' })).toThrow(/must not be empty/)
