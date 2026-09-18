@@ -48,6 +48,32 @@ function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
 }
 
+/** True only for https://github.com/... (not github.com.evil.example). */
+function isHttpsGithubCom(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' && parsed.hostname === 'github.com'
+  } catch {
+    return false
+  }
+}
+
+/** Rewrite https://github.com/... to the loopback fixture origin. */
+function rewriteGithubHostToLoopback(input: string, loopbackBase: string): string {
+  try {
+    const parsed = new URL(input)
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'github.com') {
+      return input
+    }
+    const loopback = new URL(loopbackBase)
+    parsed.protocol = loopback.protocol
+    parsed.host = loopback.host
+    return parsed.toString()
+  } catch {
+    return input
+  }
+}
+
 function createFileCache(root: string): PharCache {
   const store = new Map<string, string>()
   return {
@@ -143,7 +169,7 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
     await writeFile(join(workspace, dirtyRel), DIRTY_PHP)
 
     const fetchImpl: typeof fetch = async (input, init) => {
-      const rewritten = String(input).replace('https://github.com', baseUrl)
+      const rewritten = rewriteGithubHostToLoopback(String(input), baseUrl)
       return fetch(rewritten, init)
     }
     const cache = createFileCache(workspace)
@@ -245,7 +271,7 @@ describe('run() integration (loopback download + fixture pipeline)', () => {
     const originalFetch = globalThis.fetch
     globalThis.fetch = (async (input, init) => {
       const url = String(input)
-      if (url.startsWith('https://github.com')) {
+      if (isHttpsGithubCom(url)) {
         liveFetch(url)
       }
       return originalFetch(input, init)
