@@ -10,7 +10,7 @@ import { downloadToFile, type DownloadOptions } from './http'
 
 export const FIXER_BINARY = 'php-cs-fixer'
 
-/** Docker / local path to a pre-verified phar so runtime can stay offline. */
+/** Optional path to a pre-verified phar (e.g. local cache) so runtime can stay offline. */
 export const VENDORED_PHAR_ENV = 'PHP_CS_FIXER_PHAR'
 
 export type DownloadFixerOptions = DownloadOptions & {

@@ -19,7 +19,7 @@ npm run build
 
 That installs the support environment (including Vitest) needed to change the Action and run its tests. Consumers who only *use* the Action should follow the [README Setup](README.md#setup) section instead.
 
-From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a GitHub-release phar (vendored into the Docker image, otherwise downloaded and checksum-verified).
+From a fresh clone, audit the production lockfile (the packages ncc ships in `dist/`). There is no `composer.json`; php-cs-fixer is a GitHub-release phar (downloaded and checksum-verified, or pointed at via `PHP_CS_FIXER_PHAR`).
 
 ```bash
 npm ci
@@ -91,7 +91,7 @@ These checks are **accepted low scores**, not a regression of the Scorecard work
 
 **Token-Permissions** workflow roots are `permissions: {}`, `contents: read`, or `read-all`. Write is only on the jobs that need it: `actions: write` for php-cs-fixer cache in CI ([#62](https://github.com/ale94lko/php-cs-fixer-action/issues/62)), `contents: write` for release / badge / bump / dist commit ([#65](https://github.com/ale94lko/php-cs-fixer-action/issues/65), [#72](https://github.com/ale94lko/php-cs-fixer-action/issues/72), [#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73), [#61](https://github.com/ale94lko/php-cs-fixer-action/issues/61)). Scorecard still **warns** on those job-level writes (it only ignores semantic-release / goreleaser / Maven). Do not raise write back to the workflow root ([#54](https://github.com/ale94lko/php-cs-fixer-action/issues/54)).
 
-**SAST** — CodeQL already runs on every `push` and `pull_request` to `main` with no path filters ([#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)). Scorecard still reports 9/10 when a commit in its recent sample had no `github-code-scanning` check on the associated PR (24/25 today). Dismissing [alert #42](https://github.com/ale94lko/php-cs-fixer-action/security/code-scanning/42) does not stick: the next Scorecard SARIF upload on `main` reopens it until the score is 10. CI also runs Hadolint (`hadolint/hadolint-action`) on `Dockerfile`; Scorecard treats that as a second SAST tool and scores SAST 10, which closes the alert ([#64](https://github.com/ale94lko/php-cs-fixer-action/issues/64)). Do not push commits to `main` outside a pull request, and do not add `paths` filters to `codeql.yml`.
+**SAST** — CodeQL already runs on every `push` and `pull_request` to `main` with no path filters ([#26](https://github.com/ale94lko/php-cs-fixer-action/issues/26)). Scorecard may report below 10 when a commit in its recent sample had no `github-code-scanning` check on the associated PR, or when only one SAST tool is configured (CodeQL). Do not push commits to `main` outside a pull request, and do not add `paths` filters to `codeql.yml`. A former second SAST tool tied to an image build was removed so project-type classifiers treat this as a GitHub Action ([#115](https://github.com/ale94lko/php-cs-fixer-action/issues/115), [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)).
 
 **CI-Tests** — [`ci.yml`](.github/workflows/ci.yml) already runs on every `push` and `pull_request` with no `paths` filters. Scorecard looks for a successful `github-actions` check on each merged PR HEAD ([docs](https://github.com/ossf/scorecard/blob/main/docs/checks.md#ci-tests)). The original 19/20 finding ([alert #36](https://github.com/ale94lko/php-cs-fixer-action/security/code-scanning/36), [#66](https://github.com/ale94lko/php-cs-fixer-action/issues/66)) was a historical sample; the latest Scorecard run on `main` is **26/26, score 10**. Required status checks are a GitHub branch-protection setting, not a workflow file (same limitation as Branch-Protection in [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)). Do not add `paths` filters to `ci.yml`, and do not merge PRs that skipped CI.
 
@@ -122,16 +122,7 @@ Run php-cs-fixer against the clean fixtures. `scripts/ci-local.sh` defaults to `
 bash scripts/ci-local.sh
 ```
 
-Docker vendors the pinned phar during `docker build` (verified against `checksums.txt`). After that, lint the fixtures **offline**:
-
-```bash
-docker build -t php-cs-fixer-action .
-docker run --rm --network=none php-cs-fixer-action
-```
-
-The `FROM` line is digest-pinned (`php:8.3-cli-bookworm@sha256:…`). When bumping the PHP image, refresh that digest with `docker buildx imagetools inspect php:8.3-cli-bookworm --format '{{.Manifest.Digest}}'` (or the Hub tag digest) in the same change.
-
-CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `audit-outdated` (informational `npm outdated` artifact), `commitlint` (Conventional Commits on `pull_request` only), `typecheck`, `test` (Vitest + coverage thresholds, including `tests/integration/`), `docker-offline` (`docker build` then `docker run --network=none`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`. Weekly `dep-freshness.yml` posts the same outdated report to the job summary.
+CI jobs: `lint` (ESLint, ShellCheck, shfmt, actionlint, changelog release-notes tests), `audit` (`npm audit --omit=dev --audit-level=high`), `audit-outdated` (informational `npm outdated` artifact), `commitlint` (Conventional Commits on `pull_request` only), `typecheck`, `test` (Vitest + coverage thresholds, including `tests/integration/`), `check` on clean fixtures, `check` on a dirty fixture (must fail, with file-level annotations rather than a generic `::error::`), and `fix` on a dirty fixture (must rewrite the file). The dirty-fixture check job is expected to fail the Action step; the workflow only fails if that Action *does not* fail. Fixture Action jobs always set `config-path: tests/fixtures/.php-cs-fixer.dist.php`. Weekly `dep-freshness.yml` posts the same outdated report to the job summary.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior.
 

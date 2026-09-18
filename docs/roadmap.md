@@ -13,7 +13,7 @@ What this project intends to do (and not do) over the next year. Updated with re
 
 ## Do not
 
-- Turn this repository into IaC, a Compose stack, or a general PHP application framework.
+- Turn this repository into a general PHP application framework or deployment stack.
 - Replace checksum verification with “download and run” without pins.
 - Drop CodeQL, commitlint, or required review for convenience.
 - Add OSS-Fuzz unless a parser/network attack surface appears that warrants it (Scorecard Fuzzing remains an accepted low).

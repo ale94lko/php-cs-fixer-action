@@ -65,10 +65,9 @@ describe('readInputs', () => {
     )
     expect(fixerMatch?.[1]).toBe(DEFAULT_PHP_CS_FIXER_VERSION)
     expect(rulesMatch?.[1]).toBe(DEFAULT_RULES_VERSION)
-    const dockerfile = readFileSync(join(process.cwd(), 'Dockerfile'), 'utf8')
-    expect(dockerfile).toMatch(
-      new RegExp(`^ARG PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
+    const envExample = readFileSync(join(process.cwd(), '.env.example'), 'utf8')
+    expect(envExample).toMatch(
+      new RegExp(`^PHP_CS_FIXER_VERSION=${DEFAULT_PHP_CS_FIXER_VERSION}$`, 'm'),
     )
-    expect(dockerfile).toMatch(/^FROM php:8\.3-cli-bookworm@sha256:[a-f0-9]{64}$/m)
   })
 })

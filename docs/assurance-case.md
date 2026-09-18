@@ -53,5 +53,5 @@ Documented in [architecture.md](architecture.md) and the [download integrity](..
 ## Evidence
 
 - Unit and integration tests under `src/**/*.test.ts` and `tests/integration/` (Vitest; statement coverage thresholds ≥ 80%).
-- CodeQL and Hadolint on CI; OpenSSF Scorecard on `main`.
+- CodeQL on CI; OpenSSF Scorecard on `main`.
 - OpenSSF Best Practices Passing badge: https://www.bestpractices.dev/projects/6296
