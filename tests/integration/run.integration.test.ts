@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { createHash } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'

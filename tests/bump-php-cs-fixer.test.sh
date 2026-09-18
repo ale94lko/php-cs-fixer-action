@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 # Scorecard Pinned-Dependencies flags piping curl into an interpreter (downloadThenRun).
 set -euo pipefail
 

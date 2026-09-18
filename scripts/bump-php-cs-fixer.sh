@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) php-cs-fixer-action contributors
+# SPDX-License-Identifier: MIT
+
 # Bump the default php-cs-fixer tag together with checksums.txt.
 # Usage: bash scripts/bump-php-cs-fixer.sh [tag]
 # Omit tag to use the latest GitHub Release of PHP-CS-Fixer/PHP-CS-Fixer.

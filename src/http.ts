@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { writeFile } from 'node:fs/promises'
 
 export type FetchLike = typeof fetch

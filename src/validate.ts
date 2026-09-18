@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import type { ActionInputs, ActionMode } from './inputs'

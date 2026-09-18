@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { chmod, copyFile, rm } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { assertChecksum, createGithubPharCache, sha256File, type PharCache } from './cache'

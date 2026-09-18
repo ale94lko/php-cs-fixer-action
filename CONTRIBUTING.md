@@ -64,10 +64,14 @@ Keep changes small: one fix or feature per commit/PR, including the tests that p
 
 ## Project docs
 
-- [GOVERNANCE.md](GOVERNANCE.md) — decision model, roles, access continuity, DCO
+- [GOVERNANCE.md](GOVERNANCE.md) — decision model, roles, access continuity, DCO, 2FA
 - [docs/roadmap.md](docs/roadmap.md) — next-year plans
 - [docs/architecture.md](docs/architecture.md) — high-level design
 - [docs/assurance-case.md](docs/assurance-case.md) — security assurance case
+- [docs/hardening.md](docs/hardening.md) — hardening mechanisms
+- [docs/security-review-2026.md](docs/security-review-2026.md) — security review record
+- [docs/code-review.md](docs/code-review.md) — review requirements
+- [docs/small-tasks.md](docs/small-tasks.md) — starter tasks for new contributors
 - [docs/achievements.md](docs/achievements.md) — public badges and recognition
 - [SECURITY.md](SECURITY.md) — vulnerability reporting and response
 - [docs/dependency-notes.md](docs/dependency-notes.md) — npm / Actions pins
@@ -157,7 +161,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on every PR com
 
 **Formal test policy (required).** As major new functionality is added, tests for that functionality **MUST** be added to the automated suite (Vitest under `src/**/*.test.ts` or `tests/integration/`, or shell tests under `tests/`). Ship each feature or fix with the tests that pin the new behavior in the **same** focused commit or PR. One concern per commit/PR — do not mix unrelated formatting or refactors with the feature. Prefer regression tests when fixing bugs (target: at least half of bugs fixed in a six-month window). Do not rewrite old history to invent that pairing.
 
-Statement coverage is enforced at **≥ 80%** via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
+Statement coverage is enforced at **≥ 90%** statements/lines and **≥ 80%** branches via Vitest thresholds in [`vitest.config.ts`](vitest.config.ts) (`npm run test:coverage`).
 
 ## Workflow
 

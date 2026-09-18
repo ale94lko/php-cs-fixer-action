@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it } from 'vitest'
 import { ActionError } from './error-tracking'
 import {

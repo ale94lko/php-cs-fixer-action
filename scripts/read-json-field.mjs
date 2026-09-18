@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 /**
  * Print a top-level JSON string field from a file.
  * Usage: node scripts/read-json-field.mjs <file> <field>

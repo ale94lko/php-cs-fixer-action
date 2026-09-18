@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import * as core from '@actions/core'
 import type { AnnotationProperties } from '@actions/core'
 import type { ActionMode } from './inputs'

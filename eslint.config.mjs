@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 

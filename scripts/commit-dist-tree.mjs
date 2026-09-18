@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 /**
  * Commit files from DIST_DIR onto BRANCH via the Git Data API.
  *

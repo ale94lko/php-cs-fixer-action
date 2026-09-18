@@ -1,3 +1,6 @@
+// Copyright (c) php-cs-fixer-action contributors
+// SPDX-License-Identifier: MIT
+
 import { access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { join } from 'node:path'
