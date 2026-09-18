@@ -80,3 +80,22 @@ table) and by the loopback integration coverage in
 [`tests/integration/download-fixer.integration.test.ts`](tests/integration/download-fixer.integration.test.ts)
 (download → verify against `checksums.txt` → cache reuse). Checksum mismatch
 paths are also exercised in `src/download-fixer.test.ts` and `src/cache.test.ts`.
+
+### Shared rules (`php-cs-fixer-rules`)
+
+When `config-path` is empty, the Action downloads a config from
+[php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) at
+`rules-version` (`src/resolve-config.ts`). Digests are pinned in
+[`rules-checksums.txt`](rules-checksums.txt) as `<sha256>  <tag>/<filename>`
+(full and min files for each release tag). Verification is **fail-closed**:
+unknown refs, download failures, and digest mismatches abort the Action (they
+do not fall back to an unverified PHP config). Prefer release tags that already
+appear in `rules-checksums.txt`, or set `config-path` to a file in the consumer
+repo. To pin a new tag:
+
+```bash
+bash scripts/update-rules-checksums.sh vX.Y.Z
+```
+
+Coverage: `src/rules-checksums.test.ts` and `src/resolve-config.test.ts`
+(mismatch / missing pin).

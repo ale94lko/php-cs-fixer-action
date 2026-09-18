@@ -66,6 +66,12 @@ When bumping the default `php-cs-fixer-version`, keep `checksums.txt` in the sam
 bash scripts/update-checksums.sh v3.95.21
 ```
 
+When bumping the default `rules-version`, keep `rules-checksums.txt` in the same change:
+
+```bash
+bash scripts/update-rules-checksums.sh v1.0.1
+```
+
 A weekly workflow (`bump-php-cs-fixer.yml`) opens that PR automatically (`bash scripts/bump-php-cs-fixer.sh`, then `npm run build`). It uses top-level `permissions: {}` and grants `contents: write` plus `pull-requests: write` only on the `bump` job. Scorecard **Token-Permissions** still warns on that job-level write ([#73](https://github.com/ale94lko/php-cs-fixer-action/issues/73)); GitHub has no narrower scope for pushing a branch and opening a PR.
 
 Keep changes small: one fix or feature per commit/PR, including the tests that pin the new behavior (see [Commits and tests](#commits-and-tests)).

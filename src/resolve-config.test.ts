@@ -1,12 +1,29 @@
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { access, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import { ActionErrorCode } from './error-tracking'
 import { DOWNLOADED_CONFIG, resolveConfig, rulesDownloadUrl, rulesFileName } from './resolve-config'
+import { loadChecksums, resolveRulesChecksumsPath, rulesChecksumKey } from './rules-checksums'
 import type { ActionInputs } from './inputs'
+
+function sha256(text: string): string {
+  return createHash('sha256').update(text).digest('hex')
+}
+
+function mockDownloadResponse(body: string, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: () => null },
+    body: null,
+    arrayBuffer: async () => new TextEncoder().encode(body).buffer,
+  }
+}
 
 const base: ActionInputs = {
   phpCsFixerVersion: 'v3.95.21',
@@ -74,22 +91,21 @@ describe('resolveConfig', () => {
     )
   })
 
-  it('downloads shared rules when config-path is empty', async () => {
+  it('downloads shared rules when config-path is empty and the digest matches', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: { get: () => null },
-      body: null,
-      arrayBuffer: async () => new TextEncoder().encode('<?php return [];').buffer,
-    })
-    const writeFileImpl = vi.fn().mockResolvedValue(undefined)
+    const body = '<?php return [];'
+    const key = rulesChecksumKey('v1.0.1', 'false')
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse(body))
+    const writeFileImpl = async (path: string, data: Buffer) => {
+      await writeFile(path, data)
+    }
 
     await expect(
       resolveConfig({ ...base, useFullRules: 'false' }, workspace, {
         fetchImpl,
         writeFileImpl,
         runtimeDir: workspace,
+        rulesChecksums: new Map([[key, sha256(body)]]),
       }),
     ).resolves.toBe(join(workspace, DOWNLOADED_CONFIG))
 
@@ -97,5 +113,49 @@ describe('resolveConfig', () => {
       'https://raw.githubusercontent.com/ale94lko/php-cs-fixer-rules/v1.0.1/.php-cs-fixer.dist.min.php',
       expect.objectContaining({ redirect: 'manual' }),
     )
+  })
+
+  it('fails closed on checksum mismatch and removes the download', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const dest = join(workspace, DOWNLOADED_CONFIG)
+    const key = rulesChecksumKey('v1.0.1', 'true')
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse('tampered'))
+    const writeFileImpl = async (path: string, data: Buffer) => {
+      await writeFile(path, data)
+    }
+
+    await expect(
+      resolveConfig(base, workspace, {
+        fetchImpl,
+        writeFileImpl,
+        runtimeDir: workspace,
+        rulesChecksums: new Map([[key, sha256('expected')]]),
+      }),
+    ).rejects.toMatchObject({ code: ActionErrorCode.ChecksumMismatch })
+
+    await expect(access(dest)).rejects.toThrow()
+  })
+
+  it('fails closed when the rules pin is missing', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const fetchImpl = vi.fn()
+
+    await expect(
+      resolveConfig({ ...base, rulesVersion: 'v9.9.9' }, workspace, {
+        fetchImpl,
+        runtimeDir: workspace,
+        rulesChecksums: new Map(),
+      }),
+    ).rejects.toMatchObject({ code: ActionErrorCode.ChecksumMismatch })
+
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+})
+
+describe('committed rules-checksums.txt', () => {
+  it('pins default v1.0.1 full and min configs', async () => {
+    const table = await loadChecksums(resolveRulesChecksumsPath())
+    expect(table.get('v1.0.1/.php-cs-fixer.dist.php')).toMatch(/^[a-f0-9]{64}$/)
+    expect(table.get('v1.0.1/.php-cs-fixer.dist.min.php')).toMatch(/^[a-f0-9]{64}$/)
   })
 })

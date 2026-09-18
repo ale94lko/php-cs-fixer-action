@@ -21,7 +21,7 @@ describe('cache helpers', () => {
   })
 
   it('fails closed on a digest mismatch', () => {
-    expect(() => assertChecksum('aaa', 'bbb', 'v3.95.21')).toThrow(
+    expect(() => assertChecksum('aaa', 'bbb', 'php-cs-fixer v3.95.21')).toThrow(
       /Checksum mismatch for php-cs-fixer v3\.95\.21/,
     )
   })

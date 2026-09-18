@@ -53,7 +53,7 @@ Contributors installing the repo locally should run the one-command check in [Lo
 
 Pin a patch tag (`@v1.0.3`) so CI stays on a known release. Pushing a `vX.Y.Z` tag publishes a GitHub Release from `CHANGELOG.md` and force-updates the floating major tag (`@v1`) so it tracks the latest compatible 1.x. Until that major tag exists, keep using the latest patch tag.
 
-When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` with another tag, branch (for example `main`), or commit SHA when you want a different ref.
+When you do not set `config-path`, the Action downloads shared rules from [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules). By default it pins that package to release tag **`v1.0.1`** (`rules-version`), so CI does not silently pick up changes pushed to `main`. Override `rules-version` only with a ref that already has digests in [`rules-checksums.txt`](rules-checksums.txt) (or add pins with `bash scripts/update-rules-checksums.sh <tag>`). Unpinned refs fail closed; prefer `config-path` for a local consumer config.
 
 ## Parameters
 
@@ -87,7 +87,7 @@ Setting `PHP_CS_FIXER_IGNORE_ENV` in the job environment still works during the 
 
 ## Integrity and cache
 
-The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
+The Action verifies `php-cs-fixer.phar` against the SHA-256 in `checksums.txt` and fails closed on mismatch or a failed download. Shared rules from php-cs-fixer-rules are likewise verified against [`rules-checksums.txt`](rules-checksums.txt) (fail-closed on missing pin or mismatch). Unknown `php-cs-fixer-version` values also fail until their digest is added (`bash scripts/update-checksums.sh vX.Y.Z`). A weekly workflow opens a PR that bumps the default tag and checksum together.
 
 It then caches the phar with `@actions/cache`, keyed by version + hash. Grant cache write so later CI runs can reuse it:
 
@@ -133,7 +133,7 @@ jobs:
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
-+     rules-version: main
++     rules-version: v1.0.1  # must be pinned in rules-checksums.txt
 +     use-full-rules: true
 ```
 
