@@ -31,7 +31,7 @@ jobs:
           coverage: none
 
       - name: Apply coding standards
-        uses: ale94lko/php-cs-fixer-action@v1.0.3
+        uses: ale94lko/php-cs-fixer-action@v1
         with:
           mode: fix
           paths: src tests

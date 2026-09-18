@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* docs: Align README and `examples/` Action pins on `@v1` and clarify major vs patch pinning. [#133](https://github.com/ale94lko/php-cs-fixer-action/issues/133)
 * feature: Accept newline-separated `paths` and a JSON array form so path names may contain spaces. [#131](https://github.com/ale94lko/php-cs-fixer-action/issues/131)
 * feature: Expose `php-bin`, `working-directory`, `using-cache`, and `cache-file` inputs (strict schema; no free-form args). [#130](https://github.com/ale94lko/php-cs-fixer-action/issues/130)
 * test: Cover uncovered error and edge branches in `src/` (http, resolve-config, download-fixer, report, schema). [#129](https://github.com/ale94lko/php-cs-fixer-action/issues/129)
