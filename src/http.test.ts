@@ -30,6 +30,9 @@ describe('assertAllowedDownloadUrl', () => {
     expect(() => assertAllowedDownloadUrl('http://github.com/x')).toThrow(/HTTPS/)
     expect(() => assertAllowedDownloadUrl('https://evil.example/x')).toThrow(/not allowed/)
   })
+  it('rejects an invalid URL string', () => {
+    expect(() => assertAllowedDownloadUrl('not a url')).toThrow(/Invalid download URL/)
+  })
 })
 
 describe('readResponseBodyLimited', () => {
@@ -84,6 +87,31 @@ describe('readResponseBodyLimited', () => {
       ),
     ).rejects.toThrow(/exceeds maxBytes/)
   })
+  it('skips empty stream chunks', async () => {
+    let i = 0
+    const body = {
+      getReader: () => ({
+        read: async () => {
+          if (i === 0) {
+            i++
+            return { done: false as const, value: undefined }
+          }
+          if (i === 1) {
+            i++
+            return { done: false as const, value: new Uint8Array([9]) }
+          }
+          return { done: true as const, value: undefined }
+        },
+        releaseLock: () => undefined,
+        cancel: async () => undefined,
+      }),
+    }
+    const data = await readResponseBodyLimited(
+      { headers: { get: () => null }, body } as unknown as Response,
+      10,
+    )
+    expect(Buffer.from(data)).toEqual(Buffer.from([9]))
+  })
 })
 
 describe('fetchAllowedDownload', () => {
@@ -126,6 +154,36 @@ describe('fetchAllowedDownload', () => {
     expect(response.status).toBe(200)
     expect(fetchImpl).toHaveBeenCalledTimes(2)
     expect(fetchImpl.mock.calls[0]?.[1]).toMatchObject({ redirect: 'manual' })
+  })
+  it('rejects redirects without a Location header', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 302,
+      headers: { get: () => null },
+    })
+    await expect(
+      fetchAllowedDownload(GITHUB_PHAR, {
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        timeoutMs: 1000,
+        maxRedirects: 3,
+      }),
+    ).rejects.toThrow(/without Location/)
+  })
+
+  it('fails closed after too many redirects', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 302,
+      headers: {
+        get: (name: string) =>
+          name === 'location' ? 'https://raw.githubusercontent.com/a/b/c' : null,
+      },
+    })
+    await expect(
+      fetchAllowedDownload(RAW_RULES, {
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        timeoutMs: 1000,
+        maxRedirects: 0,
+      }),
+    ).rejects.toThrow(/Too many redirects/)
   })
 })
 
@@ -195,6 +253,30 @@ describe('downloadToFile', () => {
         retries: 1,
       }),
     ).rejects.toThrow(/maxBytes/)
+  })
+
+  it('uses defaultSleep between retries when sleep is not injected', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, headers: { get: () => null } })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        body: null,
+        arrayBuffer: async () => new TextEncoder().encode('ok').buffer,
+      })
+    const writeFileImpl = vi.fn().mockResolvedValue(undefined)
+
+    await downloadToFile(GITHUB_PHAR, 'php-cs-fixer', {
+      fetchImpl,
+      writeFileImpl,
+      retries: 2,
+      delayMs: 1,
+    })
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+    expect(writeFileImpl).toHaveBeenCalledOnce()
   })
 
   it('surfaces AbortSignal timeout errors', async () => {

@@ -150,6 +150,92 @@ describe('resolveConfig', () => {
 
     expect(fetchImpl).not.toHaveBeenCalled()
   })
+
+  it('rethrows ActionError from rulesDownloadUrl without remapping', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const key = rulesChecksumKey('../escape', 'true')
+    await expect(
+      resolveConfig({ ...base, rulesVersion: '../escape' }, workspace, {
+        runtimeDir: workspace,
+        rulesChecksums: new Map([[key, 'a'.repeat(64)]]),
+        fetchImpl: vi.fn(),
+      }),
+    ).rejects.toMatchObject({
+      step: 'resolve-config',
+      code: ActionErrorCode.InvalidInput,
+    })
+  })
+
+  it('wraps download failures as DOWNLOAD_FAILED', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const key = rulesChecksumKey('v1.0.1', 'true')
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      headers: { get: () => null },
+    })
+
+    await expect(
+      resolveConfig(base, workspace, {
+        fetchImpl,
+        runtimeDir: workspace,
+        rulesChecksums: new Map([[key, 'a'.repeat(64)]]),
+        retries: 1,
+        delayMs: 1,
+      }),
+    ).rejects.toMatchObject({ code: ActionErrorCode.DownloadFailed })
+  })
+
+  it('loads rules-checksums from disk when the table is not injected', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const body = '<?php return [];'
+    const key = rulesChecksumKey('v1.0.1', 'true')
+    const checksumsPath = join(workspace, 'rules-checksums.txt')
+    await writeFile(checksumsPath, `${sha256(body)}  ${key}\n`)
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse(body))
+    const writeFileImpl = async (path: string, data: Buffer) => {
+      await writeFile(path, data)
+    }
+
+    await expect(
+      resolveConfig(base, workspace, {
+        fetchImpl,
+        writeFileImpl,
+        runtimeDir: workspace,
+        rulesChecksumsPath: checksumsPath,
+      }),
+    ).resolves.toBe(join(workspace, DOWNLOADED_CONFIG))
+  })
+
+  it('uses RUNNER_TEMP when runtimeDir is omitted', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const body = '<?php return [];'
+    const key = rulesChecksumKey('v1.0.1', 'true')
+    const checksumsPath = join(workspace, 'rules-checksums.txt')
+    await writeFile(checksumsPath, `${sha256(body)}  ${key}\n`)
+    const previous = process.env.RUNNER_TEMP
+    process.env.RUNNER_TEMP = workspace
+    const fetchImpl = vi.fn().mockResolvedValue(mockDownloadResponse(body))
+    const writeFileImpl = async (path: string, data: Buffer) => {
+      await writeFile(path, data)
+    }
+
+    try {
+      const dest = await resolveConfig(base, workspace, {
+        fetchImpl,
+        writeFileImpl,
+        rulesChecksumsPath: checksumsPath,
+      })
+      expect(dest).toContain(DOWNLOADED_CONFIG)
+      expect(fetchImpl).toHaveBeenCalledOnce()
+    } finally {
+      if (previous === undefined) {
+        delete process.env.RUNNER_TEMP
+      } else {
+        process.env.RUNNER_TEMP = previous
+      }
+    }
+  })
 })
 
 describe('committed rules-checksums.txt', () => {
