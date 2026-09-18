@@ -102,23 +102,39 @@ describe('runFixer', () => {
     }
   })
 
-  it('spawnPhp captures stdout from a child process', async () => {
+  it('spawnPhp captures stdout only in output', async () => {
     const result = await spawnPhp(process.execPath, ['-e', 'process.stdout.write("hi")'], {
       cwd: process.cwd(),
       env: process.env,
     })
     expect(result.exitCode).toBe(0)
     expect(result.output).toBe('hi')
+    expect(result.stderr).toBe('')
   })
 
-  it('spawnPhp captures stderr and non-zero exit codes', async () => {
+  it('spawnPhp keeps stderr out of output while capturing exit codes', async () => {
     const result = await spawnPhp(
       process.execPath,
       ['-e', 'process.stderr.write("err"); process.exit(2)'],
       { cwd: process.cwd(), env: process.env },
     )
     expect(result.exitCode).toBe(2)
-    expect(result.output).toBe('err')
+    expect(result.output).toBe('')
+    expect(result.stderr).toBe('err')
+  })
+
+  it('spawnPhp does not mix stderr deprecation noise into stdout JSON', async () => {
+    const script = [
+      'process.stderr.write("Deprecated: PHP_CS_FIXER_IGNORE_ENV {legacy}\\n");',
+      'process.stdout.write("{\\"files\\":[]}");',
+    ].join('')
+    const result = await spawnPhp(process.execPath, ['-e', script], {
+      cwd: process.cwd(),
+      env: process.env,
+    })
+    expect(result.output).toBe('{"files":[]}')
+    expect(result.stderr).toContain('PHP_CS_FIXER_IGNORE_ENV')
+    expect(result.output).not.toContain('Deprecated')
   })
 
   it('spawnPhp rejects with ENOENT when the command is missing', async () => {

@@ -13,7 +13,10 @@ import { RESULT_FILE, ensureActionRuntimeDir } from './runtime-dir'
 
 export type FixerResult = {
   exitCode: number
+  /** stdout only — php-cs-fixer JSON when using --format=json */
   output: string
+  /** stderr text (also streamed to the job log); never mixed into output */
+  stderr?: string
 }
 
 export type RunProcess = (
@@ -86,20 +89,22 @@ export function spawnPhp(
       env: options.env,
       windowsHide: true,
     })
-    let output = ''
+    let stdout = ''
+    let stderr = ''
     child.stdout.on('data', (chunk: Buffer) => {
       const text = chunk.toString()
-      output += text
+      stdout += text
       process.stdout.write(text)
     })
     child.stderr.on('data', (chunk: Buffer) => {
       const text = chunk.toString()
-      output += text
+      stderr += text
+      // Keep deprecation / diagnostic noise in job logs only — not in code-style-result.
       process.stderr.write(text)
     })
     child.on('error', reject)
     child.on('close', (code) => {
-      resolve({ exitCode: code ?? 1, output })
+      resolve({ exitCode: code ?? 1, output: stdout, stderr })
     })
   })
 }

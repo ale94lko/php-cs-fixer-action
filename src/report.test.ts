@@ -7,6 +7,7 @@ import {
   extractJsonObject,
   firstChangedLine,
   parseViolations,
+  toCodeStyleResult,
   toRepoPath,
   tryParseViolations,
 } from './report'
@@ -39,8 +40,22 @@ describe('extractJsonObject', () => {
     expect(extractJsonObject(raw)).toEqual(sampleReport)
   })
 
+  it('skips preamble braces and trailing noise around the report', () => {
+    const report = JSON.stringify({ files: [] })
+    const raw = `Deprecated: use {legacy} flag\n${report}\nFixed all the {things}`
+    expect(extractJsonObject(raw)).toEqual({ files: [] })
+    expect(toCodeStyleResult(raw)).toBe('{"files":[]}')
+  })
+
+  it('toCodeStyleResult returns pure JSON without preamble', () => {
+    const report = JSON.stringify(sampleReport)
+    expect(toCodeStyleResult(`noise\n${report}\ntrail`)).toBe(report)
+    expect(() => JSON.parse(toCodeStyleResult(`noise\n${report}\ntrail`))).not.toThrow()
+  })
+
   it('fails when no JSON object is present', () => {
     expect(() => extractJsonObject('not json')).toThrow(/JSON report/)
+    expect(toCodeStyleResult('not json')).toBe('{"files":[]}')
   })
 })
 

@@ -12,7 +12,7 @@ import {
   type FailureReport,
 } from './error-tracking'
 import { readInputs, type ActionInputs } from './inputs'
-import { failWithoutGenericAnnotation, publishReport, tryParseViolations } from './report'
+import { failWithoutGenericAnnotation, publishReport, toCodeStyleResult, tryParseViolations } from './report'
 import { resolveConfig } from './resolve-config'
 import { runFixer, type FixerResult } from './run-fixer'
 import { assertSafeWorkspacePaths, parsePaths, validateAllInputs } from './validate'
@@ -73,7 +73,7 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   const fixerPaths = await resolveFixerPaths(inputs, deps)
   if (fixerPaths === 'skip') {
     core.setOutput('code-style-result', EMPTY_REPORT)
-    return { exitCode: 0, output: EMPTY_REPORT }
+    return { exitCode: 0, output: EMPTY_REPORT, stderr: '' }
   }
 
   core.info(`Resolving php-cs-fixer ${inputs.phpCsFixerVersion}`)
@@ -91,7 +91,8 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
     paths: fixerPaths,
     allowRisky: inputs.allowRisky === 'no' ? 'no' : 'yes',
   })
-  core.setOutput('code-style-result', result.output)
+  const codeStyleResult = toCodeStyleResult(result.output)
+  core.setOutput('code-style-result', codeStyleResult)
 
   const violations = tryParseViolations(result.output)
   await publishReport(violations, mode)
@@ -113,7 +114,7 @@ export async function executeAction(deps: ActionDeps = defaultDeps): Promise<Fix
   await report({
     step: ActionStep.RunFixer,
     code: ActionErrorCode.FixerFailed,
-    message: result.output.trim() || 'php-cs-fixer failed.',
+    message: (result.stderr ?? '').trim() || result.output.trim() || 'php-cs-fixer failed.',
   })
   return result
 }
