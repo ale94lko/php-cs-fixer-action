@@ -6,6 +6,7 @@ This file contains changelogs for stable releases only.
 Changelog for next
 ------------------
 
+* feature: Expose `php-bin`, `working-directory`, `using-cache`, and `cache-file` inputs (strict schema; no free-form args). [#130](https://github.com/ale94lko/php-cs-fixer-action/issues/130)
 * test: Cover uncovered error and edge branches in `src/` (http, resolve-config, download-fixer, report, schema). [#129](https://github.com/ale94lko/php-cs-fixer-action/issues/129)
 * fix: Keep `code-style-result` as pure fixer JSON; stderr stays in job logs only. [#121](https://github.com/ale94lko/php-cs-fixer-action/issues/121)
 * fix: Fail with `PHP_NOT_FOUND` (and mention `shivammathur/setup-php`) when `php` is missing from PATH. [#128](https://github.com/ale94lko/php-cs-fixer-action/issues/128)

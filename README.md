@@ -66,6 +66,10 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
 | paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
 | allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
+| php-bin | PHP executable to spawn (`php` on PATH when empty) | `false` | _(empty → `php`)_ | e.g. `php`, `/usr/bin/php` |
+| working-directory | Subdirectory of the workspace used as the fixer process cwd | `false` | _(empty → repo root)_ | e.g. `packages/api` |
+| using-cache | Pass `--using-cache=yes\|no`. Empty leaves the php-cs-fixer default | `false` | _(empty)_ | `yes` OR `no` |
+| cache-file | Relative workspace path for `--cache-file`. Empty omits the flag | `false` | _(empty)_ | e.g. `.php-cs-fixer.cache` |
 | only-changed | Limit the run to PHP files changed vs `base-ref` (`git diff`). When set, optional `paths` further restrict the set | `false` | `false` | `true` OR `false` |
 | base-ref | Git ref for `only-changed` diffs (e.g. `origin/main`). Defaults to `origin/$GITHUB_BASE_REF` on `pull_request` | `false` | _(empty)_ | tag, branch, SHA… |
 
@@ -178,6 +182,19 @@ Risky rules can change behavior in surprising ways. The Action defaults to `allo
     uses: ale94lko/php-cs-fixer-action@v1.0.3
 +   with:
 +     allow-risky: no
+```
+
+### PHP binary, cwd, and fixer cache
+
+Use `php-bin` when PHP is not on `PATH` as `php`. Set `working-directory` to run the fixer with that subdirectory as cwd (config and path arguments stay resolved from the repository root). Optionally pass php-cs-fixer cache knobs:
+
+```yaml
+- uses: ale94lko/php-cs-fixer-action@v1.0.3
+  with:
+    php-bin: php
+    working-directory: packages/api
+    using-cache: yes
+    cache-file: .php-cs-fixer.cache
 ```
 
 ### Check only files changed on the PR

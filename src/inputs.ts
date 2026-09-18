@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import * as core from '@actions/core'
+import { join } from 'node:path'
 
 /** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
 export const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21'
@@ -12,9 +13,14 @@ export const DEFAULT_RULES_VERSION = 'v1.0.1'
 /** Default --allow-risky value (keep in sync with action.yml; yes for backward compatibility). */
 export const DEFAULT_ALLOW_RISKY = 'yes'
 
+/** Default PHP executable when `php-bin` is empty. */
+export const DEFAULT_PHP_BIN = 'php'
+
 export type ActionMode = 'check' | 'fix'
 
 export type AllowRisky = 'yes' | 'no'
+
+export type UsingCache = '' | 'yes' | 'no'
 
 export type ActionInputs = {
   phpCsFixerVersion: string
@@ -24,6 +30,10 @@ export type ActionInputs = {
   mode: string
   paths: string
   allowRisky: string
+  phpBin: string
+  workingDirectory: string
+  usingCache: string
+  cacheFile: string
   onlyChanged: string
   baseRef: string
 }
@@ -46,7 +56,20 @@ export function readInputs(): ActionInputs {
     mode: read('mode', 'PHP_CS_FIXER_MODE', 'check'),
     paths: read('paths', 'PHP_CS_FIXER_PATHS', ''),
     allowRisky: read('allow-risky', 'PHP_CS_FIXER_ALLOW_RISKY', DEFAULT_ALLOW_RISKY),
+    phpBin: read('php-bin', 'PHP_CS_FIXER_PHP_BIN', ''),
+    workingDirectory: read('working-directory', 'PHP_CS_FIXER_WORKING_DIRECTORY', ''),
+    usingCache: read('using-cache', 'PHP_CS_FIXER_USING_CACHE', ''),
+    cacheFile: read('cache-file', 'PHP_CS_FIXER_CACHE_FILE', ''),
     onlyChanged: read('only-changed', 'PHP_CS_FIXER_ONLY_CHANGED', 'false'),
     baseRef: read('base-ref', 'PHP_CS_FIXER_BASE_REF', ''),
   }
+}
+
+/** Resolve spawn cwd from the repository workspace and optional working-directory input. */
+export function resolveWorkingDirectory(workspace: string, workingDirectory: string): string {
+  const trimmed = workingDirectory.trim()
+  if (trimmed === '') {
+    return workspace
+  }
+  return join(workspace, trimmed)
 }

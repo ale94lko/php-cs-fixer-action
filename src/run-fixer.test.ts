@@ -206,28 +206,79 @@ describe('runFixer', () => {
 
     const args = runProcess.mock.calls[0]?.[1] as string[]
     expect(args).not.toContain('--dry-run')
-    expect(args).toContain('src')
+    expect(args).toContain(join(workspace, 'src'))
     expect(args).toContain(`--config=${join(workspace, 'config.php')}`)
+  })
+  it('spawns a custom php-bin with working-directory and cache flags', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile, mkdir } = await import('node:fs/promises')
+    await mkdir(join(workspace, 'app'), { recursive: true })
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+    const runProcess = vi.fn().mockResolvedValue({ exitCode: 0, output: '{}', stderr: '' })
+
+    await runFixer('config.php', {
+      workspace,
+      cwd: join(workspace, 'app'),
+      runtimeDir: workspace,
+      runProcess,
+      phpBin: '/usr/bin/php8.3',
+      usingCache: 'yes',
+      cacheFile: '.php-cs-fixer.cache',
+      paths: ['src'],
+    })
+
+    expect(runProcess).toHaveBeenCalledWith(
+      '/usr/bin/php8.3',
+      expect.arrayContaining([
+        join(workspace, 'php-cs-fixer'),
+        '--using-cache=yes',
+        `--cache-file=${join(workspace, '.php-cs-fixer.cache')}`,
+        join(workspace, 'src'),
+      ]),
+      expect.objectContaining({ cwd: join(workspace, 'app') }),
+    )
   })
 })
 
 describe('buildFixerArgs', () => {
   it('includes --dry-run in check mode and defaults allow-risky to yes', () => {
-    expect(buildFixerArgs('config.php', 'check')).toContain('--dry-run')
-    expect(buildFixerArgs('config.php', 'check')).toContain('--config=config.php')
-    expect(buildFixerArgs('config.php', 'check')).toContain('--format=json')
-    expect(buildFixerArgs('config.php', 'check')).toContain('--allow-risky=yes')
+    expect(buildFixerArgs('config.php', { mode: 'check' })).toContain('--dry-run')
+    expect(buildFixerArgs('config.php', { mode: 'check' })).toContain('--config=config.php')
+    expect(buildFixerArgs('config.php', { mode: 'check' })).toContain('--format=json')
+    expect(buildFixerArgs('config.php', { mode: 'check' })).toContain('--allow-risky=yes')
   })
 
   it('honors allow-risky=no', () => {
-    expect(buildFixerArgs('config.php', 'check', [], 'no')).toContain('--allow-risky=no')
-    expect(buildFixerArgs('config.php', 'check', [], 'no')).not.toContain('--allow-risky=yes')
+    expect(buildFixerArgs('config.php', { mode: 'check', allowRisky: 'no' })).toContain(
+      '--allow-risky=no',
+    )
+    expect(buildFixerArgs('config.php', { mode: 'check', allowRisky: 'no' })).not.toContain(
+      '--allow-risky=yes',
+    )
   })
 
   it('omits --dry-run in fix mode and appends paths', () => {
-    const args = buildFixerArgs('config.php', 'fix', ['src', 'tests/fixtures/Dirty.php'])
+    const args = buildFixerArgs('config.php', {
+      mode: 'fix',
+      paths: ['src', 'tests/fixtures/Dirty.php'],
+    })
     expect(args).not.toContain('--dry-run')
     expect(args).toContain('--allow-risky=yes')
     expect(args.slice(-3)).toEqual(['--config=config.php', 'src', 'tests/fixtures/Dirty.php'])
+  })
+
+  it('passes using-cache and cache-file when set', () => {
+    const args = buildFixerArgs('config.php', {
+      usingCache: 'no',
+      cacheFile: '.php-cs-fixer.cache',
+    })
+    expect(args).toContain('--using-cache=no')
+    expect(args).toContain('--cache-file=.php-cs-fixer.cache')
+  })
+
+  it('omits cache flags when using-cache and cache-file are empty', () => {
+    const args = buildFixerArgs('config.php', { usingCache: '', cacheFile: '' })
+    expect(args.some((a) => a.startsWith('--using-cache='))).toBe(false)
+    expect(args.some((a) => a.startsWith('--cache-file='))).toBe(false)
   })
 })
