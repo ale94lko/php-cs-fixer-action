@@ -1,7 +1,7 @@
 // Copyright (c) php-cs-fixer-action contributors
 // SPDX-License-Identifier: MIT
 
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -13,6 +13,7 @@ const {
   canonicalizeDistFiles,
   canonicalizeDistText,
   injectSourceHash,
+  normalizeDist,
   readSourceHash,
   sourceHash,
 } = createRequire(join(process.cwd(), 'package.json'))('./scripts/dist-bundle.cjs') as {
@@ -21,6 +22,7 @@ const {
   canonicalizeDistFiles: (distDir: string) => void
   canonicalizeDistText: (text: string) => string
   injectSourceHash: (text: string, hash: string) => string
+  normalizeDist: (root: string) => void
   readSourceHash: (text: string) => string | undefined
   sourceHash: (root: string) => string
 }
@@ -83,5 +85,47 @@ describe('source hash freshness', () => {
       ),
     ).toThrow(/webpackMissingModule/)
     expect(() => assertNoWebpackMissingModule('const cache = require("./cache.js")\n')).not.toThrow()
+  })
+})
+
+describe('normalizeDist', () => {
+  it('canonicalizes dist text files and injects the src-hash banner', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'normalize-dist-'))
+    try {
+      await mkdir(join(root, 'src'), { recursive: true })
+      await mkdir(join(root, 'dist'), { recursive: true })
+      await writeFile(join(root, 'src', 'index.ts'), 'export {}\n')
+      await writeFile(join(root, 'package.json'), '{"name":"fixture"}\n')
+      await writeFile(join(root, 'package-lock.json'), '{"lockfileVersion":3}\n')
+      await writeFile(join(root, 'action.inputs.schema.json'), '{}\n')
+      await writeFile(
+        join(root, 'dist', 'index.js'),
+        'module.exports = {}\r\n\r\n\r\n//# sourceMappingURL=index.js.map\r\n',
+      )
+      await writeFile(join(root, 'dist', 'licenses'), 'MIT\r\n')
+
+      normalizeDist(root)
+
+      const index = await readFile(join(root, 'dist', 'index.js'), 'utf8')
+      const expected = sourceHash(root)
+      expect(readSourceHash(index)).toBe(expected)
+      expect(index).toContain('module.exports = {}')
+      expect(index).not.toContain('sourceMappingURL')
+      expect(index).not.toContain('\r')
+      expect(await readFile(join(root, 'dist', 'licenses'), 'utf8')).toBe('MIT\n')
+      expect(() => assertDistIsFresh(root)).not.toThrow()
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('normalize-dist.cjs delegates to normalizeDist for the repo root', () => {
+    const require = createRequire(join(process.cwd(), 'package.json'))
+    const wrapper = require('node:fs').readFileSync(
+      join(process.cwd(), 'scripts/normalize-dist.cjs'),
+      'utf8',
+    )
+    expect(wrapper).toMatch(/normalizeDist\(/)
+    expect(wrapper).toMatch(/dist-bundle\.cjs/)
   })
 })
