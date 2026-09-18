@@ -18,5 +18,5 @@ Read our [Code of Conduct](https://github.com/ale94lko/php-cs-fixer-action/blob/
    bash scripts/ci-local.sh
    ```
 
-4. Keep changes small: one feature or fix per commit/PR, with tests that pin the new behavior.
+4. Keep changes small: one feature or fix per commit/PR, with tests that pin the new behavior (required for new functionality).
 5. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) if you are solving one.
