@@ -26,7 +26,7 @@ inputs:
     required: false
     default: 'check'
   paths:
-    description: 'Optional space-separated list of files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder.'
+    description: 'Optional files/dirs relative to the workspace. Space-separated, newline-separated (paths may contain spaces), or a JSON string array. Empty uses the config finder.'
     required: false
     default: ''
   allow-risky:

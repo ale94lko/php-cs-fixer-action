@@ -123,7 +123,12 @@ export function schemaErrorMessage(document: SchemaInputs, error: ErrorObject): 
     case 'mode':
       return `Invalid mode '${value}'. Expected check or fix.`
     case 'paths': {
-      const token = value.trim().split(/\s+/).find((part) => part !== '') ?? value
+      const token =
+        value
+          .trim()
+          .split(/[\r\n]+/)
+          .flatMap((line) => (line.trim().startsWith('[') ? [line.trim()] : line.trim().split(/\s+/)))
+          .find((part) => part !== '') ?? value
       return `Invalid path '${token}'. Use a relative path inside the workspace.`
     }
     default:

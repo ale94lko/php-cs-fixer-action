@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 4a57eb9370489e5a70747bc9bbbfe45ba2ad12766bddfba1d167a321313fce6b
+// php-cs-fixer-action-src-hash 52e39ca4f3a5540e61550ef2367a3db0edf64f37f7107abac789765cc0971b41
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -67385,6 +67385,40 @@ class StorageContextClient extends import_src.StorageClient {
 
 /***/ }),
 
+/***/ 83627:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var generatedModels_exports = {};
+__export(generatedModels_exports, {
+  KnownEncryptionAlgorithmType: () => KnownEncryptionAlgorithmType
+});
+module.exports = __toCommonJS(generatedModels_exports);
+var KnownEncryptionAlgorithmType = /* @__PURE__ */ ((KnownEncryptionAlgorithmType2) => {
+  KnownEncryptionAlgorithmType2["AES256"] = "AES256";
+  return KnownEncryptionAlgorithmType2;
+})(KnownEncryptionAlgorithmType || {});
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+/***/ }),
+
 /***/ 30247:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -78137,6 +78171,162 @@ const listType = {
 
 /***/ }),
 
+/***/ 56635:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var appendBlob_exports = {};
+module.exports = __toCommonJS(appendBlob_exports);
+
+/***/ }),
+
+/***/ 68355:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var blob_exports = {};
+module.exports = __toCommonJS(blob_exports);
+
+/***/ }),
+
+/***/ 17188:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var blockBlob_exports = {};
+module.exports = __toCommonJS(blockBlob_exports);
+
+/***/ }),
+
+/***/ 15337:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var container_exports = {};
+module.exports = __toCommonJS(container_exports);
+
+/***/ }),
+
+/***/ 82354:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var operationsInterfaces_exports = {};
+module.exports = __toCommonJS(operationsInterfaces_exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(26865), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(15337), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(68355), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(14400), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(56635), module.exports);
+__reExport(operationsInterfaces_exports, __nccwpck_require__(17188), module.exports);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+/***/ }),
+
+/***/ 14400:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var pageBlob_exports = {};
+module.exports = __toCommonJS(pageBlob_exports);
+
+/***/ }),
+
+/***/ 26865:
+/***/ ((module) => {
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var service_exports = {};
+module.exports = __toCommonJS(service_exports);
+
+/***/ }),
+
 /***/ 40535:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -81690,162 +81880,6 @@ const filterBlobsOperationSpec = {
 
 /***/ }),
 
-/***/ 56635:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var appendBlob_exports = {};
-module.exports = __toCommonJS(appendBlob_exports);
-
-/***/ }),
-
-/***/ 68355:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var blob_exports = {};
-module.exports = __toCommonJS(blob_exports);
-
-/***/ }),
-
-/***/ 17188:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var blockBlob_exports = {};
-module.exports = __toCommonJS(blockBlob_exports);
-
-/***/ }),
-
-/***/ 15337:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var container_exports = {};
-module.exports = __toCommonJS(container_exports);
-
-/***/ }),
-
-/***/ 82354:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var operationsInterfaces_exports = {};
-module.exports = __toCommonJS(operationsInterfaces_exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(26865), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(15337), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(68355), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(14400), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(56635), module.exports);
-__reExport(operationsInterfaces_exports, __nccwpck_require__(17188), module.exports);
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-/***/ }),
-
-/***/ 14400:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var pageBlob_exports = {};
-module.exports = __toCommonJS(pageBlob_exports);
-
-/***/ }),
-
-/***/ 26865:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var service_exports = {};
-module.exports = __toCommonJS(service_exports);
-
-/***/ }),
-
 /***/ 5313:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -81929,40 +81963,6 @@ class StorageClient extends coreHttpCompat.ExtendedServiceClient {
   appendBlob;
   blockBlob;
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-/***/ }),
-
-/***/ 83627:
-/***/ ((module) => {
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var generatedModels_exports = {};
-__export(generatedModels_exports, {
-  KnownEncryptionAlgorithmType: () => KnownEncryptionAlgorithmType
-});
-module.exports = __toCommonJS(generatedModels_exports);
-var KnownEncryptionAlgorithmType = /* @__PURE__ */ ((KnownEncryptionAlgorithmType2) => {
-  KnownEncryptionAlgorithmType2["AES256"] = "AES256";
-  return KnownEncryptionAlgorithmType2;
-})(KnownEncryptionAlgorithmType || {});
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
 
@@ -101706,7 +101706,11 @@ function schemaErrorMessage(document, error) {
         case 'mode':
             return `Invalid mode '${value}'. Expected check or fix.`;
         case 'paths': {
-            const token = value.trim().split(/\s+/).find((part) => part !== '') ?? value;
+            const token = value
+                .trim()
+                .split(/[\r\n]+/)
+                .flatMap((line) => (line.trim().startsWith('[') ? [line.trim()] : line.trim().split(/\s+/)))
+                .find((part) => part !== '') ?? value;
             return `Invalid path '${token}'. Use a relative path inside the workspace.`;
         }
         default:
@@ -101750,12 +101754,38 @@ function validateConfigPath(path) {
 function validateMode(mode) {
     assertInputsSchema({ ...SCHEMA_DEFAULTS, mode });
 }
+/**
+ * Parse the `paths` input.
+ * - Empty → no path args (config finder)
+ * - JSON array string → string elements (supports spaces in path names)
+ * - Newline-separated → one path per line (supports spaces)
+ * - Otherwise → whitespace-separated (backward compatible; no spaces in names)
+ */
 function parsePaths(raw) {
     const trimmed = raw.trim();
     if (trimmed === '') {
         return [];
     }
-    return trimmed.split(/\s+/);
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        let parsed;
+        try {
+            parsed = JSON.parse(trimmed);
+        }
+        catch {
+            validate_invalidInput('Invalid paths JSON. Expected a JSON array of relative workspace path strings.');
+        }
+        if (!Array.isArray(parsed) || !parsed.every((entry) => typeof entry === 'string')) {
+            validate_invalidInput('Invalid paths JSON. Expected a JSON array of relative workspace path strings.');
+        }
+        return parsed.map((entry) => entry.trim()).filter((entry) => entry !== '');
+    }
+    if (/[\r\n]/.test(trimmed)) {
+        return trimmed
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter((line) => line !== '');
+    }
+    return trimmed.split(/\s+/).filter((part) => part !== '');
 }
 function hasParentSegment(path) {
     return path.split(/[\\/]/).includes('..');

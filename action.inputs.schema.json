@@ -47,8 +47,7 @@
     },
     "paths": {
       "type": "string",
-      "pattern": "^$|^(?:(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)(?:\\s+(?!-)(?!/)(?![A-Za-z]:[\\\\/])(?!.*\\.\\.)[^\\s]+)*$",
-      "description": "Empty (use config finder) or space-separated relative workspace paths."
+      "description": "Empty (config finder), space-separated paths, newline-separated paths (may contain spaces), or a JSON string array of relative workspace paths. Safety checks run in validate.ts."
     },
     "allow-risky": {
       "type": "string",
