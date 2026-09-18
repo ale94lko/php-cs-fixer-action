@@ -64,7 +64,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 | rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `v1.0.1` | `v1.0.1`, `main`, SHA… |
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
 | mode | `check` reports violations without writing files (`--dry-run`). `fix` applies changes | `false` | `check` | `check` OR `fix` |
-| paths | Space-separated files or directories, relative to the workspace, passed to php-cs-fixer. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests` |
+| paths | Files/dirs relative to the workspace. Space-separated, newline-separated (may include spaces), or a JSON string array. Empty uses the config finder | `false` | _(empty)_ | e.g. `src tests`, multiline, or `["src/a b.php"]` |
 | allow-risky | Whether php-cs-fixer may run **risky** fixers (`--allow-risky`). Default `yes` keeps prior Action behavior; set `no` to opt out | `false` | `yes` | `yes` OR `no` |
 | php-bin | PHP executable to spawn (`php` on PATH when empty) | `false` | _(empty → `php`)_ | e.g. `php`, `/usr/bin/php` |
 | working-directory | Subdirectory of the workspace used as the fixer process cwd | `false` | _(empty → repo root)_ | e.g. `packages/api` |
@@ -172,6 +172,27 @@ jobs:
     with:
       mode: fix
       paths: src tests
+```
+
+### Paths with spaces or multiline lists
+
+Space-separated values cannot include spaces in a path name. Prefer a **newline-separated** list, or a **JSON string array**:
+
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    with:
+      # one path per line (spaces allowed)
+      paths: |
+        src/with space.php
+        tests
+```
+
+```yaml
+  - name: PHP Code Style
+    uses: ale94lko/php-cs-fixer-action@v1.0.3
+    with:
+      paths: '["src/with space.php", "tests"]'
 ```
 
 ### Disable risky fixers

@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash 4a57eb9370489e5a70747bc9bbbfe45ba2ad12766bddfba1d167a321313fce6b
+// php-cs-fixer-action-src-hash 52e39ca4f3a5540e61550ef2367a3db0edf64f37f7107abac789765cc0971b41
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101706,7 +101706,11 @@ function schemaErrorMessage(document, error) {
         case 'mode':
             return `Invalid mode '${value}'. Expected check or fix.`;
         case 'paths': {
-            const token = value.trim().split(/\s+/).find((part) => part !== '') ?? value;
+            const token = value
+                .trim()
+                .split(/[\r\n]+/)
+                .flatMap((line) => (line.trim().startsWith('[') ? [line.trim()] : line.trim().split(/\s+/)))
+                .find((part) => part !== '') ?? value;
             return `Invalid path '${token}'. Use a relative path inside the workspace.`;
         }
         default:
@@ -101750,12 +101754,38 @@ function validateConfigPath(path) {
 function validateMode(mode) {
     assertInputsSchema({ ...SCHEMA_DEFAULTS, mode });
 }
+/**
+ * Parse the `paths` input.
+ * - Empty → no path args (config finder)
+ * - JSON array string → string elements (supports spaces in path names)
+ * - Newline-separated → one path per line (supports spaces)
+ * - Otherwise → whitespace-separated (backward compatible; no spaces in names)
+ */
 function parsePaths(raw) {
     const trimmed = raw.trim();
     if (trimmed === '') {
         return [];
     }
-    return trimmed.split(/\s+/);
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        let parsed;
+        try {
+            parsed = JSON.parse(trimmed);
+        }
+        catch {
+            validate_invalidInput('Invalid paths JSON. Expected a JSON array of relative workspace path strings.');
+        }
+        if (!Array.isArray(parsed) || !parsed.every((entry) => typeof entry === 'string')) {
+            validate_invalidInput('Invalid paths JSON. Expected a JSON array of relative workspace path strings.');
+        }
+        return parsed.map((entry) => entry.trim()).filter((entry) => entry !== '');
+    }
+    if (/[\r\n]/.test(trimmed)) {
+        return trimmed
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter((line) => line !== '');
+    }
+    return trimmed.split(/\s+/).filter((part) => part !== '');
 }
 function hasParentSegment(path) {
     return path.split(/[\\/]/).includes('..');

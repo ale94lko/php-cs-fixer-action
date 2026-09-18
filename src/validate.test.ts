@@ -139,12 +139,36 @@ describe('parsePaths', () => {
     expect(parsePaths('')).toEqual([])
     expect(parsePaths('  src   tests/Unit  ')).toEqual(['src', 'tests/Unit'])
   })
+
+  it('splits on newlines so paths may contain spaces', () => {
+    expect(parsePaths('src/with space.php\ntests')).toEqual(['src/with space.php', 'tests'])
+    expect(parsePaths('  src/a b.php\r\n\n  tests/Unit  \n')).toEqual([
+      'src/a b.php',
+      'tests/Unit',
+    ])
+  })
+
+  it('parses a JSON array of path strings', () => {
+    expect(parsePaths('["src/with space.php", "tests"]')).toEqual([
+      'src/with space.php',
+      'tests',
+    ])
+    expect(parsePaths('[]')).toEqual([])
+  })
+
+  it('rejects invalid JSON path lists', () => {
+    expect(() => parsePaths('[not-json')).toThrow(/JSON/)
+    expect(() => parsePaths('["src", 1]')).toThrow(/JSON/)
+    expect(() => parsePaths('{}')).toThrow(/JSON/)
+  })
 })
 
 describe('validatePaths', () => {
   it('allows empty and relative workspace paths', () => {
     expect(() => validatePaths('')).not.toThrow()
     expect(() => validatePaths('src tests/fixtures/Dirty.php')).not.toThrow()
+    expect(() => validatePaths('src/with space.php\ntests')).not.toThrow()
+    expect(() => validatePaths('["src/with space.php"]')).not.toThrow()
   })
 
   it('rejects traversal, absolute paths and option-like tokens', () => {
@@ -153,5 +177,6 @@ describe('validatePaths', () => {
     expect(() => validatePaths('C:\\Windows\\secrets.php')).toThrow(/relative path/)
     expect(() => validatePaths('tests/../../etc/passwd')).toThrow(/relative path/)
     expect(() => validatePaths('--allow-risky=yes')).toThrow(/relative path/)
+    expect(() => validatePaths('["../secrets.php"]')).toThrow(/relative path/)
   })
 })

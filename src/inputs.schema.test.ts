@@ -108,7 +108,13 @@ describe('action.inputs.schema.json', () => {
     expect(() => assertInputsSchema({ ...valid, configPath: '../secrets.php' })).toThrow(
       /config-path/,
     )
-    expect(() => assertInputsSchema({ ...valid, paths: '--allow-risky=yes' })).toThrow(/Invalid path/)
+    expect(() => assertInputsSchema({ ...valid, paths: 'src tests' })).not.toThrow()
+    expect(() =>
+      assertInputsSchema({
+        ...valid,
+        paths: '["src/with space.php"]',
+      }),
+    ).not.toThrow()
   })
 
   it('rejects rules-version path traversal and empty path segments', () => {

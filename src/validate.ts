@@ -32,12 +32,41 @@ export function validateMode(mode: string): asserts mode is ActionMode {
   assertInputsSchema({ ...SCHEMA_DEFAULTS, mode })
 }
 
+/**
+ * Parse the `paths` input.
+ * - Empty → no path args (config finder)
+ * - JSON array string → string elements (supports spaces in path names)
+ * - Newline-separated → one path per line (supports spaces)
+ * - Otherwise → whitespace-separated (backward compatible; no spaces in names)
+ */
 export function parsePaths(raw: string): string[] {
   const trimmed = raw.trim()
   if (trimmed === '') {
     return []
   }
-  return trimmed.split(/\s+/)
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(trimmed) as unknown
+    } catch {
+      invalidInput(
+        'Invalid paths JSON. Expected a JSON array of relative workspace path strings.',
+      )
+    }
+    if (!Array.isArray(parsed) || !parsed.every((entry) => typeof entry === 'string')) {
+      invalidInput(
+        'Invalid paths JSON. Expected a JSON array of relative workspace path strings.',
+      )
+    }
+    return (parsed as string[]).map((entry) => entry.trim()).filter((entry) => entry !== '')
+  }
+  if (/[\r\n]/.test(trimmed)) {
+    return trimmed
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== '')
+  }
+  return trimmed.split(/\s+/).filter((part) => part !== '')
 }
 
 function hasParentSegment(path: string): boolean {
