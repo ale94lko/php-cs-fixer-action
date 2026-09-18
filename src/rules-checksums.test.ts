@@ -30,6 +30,14 @@ describe('expectedRulesChecksum', () => {
   })
 })
 
+describe('resolveRulesChecksumsPath', () => {
+  it('fails when rules-checksums.txt is missing', () => {
+    expect(() => resolveRulesChecksumsPath('/no-such-cwd', '/no-such-dir')).toThrow(
+      /rules-checksums.txt was not found/,
+    )
+  })
+})
+
 describe('committed rules-checksums.txt', () => {
   it('is loadable next to action.yml', async () => {
     const table = await loadChecksums(resolveRulesChecksumsPath())

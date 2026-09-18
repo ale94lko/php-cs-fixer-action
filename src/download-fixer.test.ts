@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PharCache } from './cache'
+import { ActionError, ActionErrorCode, ActionStep } from './error-tracking'
 import { downloadFixer, fixerReleaseUrl, VENDORED_PHAR_ENV } from './download-fixer'
 
 function sha256(text: string): string {
@@ -198,5 +199,26 @@ describe('downloadFixer', () => {
       cache: noopCache,
     })
     await expect(readFile(join(workspace, 'php-cs-fixer'), 'utf8')).resolves.toBe('phar')
+  })
+
+  it('rethrows ActionError from cache restore without wrapping', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const boom = new ActionError(
+      ActionStep.DownloadFixer,
+      ActionErrorCode.DownloadFailed,
+      'cache restore failed',
+    )
+    await expect(
+      downloadFixer('v3.95.21', workspace, {
+        checksums: new Map([['v3.95.21', sha256('phar')]]),
+        cache: {
+          restore: async () => {
+            throw boom
+          },
+          save: vi.fn(),
+        },
+        fetchImpl: vi.fn(),
+      }),
+    ).rejects.toBe(boom)
   })
 })

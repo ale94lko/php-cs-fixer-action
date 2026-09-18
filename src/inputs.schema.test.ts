@@ -15,8 +15,10 @@ import {
   assertInputsSchema,
   compileInputsSchema,
   loadInputsSchema,
+  schemaErrorMessage,
   toSchemaInputs,
 } from './inputs.schema'
+import type { ErrorObject } from 'ajv'
 
 const valid: ActionInputs = {
   phpCsFixerVersion: DEFAULT_PHP_CS_FIXER_VERSION,
@@ -103,5 +105,35 @@ describe('action.inputs.schema.json', () => {
     )
     expect(() => assertInputsSchema({ ...valid, rulesVersion: 'main/' })).toThrow(/rules-version/)
     expect(() => assertInputsSchema({ ...valid, rulesVersion: '/main' })).toThrow(/rules-version/)
+  })
+})
+
+describe('schemaErrorMessage', () => {
+  it('uses the default message branch for unknown fields', () => {
+    const document = toSchemaInputs(valid)
+    expect(
+      schemaErrorMessage(document, {
+        instancePath: '/unknown-field',
+        message: 'must be string',
+        params: {},
+      } as ErrorObject),
+    ).toBe('Invalid Action inputs: must be string')
+    expect(
+      schemaErrorMessage(document, {
+        instancePath: '',
+        message: undefined,
+        params: {},
+      } as ErrorObject),
+    ).toBe('Invalid Action inputs.')
+  })
+
+  it('returns an empty field value when the instance path is missing', () => {
+    expect(
+      schemaErrorMessage(toSchemaInputs(valid), {
+        instancePath: '/not-a-real-key',
+        message: 'bad',
+        params: {},
+      } as ErrorObject),
+    ).toMatch(/Invalid Action inputs/)
   })
 })

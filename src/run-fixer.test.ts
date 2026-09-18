@@ -59,6 +59,37 @@ describe('runFixer', () => {
     ).rejects.toMatchObject({ code: ActionErrorCode.FixerFailed })
   })
 
+  it('applies runFixer defaults for mode, paths, and allowRisky', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+    const runProcess = vi.fn().mockResolvedValue({ exitCode: 0, output: '{}', stderr: '' })
+
+    await runFixer(join(workspace, 'config.php'), {
+      workspace,
+      runtimeDir: workspace,
+      runProcess,
+    })
+
+    const args = runProcess.mock.calls[0]?.[1] as string[]
+    expect(args).toContain('--dry-run')
+    expect(args).toContain('--allow-risky=yes')
+    expect(args.at(-1)).toContain('config.php')
+  })
+
+  it('wraps non-Error spawn rejections as FIXER_FAILED', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
+    const { writeFile } = await import('node:fs/promises')
+    await writeFile(join(workspace, 'config.php'), '<?php\n')
+    const runProcess = vi.fn().mockRejectedValue('spawn blew up')
+    await expect(
+      runFixer('config.php', { workspace, runtimeDir: workspace, runProcess }),
+    ).rejects.toMatchObject({
+      code: ActionErrorCode.FixerFailed,
+      message: 'spawn blew up',
+    })
+  })
+
   it('runs php-cs-fixer dry-run and writes result.txt under the runtime dir', async () => {
     const workspace = await mkdtemp(join(tmpdir(), 'php-cs-fixer-action-'))
     const { writeFile, readFile } = await import('node:fs/promises')
