@@ -37,3 +37,10 @@ describe('resolveRulesChecksumsPath', () => {
     )
   })
 })
+
+describe('committed rules-checksums.txt', () => {
+  it('is loadable next to action.yml', async () => {
+    const table = await loadChecksums(resolveRulesChecksumsPath())
+    expect(table.size).toBeGreaterThanOrEqual(2)
+  })
+})
