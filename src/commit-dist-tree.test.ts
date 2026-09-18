@@ -4,17 +4,52 @@
 import { mkdir, mkdtemp, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it, vi } from 'vitest'
-import {
-  CommitDistError,
-  api,
-  assertDistDir,
-  distFiles,
-  encodePathSegment,
-  env,
-  fail,
-  runCommitDistTree,
-} from '../scripts/commit-dist-tree.mjs'
+import { pathToFileURL } from 'node:url'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+
+type CommitDistTree = {
+  CommitDistError: new (message?: string) => Error
+  fail: (message: string) => never
+  env: (name: string, source?: NodeJS.ProcessEnv) => string
+  encodePathSegment: (value: string) => string
+  api: (
+    token: string,
+    method: string,
+    path: string,
+    body?: unknown,
+    fetchImpl?: typeof fetch,
+  ) => Promise<Record<string, unknown>>
+  distFiles: (root: string) => Array<[string, string]>
+  assertDistDir: (distDir: string) => string
+  runCommitDistTree: (options?: {
+    envSource?: NodeJS.ProcessEnv
+    fetchImpl?: typeof fetch
+    log?: (message: string) => void
+  }) => Promise<{ updated: false } | { updated: true; sha: string }>
+}
+
+let CommitDistError: CommitDistTree['CommitDistError']
+let fail: CommitDistTree['fail']
+let env: CommitDistTree['env']
+let encodePathSegment: CommitDistTree['encodePathSegment']
+let api: CommitDistTree['api']
+let distFiles: CommitDistTree['distFiles']
+let assertDistDir: CommitDistTree['assertDistDir']
+let runCommitDistTree: CommitDistTree['runCommitDistTree']
+
+beforeAll(async () => {
+  const mod = (await import(
+    pathToFileURL(join(process.cwd(), 'scripts/commit-dist-tree.mjs')).href
+  )) as CommitDistTree
+  CommitDistError = mod.CommitDistError
+  fail = mod.fail
+  env = mod.env
+  encodePathSegment = mod.encodePathSegment
+  api = mod.api
+  distFiles = mod.distFiles
+  assertDistDir = mod.assertDistDir
+  runCommitDistTree = mod.runCommitDistTree
+})
 
 describe('encodePathSegment', () => {
   it('encodes each path segment for the GitHub API', () => {
@@ -184,7 +219,7 @@ describe('runCommitDistTree', () => {
           PARENT_SHA: 'parent',
         },
         fetchImpl: fetchImpl as unknown as typeof fetch,
-        log: (message) => messages.push(message),
+        log: (message: string) => messages.push(message),
       })
 
       expect(result).toEqual({ updated: true, sha: 'commit-1' })
@@ -236,7 +271,7 @@ describe('runCommitDistTree', () => {
           PARENT_SHA: 'parent',
         },
         fetchImpl: fetchImpl as unknown as typeof fetch,
-        log: (message) => messages.push(message),
+        log: (message: string) => messages.push(message),
       })
 
       expect(result).toEqual({ updated: false })
