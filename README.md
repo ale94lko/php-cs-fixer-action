@@ -19,10 +19,6 @@ Rules can come from:
 1. The shared [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) repository (default), or
 2. A config file already present in your own repository (`config-path`).
 
-## Scope
-
-This repository is a **GitHub Action** implementation: Node 24 TypeScript under `src/`, bundled to `dist/index.js`, with Docker and a Dev Container for local runs. It is **not** infrastructure-as-code. There is no Terraform, Kubernetes, Pulumi, Helm, or Ansible here, and none will be added just to satisfy generic IaC scoring rubrics.
-
 ## Requirements
 
 - Be sure to have set the following before using the action
@@ -167,9 +163,8 @@ Runtime pipeline (`src/run.ts`):
 | `src/index.ts` | Loads `run()` |
 | `src/run.ts` | Orchestrates validate → download → resolve config → run fixer → report |
 | `dist/index.js` | Bundled file GitHub Actions actually executes |
-| `.env.example` | Env vars for Docker / `scripts/ci-local.sh` |
-| `Dockerfile`, `docker-compose.yml` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
-| `.devcontainer/devcontainer.json` | Dev Container (PHP 8.3, Node 24, `npm ci`) |
+| `.env.example` | Env vars for `scripts/ci-local.sh` and the optional offline image |
+| `Dockerfile` | PHP 8.3 + Node 24 image with a checksum-verified php-cs-fixer phar at `/opt/php-cs-fixer/php-cs-fixer` |
 | `.github/workflows/scorecard.yml` | OpenSSF Scorecard on `main` / weekly (accepted low scores in CONTRIBUTING / [#53](https://github.com/ale94lko/php-cs-fixer-action/issues/53)) |
 
 ### Repo health badge
@@ -179,7 +174,7 @@ Runtime pipeline (`src/run.ts`):
 
 ## Local development
 
-Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh` and Docker). A [Dev Container](.devcontainer/devcontainer.json) provides PHP 8.3, Node 24, and `npm ci`.
+Requires Node.js 24+ and, to run the fixer locally, PHP 8.3+. Copy [`.env.example`](.env.example) to `.env` (used by `scripts/ci-local.sh` and the optional offline image).
 
 ```bash
 git clone https://github.com/ale94lko/php-cs-fixer-action.git
@@ -213,13 +208,6 @@ The Docker image vendors the pinned phar at **build** time (checksum from `check
 ```bash
 docker build -t php-cs-fixer-action .
 docker run --rm --network=none php-cs-fixer-action
-```
-
-Or with Compose (phar lives at `/opt/php-cs-fixer/php-cs-fixer`, outside the `.:/app` mount):
-
-```bash
-docker compose build
-docker compose run --rm --network none fixer
 ```
 
 ## Contributing

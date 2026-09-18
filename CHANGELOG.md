@@ -7,6 +7,8 @@ Changelog for next
 ------------------
 
 * docs: Require features/fixes to ship with tests in small focused Conventional Commits. [#93](https://github.com/ale94lko/php-cs-fixer-action/issues/93)
+* docs: Remove the Scope subsection from README. [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
+* chore: Drop `docker-compose.yml` and `.devcontainer` (keep `Dockerfile` for offline CI / Hadolint). [#101](https://github.com/ale94lko/php-cs-fixer-action/issues/101)
 * test: Add a loopback HTTP integration test for `downloadFixer` checksum verification and cache reuse. [#92](https://github.com/ale94lko/php-cs-fixer-action/issues/92)
 * ci: Require Conventional Commits on PRs via commitlint (SHA-pinned). [#91](https://github.com/ale94lko/php-cs-fixer-action/issues/91)
 * ci: Upload an informational `npm outdated` report in CI and add a weekly dependency-freshness workflow. [#90](https://github.com/ale94lko/php-cs-fixer-action/issues/90)
