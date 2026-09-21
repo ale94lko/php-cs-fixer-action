@@ -310,6 +310,12 @@ bash scripts/dev-check.sh
 
 That script copies `.env.example` → `.env` when needed, then runs `npm ci`, `npm run test:coverage`, and `bash scripts/ci-local.sh`. Treat a green `dev-check.sh` as the local done-condition before opening a PR.
 
+Without Node or PHP on the host, the same check runs via Compose (official `node:24-bookworm` + `php:8.3-cli`, bind-mounted repo):
+
+```bash
+docker compose run --rm app
+```
+
 ### Step-by-step (optional)
 
 ```bash
