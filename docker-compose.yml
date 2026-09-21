@@ -1,0 +1,37 @@
+# Local contributor sandbox: public images only, repo bind-mounted (no custom image).
+# `app` runs scripts/dev-check.sh with PHP 8.3 + Node 24 on PATH.
+# `node` seeds the Node toolchain into a shared volume for `app`.
+
+services:
+  node:
+    image: node:24-bookworm
+    volumes:
+      - node_runtime:/export
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -euo pipefail
+        cp -a /usr/local/. /export/
+        exec sleep infinity
+    healthcheck:
+      test: ["CMD-SHELL", "test -x /export/bin/node"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 2s
+
+  app:
+    image: php:8.3-cli
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - node_runtime:/opt/node:ro
+    depends_on:
+      node:
+        condition: service_healthy
+    environment:
+      PATH: /opt/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    command: ["bash", "scripts/dev-check.sh"]
+
+volumes:
+  node_runtime:
