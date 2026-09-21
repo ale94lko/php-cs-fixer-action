@@ -48,7 +48,8 @@
     },
     "paths": {
       "type": "string",
-      "description": "Empty (config finder), space-separated paths, newline-separated paths (may contain spaces), or a JSON string array of relative workspace paths. Safety checks run in validate.ts."
+      "pattern": "^$|^(?![\\s\\S]*\\.\\.)[\\s\\S]+$",
+      "description": "Empty (config finder), space-separated paths, newline-separated paths (may contain spaces), or a JSON string array of relative workspace paths. Parent segments (..) are rejected here; absolute and option-like tokens are checked in validate.ts."
     },
     "allow-risky": {
       "type": "string",

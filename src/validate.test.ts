@@ -105,6 +105,29 @@ describe('validateAllInputs', () => {
     expect(() => validateAllInputs(valid)).not.toThrow()
   })
 
+  it('validates every ActionInputs field through Ajv before use', () => {
+    expect(() => validateAllInputs({ ...valid, phpCsFixerVersion: 'latest' })).toThrow(
+      /php-cs-fixer-version/,
+    )
+    expect(() => validateAllInputs({ ...valid, configPath: '../secrets.php' })).toThrow(
+      /config-path/,
+    )
+    expect(() => validateAllInputs({ ...valid, rulesVersion: '' })).toThrow(/must not be empty/)
+    expect(() => validateAllInputs({ ...valid, useFullRules: 'yes' })).toThrow(/true or false/)
+    expect(() => validateAllInputs({ ...valid, mode: 'lint' })).toThrow(/Expected check or fix/)
+    expect(() => validateAllInputs({ ...valid, paths: '../secrets.php' })).toThrow(/Invalid path/)
+    expect(() => validateAllInputs({ ...valid, allowRisky: 'true' })).toThrow(/yes or no/)
+    expect(() => validateAllInputs({ ...valid, phpBin: '../php' })).toThrow(/php-bin/)
+    expect(() => validateAllInputs({ ...valid, workingDirectory: '../out' })).toThrow(
+      /working-directory/,
+    )
+    expect(() => validateAllInputs({ ...valid, usingCache: 'true' })).toThrow(/using-cache/)
+    expect(() => validateAllInputs({ ...valid, cacheFile: '/tmp/cache' })).toThrow(/cache-file/)
+    expect(() => validateAllInputs({ ...valid, onlyChanged: 'yes' })).toThrow(/true or false/)
+    expect(() => validateAllInputs({ ...valid, baseRef: '../main' })).toThrow(/base-ref/)
+    expect(() => validateAllInputs({ ...valid, sarifFile: '../out.sarif' })).toThrow(/sarif-file/)
+  })
+
   it('fails closed on a bad version with a typed ActionError', () => {
     try {
       validateAllInputs({ ...valid, phpCsFixerVersion: 'latest' })

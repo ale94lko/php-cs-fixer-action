@@ -88,29 +88,94 @@ describe('action.inputs.schema.json', () => {
     expect(() => assertInputsSchema(valid)).not.toThrow()
   })
 
-  it('rejects invalid inputs through Ajv', () => {
-    expect(() => assertInputsSchema({ ...valid, phpCsFixerVersion: 'latest' })).toThrow(
-      /php-cs-fixer-version/,
+  it('maps every ActionInputs field into the Ajv document', () => {
+    expect(Object.keys(toSchemaInputs(valid)).sort()).toEqual([
+      'allow-risky',
+      'base-ref',
+      'cache-file',
+      'config-path',
+      'mode',
+      'only-changed',
+      'paths',
+      'php-bin',
+      'php-cs-fixer-version',
+      'rules-version',
+      'sarif-file',
+      'use-full-rules',
+      'using-cache',
+      'working-directory',
+    ])
+  })
+})
+
+describe('Ajv input validation boundary', () => {
+  /** Fail closed through action.inputs.schema.json (Ajv) before Action use. */
+  function expectAjvRejects(inputs: ActionInputs, message: RegExp): void {
+    expect(() => assertInputsSchema(inputs)).toThrow(message)
+  }
+
+  it('rejects malformed php-cs-fixer-version via ajv', () => {
+    expectAjvRejects({ ...valid, phpCsFixerVersion: 'latest' }, /php-cs-fixer-version/)
+  })
+
+  it('rejects malformed config-path via ajv', () => {
+    expectAjvRejects({ ...valid, configPath: '../secrets.php' }, /config-path/)
+  })
+
+  it('rejects malformed rules-version via ajv', () => {
+    expectAjvRejects({ ...valid, rulesVersion: '' }, /must not be empty/)
+    expectAjvRejects(
+      { ...valid, rulesVersion: '../../PHP-CS-Fixer/PHP-CS-Fixer/v3.64.0' },
+      /rules-version/,
     )
-    expect(() => assertInputsSchema({ ...valid, mode: 'lint' })).toThrow(/Expected check or fix/)
-    expect(() => assertInputsSchema({ ...valid, useFullRules: 'yes' })).toThrow(/true or false/)
-    expect(() => assertInputsSchema({ ...valid, allowRisky: 'true' })).toThrow(/yes or no/)
-    expect(() => assertInputsSchema({ ...valid, phpBin: '../php' })).toThrow(/php-bin/)
-    expect(() => assertInputsSchema({ ...valid, workingDirectory: '../out' })).toThrow(
-      /working-directory/,
-    )
-    expect(() => assertInputsSchema({ ...valid, usingCache: 'true' })).toThrow(/using-cache/)
-    expect(() => assertInputsSchema({ ...valid, cacheFile: '/tmp/cache' })).toThrow(/cache-file/)
-    expect(() => assertInputsSchema({ ...valid, onlyChanged: 'yes' })).toThrow(/true or false/)
-    expect(() => assertInputsSchema({ ...valid, baseRef: '../main' })).toThrow(/base-ref/)
-    expect(() => assertInputsSchema({ ...valid, rulesVersion: '' })).toThrow(/must not be empty/)
-    expect(() =>
-      assertInputsSchema({ ...valid, onlyChanged: 'true', baseRef: 'origin/main' }),
-    ).not.toThrow()
-    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'release/1.0' })).not.toThrow()
-    expect(() => assertInputsSchema({ ...valid, configPath: '../secrets.php' })).toThrow(
-      /config-path/,
-    )
+  })
+
+  it('rejects malformed use-full-rules via ajv', () => {
+    expectAjvRejects({ ...valid, useFullRules: 'yes' }, /true or false/)
+  })
+
+  it('rejects malformed mode via ajv', () => {
+    expectAjvRejects({ ...valid, mode: 'lint' }, /Expected check or fix/)
+  })
+
+  it('rejects malformed paths via ajv', () => {
+    expectAjvRejects({ ...valid, paths: '../secrets.php' }, /Invalid path/)
+    expectAjvRejects({ ...valid, paths: '["../secrets.php"]' }, /Invalid path/)
+  })
+
+  it('rejects malformed allow-risky via ajv', () => {
+    expectAjvRejects({ ...valid, allowRisky: 'true' }, /yes or no/)
+  })
+
+  it('rejects malformed php-bin via ajv', () => {
+    expectAjvRejects({ ...valid, phpBin: '../php' }, /php-bin/)
+  })
+
+  it('rejects malformed working-directory via ajv', () => {
+    expectAjvRejects({ ...valid, workingDirectory: '../out' }, /working-directory/)
+  })
+
+  it('rejects malformed using-cache via ajv', () => {
+    expectAjvRejects({ ...valid, usingCache: 'true' }, /using-cache/)
+  })
+
+  it('rejects malformed cache-file via ajv', () => {
+    expectAjvRejects({ ...valid, cacheFile: '/tmp/cache' }, /cache-file/)
+  })
+
+  it('rejects malformed only-changed via ajv', () => {
+    expectAjvRejects({ ...valid, onlyChanged: 'yes' }, /true or false/)
+  })
+
+  it('rejects malformed base-ref via ajv', () => {
+    expectAjvRejects({ ...valid, baseRef: '../main' }, /base-ref/)
+  })
+
+  it('rejects malformed sarif-file via ajv', () => {
+    expectAjvRejects({ ...valid, sarifFile: '../out.sarif' }, /sarif-file/)
+  })
+
+  it('accepts valid paths and refs through ajv', () => {
     expect(() => assertInputsSchema({ ...valid, paths: 'src tests' })).not.toThrow()
     expect(() =>
       assertInputsSchema({
@@ -118,21 +183,16 @@ describe('action.inputs.schema.json', () => {
         paths: '["src/with space.php"]',
       }),
     ).not.toThrow()
-    expect(() => assertInputsSchema({ ...valid, sarifFile: '../out.sarif' })).toThrow(/sarif-file/)
+    expect(() =>
+      assertInputsSchema({ ...valid, onlyChanged: 'true', baseRef: 'origin/main' }),
+    ).not.toThrow()
+    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'release/1.0' })).not.toThrow()
   })
 
-  it('rejects rules-version path traversal and empty path segments', () => {
-    expect(() =>
-      assertInputsSchema({
-        ...valid,
-        rulesVersion: '../../PHP-CS-Fixer/PHP-CS-Fixer/v3.64.0',
-      }),
-    ).toThrow(/rules-version/)
-    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'release//v1' })).toThrow(
-      /rules-version/,
-    )
-    expect(() => assertInputsSchema({ ...valid, rulesVersion: 'main/' })).toThrow(/rules-version/)
-    expect(() => assertInputsSchema({ ...valid, rulesVersion: '/main' })).toThrow(/rules-version/)
+  it('rejects rules-version path traversal and empty path segments via ajv', () => {
+    expectAjvRejects({ ...valid, rulesVersion: 'release//v1' }, /rules-version/)
+    expectAjvRejects({ ...valid, rulesVersion: 'main/' }, /rules-version/)
+    expectAjvRejects({ ...valid, rulesVersion: '/main' }, /rules-version/)
   })
 })
 
