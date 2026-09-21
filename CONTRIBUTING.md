@@ -63,7 +63,7 @@ After changing `src/` or lockfile dependencies, commit the rebuilt `dist/` in th
 When bumping the default `php-cs-fixer-version`, keep `checksums.txt` in the same change:
 
 ```bash
-bash scripts/update-checksums.sh v3.95.21
+bash scripts/update-checksums.sh v3.95.26
 ```
 
 When bumping the default `rules-version`, keep `rules-checksums.txt` in the same change:

@@ -59,7 +59,7 @@ When you do not set `config-path`, the Action downloads shared rules from [php-c
 
 | Name | Description | Required | Default | Values |
 |----------|:----------:|:----------:|:----------:|:----------:|
-| php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.95.21` | v`X.X.X` |
+| php-cs-fixer-version | Version of php-cs-fixer to download | `false` | `v3.95.26` | v`X.X.X` |
 | config-path | Path to a local php-cs-fixer config in your repo. When set, skips downloading from php-cs-fixer-rules | `false` | _(empty)_ | e.g. `.php-cs-fixer.dist.php` |
 | rules-version | Git ref (tag, branch or SHA) of [php-cs-fixer-rules](https://github.com/ale94lko/php-cs-fixer-rules) used when `config-path` is empty | `false` | `v1.0.1` | `v1.0.1`, `main`, SHA… |
 | use-full-rules | Whether to use the full rules package or the minimal one from php-cs-fixer-rules | `false` | `true` | `true` OR `false` |
@@ -155,7 +155,7 @@ jobs:
   - name: PHP Code Style
     uses: ale94lko/php-cs-fixer-action@v1
 +   with:
-+     php-cs-fixer-version: v3.95.21
++     php-cs-fixer-version: v3.95.26
 ```
 
 ### Check only (default)

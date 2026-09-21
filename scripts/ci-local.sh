@@ -15,7 +15,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-export PHP_CS_FIXER_VERSION="${PHP_CS_FIXER_VERSION:-v3.95.21}"
+export PHP_CS_FIXER_VERSION="${PHP_CS_FIXER_VERSION:-v3.95.26}"
 export CONFIG_PATH="${CONFIG_PATH:-${CONFIG_FILE:-tests/fixtures/.php-cs-fixer.dist.php}}"
 export CONFIG_FILE="${CONFIG_FILE:-${CONFIG_PATH}}"
 
