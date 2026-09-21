@@ -1,4 +1,4 @@
-<!-- Please read [CONTRIBUTING.md](../CONTRIBUTING.md) before opening this PR. -->
+<!-- Please read https://github.com/ale94lko/php-cs-fixer-action/blob/main/CONTRIBUTING.md before opening this PR. -->
 
 # Description
 
@@ -24,7 +24,7 @@ Please describe the tests that you ran to verify your changes. Prefer the curren
 
 # Checklist:
 
-- [ ] I followed [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [ ] I followed [CONTRIBUTING.md](https://github.com/ale94lko/php-cs-fixer-action/blob/main/CONTRIBUTING.md)
 - [ ] Commits use [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `chore`, `test`, `docs`, `ci`, `refactor`)
 - [ ] Behavior changes include paired Vitest (`src/**/*.test.ts` / `tests/integration/`) and/or shell specs under `tests/`
 - [ ] My code follows the style guidelines of this project
