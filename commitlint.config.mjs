@@ -11,6 +11,9 @@ export default {
       message.includes('Signed-off-by: dependabot[bot] <support@github.com>'),
   ],
   rules: {
+    // The preset limit of 100 rejects normal sentences. Dependabot compare
+    // links are ignored above; this covers human commit bodies.
+    'body-max-line-length': [2, 'always', 200],
     'type-enum': [
       2,
       'always',
