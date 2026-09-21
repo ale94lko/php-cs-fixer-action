@@ -25,7 +25,7 @@ expected_checksum() {
 }
 
 if [[ "${1:-}" == "--print-checksum" ]]; then
-  VERSION="${2:-v3.95.21}"
+  VERSION="${2:-v3.95.26}"
   CHECKSUMS="${3:-${ROOT_DIR}/checksums.txt}"
   if [[ ! -f "${CHECKSUMS}" ]]; then
     echo "checksums.txt not found: ${CHECKSUMS}" >&2
@@ -40,7 +40,7 @@ if [[ "${1:-}" == "--print-checksum" ]]; then
   exit 0
 fi
 
-VERSION="${1:-v3.95.21}"
+VERSION="${1:-v3.95.26}"
 DEST="${2:-/opt/php-cs-fixer/php-cs-fixer}"
 CHECKSUMS="${3:-${ROOT_DIR}/checksums.txt}"
 URL="https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/releases/download/${VERSION}/php-cs-fixer.phar"

@@ -5,7 +5,7 @@ import * as core from '@actions/core'
 import { join } from 'node:path'
 
 /** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
-export const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.21'
+export const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.26'
 
 /** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
 export const DEFAULT_RULES_VERSION = 'v1.0.1'
