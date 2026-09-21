@@ -21,7 +21,7 @@ There is no separate foundation board. Technical and security decisions are made
 | **Contributor** | Anyone with a merged PR or substantive issue | Propose changes that follow [CONTRIBUTING.md](CONTRIBUTING.md), add tests for new behavior, respect the [Code of Conduct](.github/CODE_OF_CONDUCT.md) |
 | **Security contact** | Maintainers (see [SECURITY.md](SECURITY.md)) | Receive private reports, coordinate disclosure, publish advisories when needed |
 
-Code ownership for review requests is defined in [`.github/CODEOWNERS`](.github/CODEOWNERS) (`@ale94lko` and `@leoflavio1989`).
+Code ownership for review requests is defined in [`.github/CODEOWNERS`](.github/CODEOWNERS) (`@ale94lko` and `@leoflavio1989`). When a second maintainer is available, prefer that they review and merge (or at least approve) rather than the author self-merging after a single-owner path — see also [CONTRIBUTING.md](CONTRIBUTING.md#code-review).
 
 ## Access continuity
 
