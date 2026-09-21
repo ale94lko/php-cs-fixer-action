@@ -9,7 +9,7 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
 
-        Before you begin, **please ensure that there are no [existing issues](https://github.com/ale94lko/php-cs-fixer-action/issues), whether still open or closed, related to your report**.
+        Before you begin, please read the [contributing guide](https://github.com/ale94lko/php-cs-fixer-action/blob/main/CONTRIBUTING.md) and **ensure that there are no [existing issues](https://github.com/ale94lko/php-cs-fixer-action/issues), whether still open or closed, related to your report**.
         If there is, your report will be closed promptly.
         ---
 

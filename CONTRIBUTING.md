@@ -176,6 +176,10 @@ Statement coverage is enforced at **≥ 90%** statements/lines and **≥ 80%** b
 4. Open a pull request and [link it to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) if you are solving one.
 5. Enable [allow maintainer edits](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).
 
+## Code review
+
+Branch protection and [`.github/CODEOWNERS`](.github/CODEOWNERS) require a maintainer review before merge. When a second human maintainer is available, prefer that they review and merge the PR (or at least leave the approving review) so authorship and merge credit diversify over time. Do not self-merge your own PR when another CODEOWNER can review. This complements the longer-term maintainer process in [#117](https://github.com/ale94lko/php-cs-fixer-action/issues/117); it does not replace it.
+
 After a same-repo pull request is merged, GitHub deletes the head branch automatically (`Automatically delete head branches` is enabled on this repository). Fork PR branches are not deleted on the contributor's fork.
 
 ## Security reports
