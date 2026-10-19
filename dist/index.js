@@ -1,4 +1,4 @@
-// php-cs-fixer-action-src-hash ac2fd0fc283729497c77109acf4309a329561a5ca6cd4d5e61b08be04bd441d0
+// php-cs-fixer-action-src-hash 9cab12a33c977e9f46bb8f3deefceeb3c217ba3d3ccc5e547ad4cbea064e0f21
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -101195,7 +101195,7 @@ runtimeDir, options = {}) {
 // SPDX-License-Identifier: MIT
 
 /** Default php-cs-fixer release tag when consumers omit `php-cs-fixer-version` (keep in sync with action.yml). */
-const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.26';
+const DEFAULT_PHP_CS_FIXER_VERSION = 'v3.95.27';
 /** Default php-cs-fixer-rules ref when consumers omit `rules-version` (keep in sync with action.yml). */
 const DEFAULT_RULES_VERSION = 'v1.0.1';
 /** Default --allow-risky value (keep in sync with action.yml; yes for backward compatibility). */
