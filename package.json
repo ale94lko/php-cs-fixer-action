@@ -43,7 +43,7 @@
   "//": "Pins and overrides: see docs/dependency-notes.md (ncc CJS / webpackMissingModule).",
   "overrides": {
     "typescript": "~5.9.3",
-    "undici": "^6.28.0",
+    "undici": "^6.29.1",
     "uuid": "^11.1.1"
   }
 }

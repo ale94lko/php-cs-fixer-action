@@ -24,7 +24,7 @@ node scripts/check-dist.cjs
 | Override | Why |
 |----------|-----|
 | `typescript` → `~5.9.3` | Keep the toolchain on a known 5.9 line across transitive `typescript-eslint` / Vite peers so `npm run typecheck` stays deterministic. |
-| `undici` → `^6.28.0` | Align the HTTP client pulled by the Actions toolkit / Node fetch stack with a compatible 6.x release under the CJS-friendly `@actions/*` majors above. |
+| `undici` → `^6.29.1` | Align the HTTP client pulled by the Actions toolkit / Node fetch stack with a patched 6.x release (GHSA high advisories through 6.29.0) under the CJS-friendly `@actions/*` majors above. |
 | `uuid` → `^11.1.1` | Transitive from `@actions/cache` 4.x; pin so the lockfile does not drift onto a uuid build that breaks the ncc graph. |
 
 Treat `npm outdated` / [`dep-freshness.yml`](../.github/workflows/dep-freshness.yml) reports for these packages as **intentional friction**, not accidental neglect: bump only when ncc can bundle the new major (or when the bundler strategy changes).
